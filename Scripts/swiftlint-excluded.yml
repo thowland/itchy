@@ -1,0 +1,41 @@
+# Complexity cap governing the coverage exclusion list (D-11, specification §15.3).
+#
+# A file may sit on Scripts/coverage-exclusions.txt only while it passes this
+# configuration. The effect is that exclusion from coverage measurement is earned
+# by being genuinely boilerplate: a view file that acquires a branch stops
+# qualifying, and the choice becomes extracting the branch into a seam or
+# covering the file. Both are fine. An untested branch inside an unmeasured file
+# is not, and this is the configuration that makes that hard to arrange.
+#
+# Run by Scripts/arch-lint.sh over exactly the paths the coverage script excludes,
+# so the two lists cannot drift apart.
+
+only_rules:
+  - cyclomatic_complexity
+  - custom_rules
+
+cyclomatic_complexity:
+  warning: 2
+  error: 2
+
+custom_rules:
+  branching_in_excluded_file:
+    name: "Branching in a coverage-excluded file"
+    regex: '\b(switch|for|while|repeat)\b'
+    match_kinds: [keyword]
+    message: "This file is excluded from coverage measurement, so it may not branch. Extract the decision into a *Model, *Plan, *Policy, *Resolver or *Codec (specification §15.2), or remove the file from Scripts/coverage-exclusions.txt."
+    severity: error
+
+  conditional_in_excluded_file:
+    name: "Conditional in a coverage-excluded file"
+    regex: '\b(if|guard)\s+(?!let\b|var\b|case\b)'
+    excluded_match_kinds: [comment, doccomment, string, identifier]
+    message: "This file is excluded from coverage measurement, so it may only use if/guard for optional unwrapping. Extract the decision into a seam (specification §15.2), or remove the file from Scripts/coverage-exclusions.txt."
+    severity: error
+
+  ternary_in_excluded_file:
+    name: "Ternary in a coverage-excluded file"
+    regex: '\?\s*[^:\s][^:]*\s*:'
+    excluded_match_kinds: [comment, doccomment, string, typeidentifier, identifier, keyword, number]
+    message: "A ternary is a branch. This file is excluded from coverage measurement and may not contain one."
+    severity: error

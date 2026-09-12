@@ -1,0 +1,11 @@
+# Nested configuration governing ItchyServices's library sources only.
+#
+# Public API in a package is an interface the layers above depend on, so access
+# control is stated rather than inferred. This config sits on Sources/ so that
+# it reaches the library code and not the manifest or the tests — a manifest is
+# declarative, and a test's visibility is not an interface anyone depends on.
+parent_config: ../../../.swiftlint.yml
+
+opt_in_rules:
+  - explicit_acl
+  - explicit_top_level_acl

@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+
+jobs:
+  gate:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app
+
+      - name: Install SwiftLint
+        run: brew install swiftlint
+
+      - name: Lint (G1)
+        run: make lint
+
+      - name: Architecture lint
+        run: make arch-lint
+
+      - name: Test (G2)
+        run: make test
+
+      - name: Prove the gates work
+        run: make verify-gate
+
+      - name: Coverage (G3)
+        run: make coverage

@@ -1,0 +1,64 @@
+# Base configuration. Packages/.swiftlint.yml adds rules that only apply to the
+# library targets; Scripts/swiftlint-excluded.yml applies the complexity cap that
+# governs the coverage exclusion list (D-11, specification §15.3).
+
+included:
+  - App
+  - Packages
+  - Shim
+  - Harness
+
+excluded:
+  - .build
+  - Packages/ItchyCore/.build
+  - Packages/ItchyServices/.build
+  - Tests/Fixtures
+
+opt_in_rules:
+  - force_unwrapping
+  - implicitly_unwrapped_optional
+  - empty_count
+  - closure_spacing
+  - overridden_super_call
+  - redundant_nil_coalescing
+  - unneeded_parentheses_in_closure_argument
+  - yoda_condition
+
+disabled_rules:
+  - todo # tracked in the decision log and the plan, not by the linter
+  # swift-format owns comma placement and requires a trailing comma in multiline
+  # collection literals. SwiftLint's rule forbids it. Formatting belongs to the
+  # formatter, so SwiftLint yields rather than the two contradicting each other
+  # on every multiline literal in the codebase.
+  - trailing_comma
+
+line_length:
+  warning: 120
+  error: 160
+  ignores_comments: false
+
+file_length:
+  warning: 400
+  error: 600
+
+type_body_length:
+  warning: 250
+  error: 350
+
+function_body_length:
+  warning: 50
+  error: 80
+
+cyclomatic_complexity:
+  warning: 8
+  error: 12
+
+identifier_name:
+  min_length: 2
+  excluded: [id, x, y, at, to, up]
+
+force_try:
+  severity: error
+
+force_cast:
+  severity: error

@@ -1,0 +1,6 @@
+# Minimal exclusions for the gate-verification fixture. Only the fixture's own
+# test target is excluded — narrowly, because the fixture itself lives under
+# Tests/, and a broad /Tests/ pattern would exclude the very source the fixture
+# exists to leave uncovered.
+[not-source]
+/Tests/UnderCoveredTests/

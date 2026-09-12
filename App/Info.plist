@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Accessory application: no Dock icon, no application window (FR-1.1). -->
+	<key>LSUIElement</key>
+	<true/>
+	<key>CFBundleName</key>
+	<string>Itchy</string>
+	<key>CFBundleDisplayName</key>
+	<string>Itchy</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.wdogsystems.itchy</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>0.1.0</string>
+	<key>CFBundleVersion</key>
+	<string>1</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>26.0</string>
+	<key>NSHumanReadableCopyright</key>
+	<string>Copyright © 2026 Tim Howland. All rights reserved.</string>
+</dict>
+</plist>
