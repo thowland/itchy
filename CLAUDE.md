@@ -79,4 +79,6 @@ Xcode does not add it to `project.yml`.
 
 ## Unresolved before coding
 
-Four framework behaviours are marked **[VERIFY]** in the specification and gate specific sprints (§18): Carbon `RegisterEventHotKey` on macOS 26 (S-1, Sprint 5), `TextEditor` attachment rendering (S-2, Sprint 3), `.metadata_never_index` efficacy (S-3, Sprint 5), MCP Swift SDK fit for a long-running host (S-4, Sprint 8). Run each before its sprint opens, not during it.
+Three framework behaviours remain marked **[VERIFY]** in the specification and gate specific sprints (§18): Carbon `RegisterEventHotKey` on macOS 26 (S-1, Sprint 5), `.metadata_never_index` efficacy (S-3, Sprint 5), MCP Swift SDK fit for a long-running host (S-4, Sprint 8). Run each before its sprint opens, not during it.
+
+S-2 (`TextEditor` attachment rendering) is resolved: unchanged, §9.1 stands, see D-15.

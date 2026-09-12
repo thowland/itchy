@@ -30,3 +30,4 @@ New decisions:
 | [D-12](D-12-xcode-project.md) | The Xcode project is generated from a checked-in `project.yml`; `Itchy.xcodeproj` is not committed |
 | [D-13](D-13-rtfd-bundle-representation.md) | Pad content is an RTFD bundle map, not opaque `Data` |
 | [D-14](D-14-panel-activation.md) | A pad appearing does not activate; a pad focused necessarily does |
+| [D-15](D-15-spike-s2-resolved.md) | Spike S-2 resolved: `TextEditor` still does not render attachments; §9.1 stands |

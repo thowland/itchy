@@ -559,7 +559,7 @@ Instrumentation is `OSSignposter` intervals named `hotkey→visible`, `panel.cre
 
 ### 9.1 Why AppKit, restated as a constraint
 
-SwiftUI's `TextEditor` on macOS 26 handles styled text through `AttributedString` and would be the right choice for styling alone. It does not render text attachments: an attributed string loaded from RTFD with an embedded image reports the attachment present and draws nothing, while `NSTextView` displays it correctly. Pasted screenshots are `FR-4.2`, a first-release requirement, so the decision is settled and is not to be revisited on the grounds that the SwiftUI code would be shorter. **[VERIFY]** the attachment behaviour on the shipping macOS 26 before M3 begins, since a fix would genuinely change this.
+SwiftUI's `TextEditor` on macOS 26 handles styled text through `AttributedString` and would be the right choice for styling alone. It does not render text attachments: an attributed string loaded from RTFD with an embedded image reports the attachment present and draws nothing, while `NSTextView` displays it correctly. Pasted screenshots are `FR-4.2`, a first-release requirement, so the decision is settled and is not to be revisited on the grounds that the SwiftUI code would be shorter. Verified by spike S-2 and recorded in D-15: the behaviour is unchanged, and the evidence is in `docs/spike-s2-texteditor-attachments.png`.
 
 ### 9.2 Bridge structure
 
@@ -863,7 +863,7 @@ The gap between M5 and M6 is a specification item rather than a scheduling accid
 | R-4 | MCP write path correctness | Visibility and undo rather than locking (§11.6, §11.7). Accepted by `FR-8.8` |
 | R-5 | Feature accretion into a note-taking application | `CON-1`–`CON-3` are the control, and the M5–M6 gap is the enforcement mechanism |
 | S-1 | `RegisterEventHotKey` on macOS 26 **[VERIFY]** | One-afternoon spike before M5. Fallback is a global monitor and an Accessibility prompt, which is a materially worse product |
-| S-2 | `TextEditor` attachment rendering on shipping macOS 26 **[VERIFY]** | Before M3. If fixed, §9.1 is worth revisiting; if not, nothing changes |
+| S-2 | `TextEditor` attachment rendering on shipping macOS 26 | **Resolved** (D-15). Unchanged: the attachment is in the model and is not drawn. §9.1 stands |
 | S-3 | `.metadata_never_index` efficacy **[VERIFY]** | Before M5, since `NFR-3.4` is an exit criterion. Fallbacks in D-10 |
 | S-4 | MCP Swift SDK fit for a long-running host | Before M7, per D-5. Decides SDK versus Hummingbird plus hand-written protocol |
 
