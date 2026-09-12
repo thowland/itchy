@@ -41,9 +41,12 @@ for PKG in $PACKAGES; do
   fi
 done
 
-# The app target is measured through xcodebuild. project.yml is the source of
-# truth and Itchy.xcodeproj is generated (D-12), so generate it if absent rather
-# than silently skipping the app target and reporting a partial figure as whole.
+# The app target is measured through xcodebuild and read with xccov.
+#
+# Not llvm-cov: exporting lcov against the built application binary returns an
+# empty profile for an Xcode app target, which silently reports the whole app as
+# unmeasured rather than failing. xccov reads the same run's result bundle and
+# gives per-file covered/executable counts, which is what the denominator needs.
 if [ "$PKG_DIR" = "Packages" ]; then
   if [ ! -d "Itchy.xcodeproj" ]; then
     command -v xcodegen >/dev/null 2>&1 || {
@@ -57,15 +60,15 @@ if [ "$PKG_DIR" = "Packages" ]; then
       echo "coverage: app target tests failed" >&2
       exit 1
     }
-  PROF=$(find "$LCOV_DIR/dd" -name 'Coverage.profdata' 2>/dev/null | head -1)
-  APP=$(find "$LCOV_DIR/dd" -path '*Itchy.app/Contents/MacOS/Itchy' -type f 2>/dev/null | head -1)
-  if [ -n "$PROF" ] && [ -n "$APP" ]; then
-    xcrun llvm-cov export -format=lcov -instr-profile "$PROF" "$APP" \
-      > "$LCOV_DIR/App.lcov" 2>/dev/null
-  else
-    echo "coverage: could not locate app coverage data" >&2
+  RESULT=$(find "$LCOV_DIR/dd/Logs/Test" -name '*.xcresult' -maxdepth 1 2>/dev/null | head -1)
+  if [ -z "$RESULT" ]; then
+    echo "coverage: no test result bundle; cannot measure the app target" >&2
     exit 1
   fi
+  xcrun xccov view --report --json "$RESULT" > "$LCOV_DIR/app.json" 2>/dev/null || {
+    echo "coverage: could not read app coverage from the result bundle" >&2
+    exit 1
+  }
 fi
 
 python3 - "$LCOV_DIR" "$MIN" "$EXCLUSIONS" <<'PY'
@@ -93,6 +96,25 @@ always = [re.compile(r"/\.build/"), re.compile(r"\.derived/"),
 def excluded(path):
     return any(p.search(path) for p in patterns + always)
 
+# path -> (covered, executable). Package data arrives per line from lcov; app
+# data arrives pre-aggregated from xccov. Both end up in the same denominator.
+counts = {}
+
+app_report = os.path.join(lcov_dir, "app.json")
+if os.path.exists(app_report):
+    import json
+    with open(app_report) as fh:
+        report = json.load(fh)
+    for target in report.get("targets", []):
+        for entry in target.get("files", []):
+            path = entry.get("path", "")
+            executable = entry.get("executableLines", 0)
+            covered = entry.get("coveredLines", 0)
+            if not path or executable == 0:
+                continue
+            previous = counts.get(path, (0, 0))
+            counts[path] = (previous[0] + covered, previous[1] + executable)
+
 files, current = {}, None
 for name in sorted(os.listdir(lcov_dir)):
     if not name.endswith(".lcov"):
@@ -109,14 +131,18 @@ for name in sorted(os.listdir(lcov_dir)):
             elif line == "end_of_record":
                 current = None
 
-measured = {f: d for f, d in files.items() if not excluded(f)}
-skipped = len(files) - len(measured)
+for path, lines in files.items():
+    executable = len(lines)
+    hit = sum(1 for count in lines.values() if count > 0)
+    previous = counts.get(path, (0, 0))
+    counts[path] = (previous[0] + hit, previous[1] + executable)
+
+measured = {f: d for f, d in counts.items() if not excluded(f)}
+skipped = len(counts) - len(measured)
 
 total = covered = 0
 rows = []
-for path, lines in sorted(measured.items()):
-    t = len(lines)
-    c = sum(1 for h in lines.values() if h > 0)
+for path, (c, t) in sorted(measured.items()):
     total += t
     covered += c
     rows.append((100.0 * c / t if t else 100.0, c, t, path))

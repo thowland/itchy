@@ -5,6 +5,7 @@ import XCTest
 /// XCTest is present from Sprint 0 so that the harness is proven rather than
 /// assumed (D-3). Swift Testing carries the package suites; this target exists
 /// for the cases that need XCTest machinery and for host-application tests.
+@MainActor
 final class AppShellTests: XCTestCase {
   func testActivationPolicyIsAccessory() {
     // FR-1.1: the app runs as an accessory with no Dock icon. LSUIElement in

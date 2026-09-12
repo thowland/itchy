@@ -783,7 +783,10 @@ Small and deliberately shallow, XCUITest, covering the things unit tests structu
 
 ### 14.6 Manual checklist per release
 
-Accessibility passes (`NFR-5.2`, `NFR-5.3`), Gatekeeper launch on a clean machine (`NFR-4.2`), Spotlight exclusion verified by searching for pad-unique content and then grepping the same content out of the directory (`NFR-3.4`), and idle CPU observed over five minutes (`NFR-1.3`).
+Dragging a pad's title bar over another application's window, confirming that no
+other Itchy window comes forward and the user's arrangement is otherwise
+untouched (`FR-3.1`; see D-14 for why this is manual). Accessibility passes
+(`NFR-5.2`, `NFR-5.3`), Gatekeeper launch on a clean machine (`NFR-4.2`), Spotlight exclusion verified by searching for pad-unique content and then grepping the same content out of the directory (`NFR-3.4`), and idle CPU observed over five minutes (`NFR-1.3`).
 
 ## 15. Testability seams
 
