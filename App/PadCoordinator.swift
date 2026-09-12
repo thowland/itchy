@@ -18,6 +18,7 @@ final class PadCoordinator {
   @ObservationIgnored private let store: PadStore
   @ObservationIgnored private lazy var registry = PadWindowRegistry(store: store)
   @ObservationIgnored private var sizes: [PadID: Int] = [:]
+  @ObservationIgnored private var editors: [PadID: PadTextCoordinator] = [:]
 
   @ObservationIgnored private let launchOptions: LaunchOptions
 
@@ -35,6 +36,7 @@ final class PadCoordinator {
     if launchOptions.opensPadOnLaunch {
       await openFirstPadForTesting()
     }
+    PreviousAppTracker.shared.start()
     Task { [weak self] in
       guard let self else { return }
       for await _ in await store.changes {
@@ -65,12 +67,57 @@ final class PadCoordinator {
   }
 
   func open(_ padID: PadID, makingKey: Bool = true) {
+    Task { [weak self] in
+      await self?.openPad(padID, makingKey: makingKey)
+    }
+  }
+
+  /// Reads the pad's content — the first time it is read at all (`FR-1.6`) — and
+  /// shows its panel.
+  ///
+  /// A pad whose content cannot be read opens onto its fault rather than onto an
+  /// empty editor, which specification §6.7 prohibits because an empty editor
+  /// would destroy the content on the next save.
+  private func openPad(_ padID: PadID, makingKey: Bool) async {
     guard let pad = pads.first(where: { $0.id == padID }) else { return }
-    let fault = faultForDisplay(padID)
+    let fault = await store.fault(for: padID)
+    let content = try? await store.content(of: padID)
+    let initial = content.flatMap { try? ContentCodec.decode($0) } ?? NSAttributedString()
+    let editor = editorCoordinator(for: padID)
+
     registry.show(
       pad,
-      content: PadView(segments: StatusBarModel.segments(for: pad, fault: fault)),
+      content: PadView(
+        coordinator: editor,
+        mode: pad.mode,
+        initial: initial,
+        segments: StatusBarModel.segments(for: pad, fault: fault)),
       makingKey: makingKey)
+  }
+
+  private func editorCoordinator(for padID: PadID) -> PadTextCoordinator {
+    if let existing = editors[padID] { return existing }
+    let created = PadTextCoordinator(padID: padID, store: store)
+    editors[padID] = created
+    return created
+  }
+
+  /// `FR-4.5`: flattening is one undoable operation, shared with the future
+  /// `flatten` transform.
+  func setMode(_ padID: PadID, to mode: PadMode) {
+    Task { [weak self] in
+      guard let self else { return }
+      let current = self.pads.first { $0.id == padID }?.mode
+      self.flattenIfDowngrading(padID, from: current, to: mode)
+      try? await self.store.setMode(padID, to: mode)
+      self.editors[padID]?.setMode(mode)
+      await self.refresh()
+    }
+  }
+
+  private func flattenIfDowngrading(_ padID: PadID, from current: PadMode?, to mode: PadMode) {
+    guard current == .styled, mode == .plain else { return }
+    editors[padID]?.flatten()
   }
 
   func createPad() {
@@ -89,10 +136,22 @@ final class PadCoordinator {
   ///
   /// Blocking the main thread is normally indefensible. At termination, with a
   /// timeout, losing a pad is worse (specification §6.6).
+  /// Stages any unserialised edit before the store's own flush, so that content
+  /// typed within the serialisation debounce is not lost (specification §9.3).
+  func flushEditors() async {
+    for editor in editors.values {
+      await editor.flush()
+    }
+  }
+
   func flushOnTermination() {
     let store = store
+    let editors = Array(editors.values)
     let semaphore = DispatchSemaphore(value: 0)
     Task.detached {
+      for editor in editors {
+        await editor.flush()
+      }
       try? await store.flushAll()
       semaphore.signal()
     }

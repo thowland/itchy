@@ -6,13 +6,11 @@ import XCTest
 /// Every case runs the application against a throwaway storage root, so the
 /// user's real pads are never touched.
 final class LaunchUITests: XCTestCase {
-  /// The placeholder editor, looked up by identifier rather than by element
-  /// type: SwiftUI renders a vertical `TextField` differently across versions,
-  /// and the identifier is the stable part.
+  /// The pad's text view, looked up by identifier rather than by element type:
+  /// the identifier is the stable part across the Sprint 2 placeholder and the
+  /// Sprint 3 `NSTextView` that replaced it.
   private func padInput(in app: XCUIApplication) -> XCUIElement {
-    app.descendants(matching: .any)
-      .matching(identifier: "pad.placeholder.input")
-      .firstMatch
+    app.windows.textViews["pad.editor"].firstMatch
   }
 
   private func launchApp() -> XCUIApplication {

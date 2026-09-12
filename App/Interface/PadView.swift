@@ -3,37 +3,20 @@ import SwiftUI
 
 /// A pad's contents and its status line.
 ///
-/// Sprint 2 shows the status line over a placeholder; the text view arrives in
-/// Sprint 3 (`FR-4.1`). This file is on the coverage exclusion list, so it may
-/// not branch — anything resembling a decision belongs in `StatusBarModel`.
+/// This file is on the coverage exclusion list, so it may not branch — anything
+/// resembling a decision belongs in `StatusBarModel` or `PadTextCoordinator`.
 struct PadView: View {
+  let coordinator: PadTextCoordinator
+  let mode: PadMode
+  let initial: NSAttributedString
   let segments: [StatusSegment]
 
   var body: some View {
     VStack(spacing: 0) {
-      PadPlaceholderView()
+      PadTextEditor(coordinator: coordinator, mode: mode, initial: initial)
       Divider()
       PadStatusBar(segments: segments)
     }
-  }
-}
-
-/// Stands in for the text view until Sprint 3.
-///
-/// It is a real editable field rather than a label, and deliberately so: Sprint
-/// 2's exit gate is that a panel summoned over another application accepts typed
-/// input (`FR-3.2`), and that cannot be demonstrated against static text. The
-/// `NSTextView` bridge replaces this in Sprint 3.
-struct PadPlaceholderView: View {
-  @State private var draft = ""
-
-  var body: some View {
-    TextField("The editor arrives in Sprint 3", text: $draft, axis: .vertical)
-      .textFieldStyle(.plain)
-      .font(.body)
-      .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-      .padding(8)
-      .accessibilityIdentifier("pad.placeholder.input")
   }
 }
 
@@ -46,15 +29,27 @@ struct PadStatusBar: View {
       ForEach(segments) { segment in
         Text(segment.text)
           .font(.caption)
-          .foregroundStyle(segment.kind == .fault ? AnyShapeStyle(.red) : AnyShapeStyle(.secondary))
+          .foregroundStyle(StatusSegmentStyle.style(for: segment))
         Text(verbatim: "·")
           .font(.caption)
           .foregroundStyle(.tertiary)
-          .opacity(segment.id == segments.last?.id ? 0 : 1)
+          .opacity(StatusSegmentStyle.separatorOpacity(segment, in: segments))
       }
       Spacer()
     }
     .padding(.horizontal, 10)
     .padding(.vertical, 5)
+  }
+}
+
+/// How a status segment is drawn. A seam, because deciding that a fault reads in
+/// red is a decision and view files do not make decisions (D-11).
+enum StatusSegmentStyle {
+  static func style(for segment: StatusSegment) -> AnyShapeStyle {
+    segment.kind == .fault ? AnyShapeStyle(.red) : AnyShapeStyle(.secondary)
+  }
+
+  static func separatorOpacity(_ segment: StatusSegment, in segments: [StatusSegment]) -> Double {
+    segment.id == segments.last?.id ? 0 : 1
   }
 }

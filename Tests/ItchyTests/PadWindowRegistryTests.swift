@@ -21,8 +21,12 @@ struct PadWindowRegistryTests {
     PadMetadata(name: name, created: .distantPast, modified: .distantPast)
   }
 
-  private func content() -> some View {
-    PadView(segments: [StatusSegment(kind: .name, text: "scratch")])
+  private func content(store: PadStore) -> some View {
+    PadView(
+      coordinator: PadTextCoordinator(padID: PadID(), store: store),
+      mode: .styled,
+      initial: NSAttributedString(string: "scratch"),
+      segments: [StatusSegment(kind: .name, text: "scratch")])
   }
 
   /// `FR-3.3`: opening a pad that is already open brings the existing panel
@@ -36,7 +40,7 @@ struct PadWindowRegistryTests {
 
     var controllers: [PadWindowController] = []
     for _ in 0..<5 {
-      controllers.append(registry.show(target, content: content(), makingKey: false))
+      controllers.append(registry.show(target, content: content(store: store), makingKey: false))
     }
 
     #expect(registry.openCount == 1)
@@ -52,8 +56,8 @@ struct PadWindowRegistryTests {
     let first = pad("a")
     let second = pad("b")
 
-    registry.show(first, content: content(), makingKey: false)
-    registry.show(second, content: content(), makingKey: false)
+    registry.show(first, content: content(store: store), makingKey: false)
+    registry.show(second, content: content(store: store), makingKey: false)
 
     #expect(registry.openCount == 2)
     #expect(registry.isOpen(first.id))
@@ -85,7 +89,7 @@ struct PadWindowRegistryTests {
     target.frame = PadFrame(
       x: visible.minX + 120, y: visible.minY + 120, width: 400, height: 480)
 
-    let controller = registry.show(target, content: content(), makingKey: false)
+    let controller = registry.show(target, content: content(store: store), makingKey: false)
 
     #expect(controller.panel.frame.width == 400)
     #expect(controller.panel.frame.height == 480)
@@ -99,7 +103,7 @@ struct PadWindowRegistryTests {
     let registry = PadWindowRegistry(store: store)
     let target = pad("json dump")
 
-    let controller = registry.show(target, content: content(), makingKey: false)
+    let controller = registry.show(target, content: content(store: store), makingKey: false)
 
     #expect(controller.panel.title == "json dump")
     registry.close(target.id)
@@ -115,7 +119,7 @@ struct PadWindowRegistryTests {
     let registry = PadWindowRegistry(store: store)
     let target = pad()
 
-    let controller = registry.show(target, content: content(), makingKey: false)
+    let controller = registry.show(target, content: content(store: store), makingKey: false)
 
     #expect(controller.isVisible)
     #expect(!controller.isKey)
