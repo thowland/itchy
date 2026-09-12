@@ -14,7 +14,7 @@ Sprints are one week of part-time solo work. That figure is a planning unit rath
 
 Every sprint, including Sprint 0, exits only when all four conditions hold. They are cumulative: a later sprint inherits every earlier sprint's tests and must keep them passing.
 
-**G1 — No linting failures.** `swiftlint --strict` reports zero violations, `swift-format lint --recursive --strict` reports zero, and the architecture lint in §3.4 reports zero. Warnings are errors; there is no allowance for a violation left in place with a comment explaining it.
+**G1 — No linting failures.** `swiftlint --strict` reports zero violations, `xcrun swift-format lint --recursive --strict` reports zero, and the architecture lint in §3.4 reports zero. Warnings are errors; there is no allowance for a violation left in place with a comment explaining it.
 
 **G2 — No failing tests, anywhere.** The entire suite passes, not the subset written this sprint. A test written in Sprint 1 that fails in Sprint 4 is a Sprint 4 blocker.
 
@@ -34,11 +34,13 @@ The gate is not a quality claim. Eighty per cent line coverage says the lines ra
 
 ### 3.1 Toolchain
 
-Swift 6.2 with strict concurrency (D-1), Xcode for the app target, SwiftPM for `ItchyCore` and `ItchyServices` (D-2). Swift Testing for new tests, XCTest where the machinery requires it, XCUITest for the UI smoke suite (D-3).
+Swift 6.3 with strict concurrency (D-1), Xcode for the app target, SwiftPM for `ItchyCore` and `ItchyServices` (D-2). Swift Testing for new tests, XCTest where the machinery requires it, XCUITest for the UI smoke suite (D-3).
 
 ### 3.2 Linting
 
-`swiftlint` with a checked-in `.swiftlint.yml`: the default rule set, plus opt-in rules for `explicit_acl` on package targets, `force_unwrapping`, `force_try`, and `implicitly_unwrapped_optional`. `swift-format` handles formatting with a checked-in `.swift-format`; formatting is not negotiated in review because it is not decided in review.
+`swiftlint` with a checked-in `.swiftlint.yml`: the default rule set, plus opt-in rules for `explicit_acl` on package targets, `force_unwrapping`, `force_try`, and `implicitly_unwrapped_optional`. `swift-format` handles formatting with a checked-in `.swift-format`, invoked as `xcrun swift-format` so that the formatter tracks the toolchain that compiles the code (D-1). Formatting is not negotiated in review because it is not decided in review.
+
+Both tools are already present on the development machine: `swiftlint` 0.65.1 from Homebrew, `swift-format` 6.3.0 from the Xcode 26.6 toolchain. Both were confirmed to exit non-zero on a violation and zero on clean input, which is the only property the gate actually depends on.
 
 ### 3.3 Coverage measurement
 

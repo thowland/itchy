@@ -23,8 +23,10 @@ Two classes of statement need distinguishing. Most of this document is settled d
 
 Each carries an identifier so that later documents and commit messages can cite it.
 
-**D-1 — Swift 6.2 with strict concurrency checking, no Objective-C of our own.**
+**D-1 — Swift 6.3 with strict concurrency checking, no Objective-C of our own.**
 The window and text layers are AppKit, but they are consumed from Swift. Strict concurrency is enabled from the first commit rather than adopted later, because the store is an actor and the text system is main-actor-bound, and that boundary is the one place in the application where concurrency mistakes are plausible. Retrofitting `Sendable` conformance across a working codebase is worse than living with the compiler from the start.
+
+The toolchain is whatever Xcode provides, and the formatter comes from it rather than from Homebrew: `swift-format` ships inside the Xcode toolchain and is invoked as `xcrun swift-format`. A separately installed formatter can drift from the compiler that builds the code and then reformat against a grammar the toolchain does not have, which is a class of argument not worth having. `swiftlint` has no toolchain equivalent and is installed from Homebrew.
 
 **D-2 — Local Swift packages for Core and Services, an Xcode app target for Platform and Interface.**
 `NFR-4.3` requires the core to be testable without linking a UI framework, and the cheapest way to guarantee that rather than merely intend it is to make it structurally impossible: `ItchyCore` is a package target that does not depend on AppKit, so an accidental `import AppKit` in the store fails to build. The app target depends on the packages; the packages depend on nothing of ours.

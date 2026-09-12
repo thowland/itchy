@@ -53,7 +53,8 @@ An obsolete test may be deleted, recorded with the requirement that changed — 
 
 ## Conventions
 
-- Swift 6.2, strict concurrency from the first commit (D-1). The store is an actor; the view layer is `@MainActor`.
+- Swift 6.3, strict concurrency from the first commit (D-1). The store is an actor; the view layer is `@MainActor`.
+- `swiftlint` from Homebrew; `swift-format` from the Xcode toolchain via `xcrun swift-format`, never from Homebrew (D-1).
 - Swift Testing for new tests; XCTest only where its machinery is required; XCUITest for the UI smoke suite.
 - No third-party dependencies in R1 or R2 (D-4). The question reopens at R3 for the MCP stack only (D-5).
 - Documents are written in British spelling and in continuous prose with reasoning attached. A decision recorded without its reasoning cannot be reversed safely later.
