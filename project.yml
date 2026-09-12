@@ -24,22 +24,30 @@ settings:
     SWIFT_STRICT_CONCURRENCY: complete
     MARKETING_VERSION: "0.1.0"
     CURRENT_PROJECT_VERSION: "1"
-    # Ad-hoc by default so a clone builds and tests without a certificate.
-    # `make release` overrides both for a distributable build (NFR-4.2).
-    CODE_SIGN_IDENTITY: "-"
+    # CODE_SIGN_IDENTITY is deliberately absent here. A project-level value
+    # overrides an xcconfig, which would defeat Config/Debug.xcconfig and leave
+    # every build ad-hoc — and TCC re-prompting on each one. Debug takes it from
+    # the config file; Release sets it below and `make release` overrides that
+    # with the Developer ID (NFR-4.2).
     CODE_SIGN_STYLE: Manual
     CODE_SIGN_ENTITLEMENTS: App/Itchy.entitlements
     ENABLE_USER_SCRIPT_SANDBOXING: NO
+
   configs:
-    Debug:
-      # The hardened runtime refuses to load a test bundle signed with a
-      # different team, which is every ad-hoc signed XCTest bundle. It is a
-      # release property, so it belongs in the release configuration.
-      ENABLE_HARDENED_RUNTIME: NO
     Release:
+      # Ad-hoc by default so a clone builds without a certificate; `make release`
+      # overrides it with the Developer ID.
+      CODE_SIGN_IDENTITY: "-"
       # Required for notarisation, and compatible with running unsandboxed
       # (NFR-4.2, CON-6).
       ENABLE_HARDENED_RUNTIME: YES
+
+# Debug signing is indirected through Config/Debug.xcconfig so that an ad-hoc
+# build still works everywhere, while `make sign-setup` gives this machine a
+# stable identity — which is what stops TCC asking for automation permission on
+# every rebuild.
+configFiles:
+  Debug: Config/Debug.xcconfig
 
 packages:
   ItchyCore:

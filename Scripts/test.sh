@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
-# Runs the whole suite, and refuses to hang.
+# Runs the suite, and refuses to hang.
+#
+# By default the UI tests are skipped, because they are the only part that needs
+# macOS automation permission — and a permission prompt blocks invisibly, which
+# presents as a hang rather than as a question. `--ui` includes them, and CI runs
+# them as a separate job so an environment that cannot grant automation does not
+# block everything else.
 #
 # Everything here runs locally against a store of at most twenty small files.
 # Nothing legitimately takes minutes, so every stage has a hard ceiling and a
@@ -13,10 +19,20 @@ set -uo pipefail
 cd "$(dirname "$0")/.." || exit 1
 
 PACKAGE_TIMEOUT="${ITCHY_PACKAGE_TIMEOUT:-120}"
-# Covers compiling and running together, so it is generous. Per-test limits do
-# the sharp work; this is the backstop for a run that wedges entirely.
+BUILD_TIMEOUT="${ITCHY_BUILD_TIMEOUT:-420}"
+# Generous, because `xcodebuild test` re-checks the build even after
+# build-for-testing has succeeded, so this covers compiling as well as running.
+# The sharp ten-second rule is enforced per test instead —
+# executionTimeAllowance on the XCTest cases and bounded waits in the Swift
+# Testing ones (Tests/ItchyTests/TestTiming.swift). This ceiling exists only so
+# that a wedged run fails instead of continuing indefinitely.
 APP_TIMEOUT="${ITCHY_APP_TIMEOUT:-420}"
 DD="${ITCHY_DERIVED_DATA:-.build/DerivedData}"
+# UI tests are opt-in: they need automation permission, and nothing else does.
+RUN_UI="${ITCHY_RUN_UI:-0}"
+[ "${1:-}" = "--ui" ] && RUN_UI=1
+[ "${1:-}" = "--ui-only" ] && { RUN_UI=1; UI_ONLY=1; }
+UI_ONLY="${UI_ONLY:-0}"
 # Named explicitly: without it xcodebuild stops to resolve an ambiguous macOS
 # destination and simply waits, which reads as a hung test run.
 DESTINATION="platform=macOS,arch=$(uname -m)"
@@ -83,15 +99,38 @@ fi
 # executionTimeAllowance on the XCTest cases and bounded waits in the Swift
 # Testing ones (Tests/ItchyTests/TestTiming.swift). This ceiling only catches a
 # run that wedges as a whole.
+# Built as its own step. `test-without-building` would be the obvious way to
+# then run the tests alone, but it stalls after resolving the package graph on
+# this toolchain and never starts — verified twice. So the test step is an
+# ordinary `xcodebuild test` whose build phase is already satisfied.
+if ! run_with_timeout "$BUILD_TIMEOUT" \
+    xcodebuild build-for-testing -project Itchy.xcodeproj -scheme Itchy \
+    -destination "$DESTINATION" -derivedDataPath "$DD" -quiet \
+    >/tmp/itchy-build.log 2>&1; then
+  fail "app target did not build"
+  grep -E "error:" /tmp/itchy-build.log | head -6 | sed 's/^/       /'
+  exit 1
+fi
+pass "app target builds"
+
+SKIP_UI_FLAG="-skip-testing:ItchyUITests"
+[ "$RUN_UI" = "1" ] && SKIP_UI_FLAG=""
+[ "$UI_ONLY" = "1" ] && SKIP_UI_FLAG="-only-testing:ItchyUITests"
+
 if run_with_timeout "$APP_TIMEOUT" \
     xcodebuild test -project Itchy.xcodeproj -scheme Itchy \
-    -destination "$DESTINATION" -derivedDataPath "$DD" \
+    -destination "$DESTINATION" -derivedDataPath "$DD" $SKIP_UI_FLAG \
     >/tmp/itchy-app.log 2>&1; then
-  pass "app target"
+  pass "app target$([ "$RUN_UI" = "1" ] && echo " (including UI)" || echo " (UI skipped)")"
 else
   code=$?
   if [ $code -eq 124 ]; then
     fail "app tests exceeded ${APP_TIMEOUT}s — a hung run is a failed run"
+    if [ "$RUN_UI" = "1" ]; then
+      echo "       UI tests need macOS automation permission. If a prompt is" >&2
+      echo "       waiting on screen, answering it once is enough — provided" >&2
+      echo "       'make sign-setup' has been run, or it returns every build." >&2
+    fi
     grep -E "Test Case.*started" /tmp/itchy-app.log | grep -v linkd | tail -1 \
       | sed 's/^/       last started: /'
   else

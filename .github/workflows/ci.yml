@@ -6,6 +6,8 @@ on:
   pull_request:
 
 jobs:
+  # Everything that needs no macOS automation permission. This is the job that
+  # gates a merge.
   gate:
     runs-on: macos-26
     steps:
@@ -26,7 +28,7 @@ jobs:
       - name: Architecture lint
         run: make arch-lint
 
-      - name: Test (G2)
+      - name: Test, without the UI suite (G2)
         run: make test
 
       - name: Prove the gates work
@@ -34,3 +36,32 @@ jobs:
 
       - name: Coverage (G3)
         run: make coverage
+
+  # The UI suite drives the application through XCUITest, which needs macOS
+  # automation permission. A hosted runner grants it to its ephemeral user, but
+  # it is the part most likely to fail for environmental reasons rather than for
+  # a defect — so it runs on its own and does not block the gate above.
+  ui:
+    runs-on: macos-26
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app
+
+      - name: Install tools
+        run: brew install xcodegen
+
+      - name: Generate the Xcode project
+        run: make project
+
+      - name: UI suite
+        run: make test-ui
+
+      - name: Keep the log when it fails
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-test-log
+          path: /tmp/itchy-app.log

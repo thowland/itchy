@@ -11,3 +11,6 @@ Itchy.xcodeproj/
 App/Info.plist
 
 Harness/.build/
+
+# Names a signing identity that exists only in one machine's keychain.
+Config/Signing.local.xcconfig

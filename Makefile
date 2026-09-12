@@ -7,7 +7,7 @@ SWIFTFORMAT := xcrun swift-format
 PACKAGES := Packages/ItchyCore Packages/ItchyServices
 DD := .build/DerivedData
 
-.PHONY: help gate project regenerate test lint format arch-lint coverage verify-gate app release notarise dmg ship-check icon clean open
+.PHONY: help gate project regenerate test test-ui test-all sign-setup lint format arch-lint coverage verify-gate app release notarise dmg ship-check icon clean open
 
 help: ## Show this help
 	@grep -E '^[a-z-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -33,8 +33,17 @@ regenerate: ## Force a project regeneration
 open: project ## Regenerate and open in Xcode
 	@open Itchy.xcodeproj
 
-test: project ## Run all tests, with hard time limits
+test: project ## Run tests without the UI suite (needs no permissions)
 	@./Scripts/test.sh
+
+test-ui: project ## Run the UI suite (needs macOS automation permission)
+	@./Scripts/test.sh --ui-only
+
+test-all: project ## Run everything, UI suite included
+	@./Scripts/test.sh --ui
+
+sign-setup: ## Point Debug builds at a keychain identity, so TCC stops re-asking
+	@./Scripts/sign-setup.sh
 
 lint: ## Lint and check formatting (G1)
 	@$(SWIFTLINT) lint --quiet --strict

@@ -1,0 +1,27 @@
+// Debug build settings.
+//
+// Signing identity is indirected through ITCHY_SIGN_IDENTITY so that the
+// committed default works anywhere — a fresh clone, a CI runner with no
+// keychain — while a developer can opt into a stable identity locally.
+//
+// Why it matters: an ad-hoc signed application has no stable designated
+// requirement, so TCC keys its automation grant on the code hash, and the hash
+// changes on every build. The result is a permission prompt for every single
+// rebuild, and a UI test run that hangs waiting for someone to answer it.
+// Signing with a real identity gives a stable requirement and the grant sticks.
+//
+// `make sign-setup` writes Signing.local.xcconfig with an identity found in
+// this machine's keychain. That file is not committed.
+
+ITCHY_SIGN_IDENTITY = -
+ITCHY_DEVELOPMENT_TEAM =
+
+#include? "Signing.local.xcconfig"
+
+CODE_SIGN_IDENTITY = $(ITCHY_SIGN_IDENTITY)
+DEVELOPMENT_TEAM = $(ITCHY_DEVELOPMENT_TEAM)
+CODE_SIGN_STYLE = Manual
+
+// The hardened runtime refuses to load a test bundle signed by a different
+// team, which is every ad-hoc signed XCTest bundle. It is a release property.
+ENABLE_HARDENED_RUNTIME = NO

@@ -71,23 +71,42 @@ public struct PadContent: Sendable, Equatable {
   /// Minimal RTF wrapper for plain text.
   ///
   /// The core writes RTF only for the degenerate plain-text case; everything
-  /// styled is produced by the platform layer's `ContentCodec` in Sprint 3, where
+  /// styled is produced by the platform layer's `ContentCodec`, where
   /// `NSAttributedString` does the work properly.
+  ///
+  /// Non-ASCII characters are escaped as `\uN?` rather than written as raw
+  /// bytes. An `\ansi` document's bytes are read as cp1252, so an em dash
+  /// written literally comes back as `â€"` — which is how this was found, in a
+  /// screenshot taken for the README.
   private static func rtf(escaping text: String) -> String {
     var escaped = ""
     for character in text {
-      switch character {
-      case "\\": escaped += "\\\\"
-      case "{": escaped += "\\{"
-      case "}": escaped += "\\}"
-      case "\n": escaped += "\\\n"
-      default: escaped.append(character)
-      }
+      escaped += escapedRTF(character)
     }
     return """
       {\\rtf1\\ansi\\ansicpg1252\\cocoartf2820
       {\\fonttbl\\f0\\fnil\\fcharset0 SFMono-Regular;}
       \\f0\\fs24 \(escaped)}
       """
+  }
+
+  private static func escapedRTF(_ character: Character) -> String {
+    switch character {
+    case "\\": return "\\\\"
+    case "{": return "\\{"
+    case "}": return "\\}"
+    case "\n": return "\\\n"
+    default: break
+    }
+    guard !character.isASCII else { return String(character) }
+    // RTF carries a Unicode scalar as \uN with an ASCII fallback after it, and
+    // reads N as a signed 16-bit value. Scalars beyond the basic plane are
+    // written as their surrogate pair, which is what RTF readers expect.
+    var result = ""
+    for scalar in String(character).utf16 {
+      let signed = scalar > 32_767 ? Int(scalar) - 65_536 : Int(scalar)
+      result += "\\u\(signed)?"
+    }
+    return result
   }
 }

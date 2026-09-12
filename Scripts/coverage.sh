@@ -57,8 +57,13 @@ if [ "$PKG_DIR" = "Packages" ]; then
     }
     xcodegen generate --quiet >/dev/null 2>&1 && touch Itchy.xcodeproj
   fi
+  # The UI suite is skipped here for the same reason Scripts/test.sh skips it:
+  # it needs automation permission, and a coverage run that stops for a
+  # permission prompt reads as a hang. The UI tests contribute almost nothing to
+  # the measured denominator — by design, since D-11 keeps decisions out of the
+  # views they drive.
   xcodebuild test -project Itchy.xcodeproj -scheme Itchy \
-    -destination "platform=macOS,arch=$(uname -m)" \
+    -destination "platform=macOS,arch=$(uname -m)" -skip-testing:ItchyUITests \
     -enableCodeCoverage YES -derivedDataPath "$LCOV_DIR/dd" >/dev/null 2>&1 || {
       echo "coverage: app target tests failed" >&2
       exit 1
