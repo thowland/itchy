@@ -221,18 +221,46 @@ struct PadStorePersistenceTests {
     #expect(shadow == Data("two".utf8))
   }
 
-  /// `NFR-3.4`, D-10: re-asserted on every launch in case it was removed.
-  @Test("The Spotlight exclusion marker is written and re-asserted")
-  func spotlightExclusion() async throws {
+  /// `NFR-3.4`, D-16. The suffix is the whole mechanism: spike S-3 showed that
+  /// `.metadata_never_index` has no effect on a directory, while a `.noindex`
+  /// suffix does. A rename that drops the suffix silently restores indexing of
+  /// every pad, so it is asserted rather than assumed.
+  @Test("Pads live in a directory Spotlight will not index")
+  func padsDirectoryIsExcludedFromSpotlight() async throws {
     let root = TemporaryRoot()
     let store = PadStore(layout: root.layout, now: FixedClock().now)
     await store.load()
-    #expect(FileManager.default.fileExists(atPath: root.layout.spotlightExclusionFile.path))
 
-    try FileManager.default.removeItem(at: root.layout.spotlightExclusionFile)
-    let again = PadStore(layout: root.layout, now: FixedClock().now)
-    await again.load()
-    #expect(FileManager.default.fileExists(atPath: root.layout.spotlightExclusionFile.path))
+    #expect(root.layout.padsDirectory.lastPathComponent.hasSuffix(".noindex"))
+    #expect(FileManager.default.fileExists(atPath: root.layout.padsDirectory.path))
+  }
+
+  /// An install written before D-16 must not keep its pads in the indexed
+  /// location, or `NFR-3.4` holds only for pads created after the upgrade.
+  @Test("An install predating the change is moved into the excluded directory")
+  func legacyPadsAreMigrated() async throws {
+    let root = TemporaryRoot()
+    let clock = FixedClock()
+
+    // Build an install the old way: pads under "pads".
+    let legacy = root.layout.legacyPadsDirectory
+    try FileManager.default.createDirectory(at: legacy, withIntermediateDirectories: true)
+    let seeded = PadStore(
+      layout: PadStorageLayout(root: root.url), now: clock.now)
+    await seeded.load()
+    let pad = try await seeded.createPad(name: "from before")
+    try await seeded.flushAll()
+    try? FileManager.default.removeItem(at: legacy)
+    try FileManager.default.moveItem(at: root.layout.padsDirectory, to: legacy)
+
+    let migrated = PadStore(layout: root.layout, now: clock.now)
+    await migrated.load()
+
+    #expect(await migrated.pads.map(\.name) == ["from before"])
+    #expect(!FileManager.default.fileExists(atPath: legacy.path), "the old directory is gone")
+    #expect(
+      FileManager.default.fileExists(
+        atPath: root.layout.directory(for: pad.id).path))
   }
 
   /// `FR-5.7`: an unknown field added by hand survives the next save.

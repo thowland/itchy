@@ -20,7 +20,7 @@ contradicts the specification updates the specification in the same commit.
 | D-7 | A directory per pad, written atomically, with a schema version in every JSON file |
 | D-8 | The shadow text file is written by the store, inside the same save, for every pad |
 | D-9 | Undo lives on the text view; the store defers to it |
-| D-10 | Spotlight exclusion by `.metadata_never_index` |
+| D-10 | Spotlight exclusion by `.metadata_never_index` — **superseded by D-16** |
 | D-11 | Decisions live in value-typed code; view files translate and apply |
 
 New decisions:
@@ -31,3 +31,5 @@ New decisions:
 | [D-13](D-13-rtfd-bundle-representation.md) | Pad content is an RTFD bundle map, not opaque `Data` |
 | [D-14](D-14-panel-activation.md) | A pad appearing does not activate; a pad focused necessarily does |
 | [D-15](D-15-spike-s2-resolved.md) | Spike S-2 resolved: `TextEditor` still does not render attachments; §9.1 stands |
+| [D-16](D-16-spotlight-exclusion.md) | Spotlight exclusion is a `.noindex` directory, not `.metadata_never_index`; supersedes D-10 |
+| [D-17](D-17-spike-s1-s4.md) | Spikes S-1 and S-4 resolved: Carbon hotkey stands, MCP SDK adopted |

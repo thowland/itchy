@@ -4,14 +4,20 @@ import Foundation
 ///
 /// ```
 /// ~/Library/Application Support/Itchy/
-/// ├── .metadata_never_index      D-10, NFR-3.4
 /// ├── index.json                 slot order
 /// ├── settings.json              non-secret preferences
-/// └── pads/<uuid>/
+/// └── pads.noindex/<uuid>/       excluded from Spotlight (D-16, NFR-3.4)
 ///     ├── content.rtfd/          authoritative styled content
 ///     ├── content.txt            shadow, derived, never read back
 ///     └── meta.json
 /// ```
+///
+/// The `.noindex` suffix is the mechanism that actually works. D-10 specified
+/// `.metadata_never_index`, which spike S-3 showed has no effect on a directory
+/// — it is a volume-root marker. `.noindex` is what Xcode uses for DerivedData,
+/// and it excludes the directory's contents from Spotlight while leaving them
+/// perfectly readable to `grep`, to the shadow files' intended consumers, and to
+/// the MCP server (D-16).
 ///
 /// Flat files, one directory per pad, no database. For twenty records SQLite
 /// through Core Data or SwiftData is overhead in exchange for capabilities that
@@ -23,8 +29,12 @@ public struct PadStorageLayout: Sendable {
   public static let metadataFileName = "meta.json"
   public static let indexFileName = "index.json"
   public static let settingsFileName = "settings.json"
-  public static let spotlightExclusionName = ".metadata_never_index"
-  public static let padsDirectoryName = "pads"
+  /// `NFR-3.4`, D-16. The suffix is load-bearing: renaming this directory
+  /// without it silently restores Spotlight indexing of every pad.
+  public static let padsDirectoryName = "pads.noindex"
+
+  /// What the pads directory was called before D-16. Migrated on load.
+  public static let legacyPadsDirectoryName = "pads"
 
   public let root: URL
 
@@ -61,11 +71,9 @@ public struct PadStorageLayout: Sendable {
     root.appendingPathComponent(Self.settingsFileName)
   }
 
-  /// The marker that keeps pad contents out of system-wide search
-  /// (`NFR-3.4`, D-10). Command-line and agent readability of the shadow files
-  /// is intended; appearing in a user's Spotlight results is not.
-  public var spotlightExclusionFile: URL {
-    root.appendingPathComponent(Self.spotlightExclusionName)
+  /// Where pads lived before D-16, so an existing install can be moved.
+  public var legacyPadsDirectory: URL {
+    root.appendingPathComponent(Self.legacyPadsDirectoryName)
   }
 
   public func directory(for id: PadID) -> URL {

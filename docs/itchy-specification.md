@@ -8,7 +8,7 @@ This is the build document. It sits below `itchy-vision.md` (why), `itchy-archit
 
 Requirement identifiers in the form `FR-4.2` refer to `itchy-requirements.md` and are the acceptance authority. Code in this document is illustrative of shape and naming rather than final; it is written as Swift because the type signatures are the clearest way to state an interface, not because the implementation is expected to match character for character.
 
-Two classes of statement need distinguishing. Most of this document is settled design. A small number of points depend on framework behaviour I have not verified on macOS 26 and are marked **[VERIFY]**, each with the spike that settles it listed in §18. Those marks should be cleared before the relevant milestone begins, not discovered during it.
+Two classes of statement need distinguishing. Most of this document is settled design. A small number of points depended on framework behaviour unverified on macOS 26 and were marked **[VERIFY]**. All four spikes are now resolved; §18 records each outcome, and D-15 through D-17 carry the detail. Those marks should be cleared before the relevant milestone begins, not discovered during it.
 
 ## 1. Deliverables
 
@@ -52,8 +52,8 @@ Per `FR-5.4`. The store extracts the string and writes both files as one operati
 **D-9 — Undo lives on the text view, and the store defers to it.**
 The store does not maintain its own undo stack. Transforms and MCP writes register their inverse with the pad's `NSTextView.undoManager` inside an undo grouping, which is what makes `FR-6.5` and `FR-8.8` the same mechanism rather than two. The consequence is that a write to a pad whose panel is closed has no undo, which is accepted: §11.7 specifies that such a write is instead recorded as an external-write event on the pad.
 
-**D-10 — Spotlight exclusion by `.metadata_never_index` in the support directory.**
-Satisfies `NFR-3.4` with one empty file, written at first launch and re-asserted on every launch in case it has been removed. **[VERIFY]** that this still suppresses indexing on macOS 26; the fallback is setting the directory's `kMDItemSupportFileType`-adjacent exclusion attributes, and failing that, documenting the exclusion as a user action.
+**D-10 — Spotlight exclusion. Superseded by D-16.**
+D-10 specified an empty `.metadata_never_index` file in the support directory. Spike S-3 showed that has no effect on a directory — it is a volume-root marker — and that a directory named `*.noindex` does work. Pads therefore live in `pads.noindex`, and nothing is written to mark them. See D-16.
 
 **D-11 — Decisions live in value-typed code; view files translate and apply.**
 No conditional in a view body, window controller, `NSViewRepresentable`, or app-delegate stub. Every decision those files would otherwise make is extracted into a pure unit named by the convention in §15.1, and the exclusion list that keeps boilerplate out of the coverage denominator is coupled to a complexity cap so that exclusion is earned by triviality rather than claimed. §15 is the full statement, including the seam-by-seam table. This is taken as a decision rather than left as good practice because it is the difference between a coverage floor that measures something and one that measures whether files were excluded.
@@ -264,10 +264,9 @@ Rule three is what makes `FR-8.8` and `FR-6.5` fall out of the same code, and ru
 
 ```
 ~/Library/Application Support/Itchy/
-├── .metadata_never_index          # D-10 / NFR-3.4
 ├── index.json                     # slot order + schema version
 ├── settings.json                  # non-secret preferences
-└── pads/
+└── pads.noindex/                  # excluded from Spotlight — D-16 / NFR-3.4
     └── <uuid>/
         ├── content.rtfd/          # authoritative styled content (a file wrapper)
         ├── content.txt            # shadow, derived, never read (FR-5.4)
@@ -862,10 +861,10 @@ The gap between M5 and M6 is a specification item rather than a scheduling accid
 | R-3 | Pasted images grow pads unnoticed | Downsample at 1600 px, 64 MB documented ceiling, 32 MB marker (§9.4, `FR-4.3`, `FR-5.9`) |
 | R-4 | MCP write path correctness | Visibility and undo rather than locking (§11.6, §11.7). Accepted by `FR-8.8` |
 | R-5 | Feature accretion into a note-taking application | `CON-1`–`CON-3` are the control, and the M5–M6 gap is the enforcement mechanism |
-| S-1 | `RegisterEventHotKey` on macOS 26 **[VERIFY]** | One-afternoon spike before M5. Fallback is a global monitor and an Accessibility prompt, which is a materially worse product |
+| S-1 | `RegisterEventHotKey` on macOS 26 | **Resolved** (D-17). Registers with `noErr` and no Accessibility permission; D-6 stands. Live firing is a manual check |
 | S-2 | `TextEditor` attachment rendering on shipping macOS 26 | **Resolved** (D-15). Unchanged: the attachment is in the model and is not drawn. §9.1 stands |
-| S-3 | `.metadata_never_index` efficacy **[VERIFY]** | Before M5, since `NFR-3.4` is an exit criterion. Fallbacks in D-10 |
-| S-4 | MCP Swift SDK fit for a long-running host | Before M7, per D-5. Decides SDK versus Hummingbird plus hand-written protocol |
+| S-3 | Spotlight exclusion | **Resolved** (D-16). `.metadata_never_index` does nothing; pads now live in `pads.noindex`, verified against real Spotlight |
+| S-4 | MCP Swift SDK fit for a long-running host | **Resolved** (D-17). Fits: the transport owns no socket and exposes `handleRequest`. SDK adopted; the fallback is not needed |
 
 ## 19. Deliberate non-goals, restated
 

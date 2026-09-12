@@ -415,7 +415,7 @@ The MCP token and any model credentials MUST be stored in the Keychain.
 *Acceptance:* the support directory contains no secret material.
 
 **NFR-3.4 — Not in system-wide search** *(R1, MUST)*
-The support directory MUST be excluded from Spotlight indexing, so that pad contents do not surface in unrelated system searches. Command-line and agent readability of the shadow files under FR-5.4 is intended; appearing in a user's search results across the machine is not.
+Pad contents MUST be excluded from Spotlight indexing, so that they do not surface in unrelated system searches. The mechanism is a `.noindex` directory (D-16); `~/Library/Application Support` is itself indexed, so this is a real exclusion rather than a formality. Command-line and agent readability of the shadow files under FR-5.4 is intended; appearing in a user's search results across the machine is not.
 *Acceptance:* content unique to a pad returns no Spotlight hit, while `grep` over the support directory finds it.
 
 **NFR-3.5 — No telemetry** *(R1, MUST NOT)*

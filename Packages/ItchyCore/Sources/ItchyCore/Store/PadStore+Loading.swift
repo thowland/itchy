@@ -11,8 +11,8 @@ extension PadStore {
   /// (`FR-1.6`): content is read on first open and cached for the process.
   public func load(padLimit requested: Int = PadBounds.defaultCount) async {
     limit = PadBounds.clamp(requested)
+    migrateLegacyPadsDirectory()
     try? fileSystem.createDirectory(at: layout.padsDirectory)
-    assertSpotlightExclusion()
     atomic.sweepOrphanedTemporaries(
       in: layout.padsDirectory, olderThan: Self.temporarySweepAge, now: now())
 
@@ -26,11 +26,15 @@ extension PadStore {
     lastOpened = index.lastOpened
   }
 
-  /// `NFR-3.4`, D-10: written at first launch and re-asserted on every launch in
-  /// case it has been removed.
-  private func assertSpotlightExclusion() {
-    guard !fileSystem.fileExists(at: layout.spotlightExclusionFile) else { return }
-    try? fileSystem.write(Data(), to: layout.spotlightExclusionFile)
+  /// Moves an install created before D-16 into the `.noindex` directory.
+  ///
+  /// Renaming rather than copying, so it is atomic and costs nothing. Pads
+  /// written by an earlier build would otherwise stay indexed by Spotlight
+  /// forever, which is the thing `NFR-3.4` exists to prevent.
+  private func migrateLegacyPadsDirectory() {
+    guard fileSystem.isDirectory(at: layout.legacyPadsDirectory) else { return }
+    guard !fileSystem.fileExists(at: layout.padsDirectory) else { return }
+    try? fileSystem.replaceItem(at: layout.padsDirectory, with: layout.legacyPadsDirectory)
   }
 
   private func discoverPads() -> [PadID] {

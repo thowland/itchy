@@ -79,6 +79,16 @@ Xcode does not add it to `project.yml`.
 
 ## Unresolved before coding
 
-Three framework behaviours remain marked **[VERIFY]** in the specification and gate specific sprints (§18): Carbon `RegisterEventHotKey` on macOS 26 (S-1, Sprint 5), `.metadata_never_index` efficacy (S-3, Sprint 5), MCP Swift SDK fit for a long-running host (S-4, Sprint 8). Run each before its sprint opens, not during it.
+All four spikes are resolved (D-15, D-16, D-17). Nothing framework-level is
+outstanding before Sprint 5.
 
-S-2 (`TextEditor` attachment rendering) is resolved: unchanged, §9.1 stands, see D-15.
+Two things do block shipping and need a person, not code:
+
+1. **No Developer ID Application certificate on this machine.** Only Apple
+   Development identities are present, which cannot be used for direct
+   distribution. `NFR-4.2` needs a Developer ID certificate and a
+   `notarytool` credential profile before Sprint 5 can produce a shippable
+   build.
+2. **The global hotkey's live firing is unconfirmed.** Registration is verified
+   without the Accessibility permission (D-17), but a synthesised keypress
+   cannot be posted from a test process. One real ⌃⌥Space press confirms it.
