@@ -192,10 +192,16 @@ public struct PadMetadata: Sendable, Codable, Equatable {
 
 ```swift
 public struct PadContent: Sendable, Equatable {
-    public var rtfd: Data          // authoritative (FR-5.3)
-    public var plainText: String   // derived; written to shadow file (FR-5.4)
+    /// RTFD bundle contents keyed by filename; "TXT.rtf" plus attachments.
+    public var bundle: [String: Data]   // authoritative (FR-5.3)
+    public var plainText: String        // derived; written to shadow file (FR-5.4)
 }
 ```
+
+The bundle is a filename-to-bytes map rather than opaque `Data` (D-13). An RTFD
+bundle is a directory, and `FR-5.3` requires that what Itchy writes opens in
+TextEdit — which a flat packed representation does not satisfy. A map is
+`Sendable` and `Equatable`, which opaque `Data` is too but `FileWrapper` is not.
 
 This is a deliberate inversion of the obvious design. It would be more natural for the store to hold an `NSAttributedString`, and it would also mean the store links AppKit and D-2 collapses. Serialising at the boundary costs one conversion per load and per save, both of which are already off the keystroke path.
 

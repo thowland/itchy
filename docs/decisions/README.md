@@ -28,3 +28,4 @@ New decisions:
 | # | Decision |
 |---|---|
 | [D-12](D-12-xcode-project.md) | The Xcode project is generated from a checked-in `project.yml`; `Itchy.xcodeproj` is not committed |
+| [D-13](D-13-rtfd-bundle-representation.md) | Pad content is an RTFD bundle map, not opaque `Data` |

@@ -21,6 +21,12 @@
 /Tests/
 /Fixtures/
 
+# itchyctl is a development harness and is not shipped (specification §1). It is
+# outside the denominator defined in implementation plan §3.3, which covers the
+# two packages and the non-view logic of the app target. It still builds under
+# `make test`, so it cannot rot unnoticed.
+/Harness/
+
 [capped]
 # SwiftUI view bodies: covering these asserts that a view hierarchy was
 # constructed, which raises the number and finds nothing.

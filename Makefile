@@ -25,11 +25,13 @@ project: ## Regenerate Itchy.xcodeproj from project.yml (D-12)
 open: project ## Regenerate and open in Xcode
 	@open Itchy.xcodeproj
 
-test: project ## Run all tests (packages and app target)
+test: project ## Run all tests (packages, harness, app target)
 	@for p in $(PACKAGES); do \
 	  echo "==> $$p"; \
 	  ( cd $$p && swift test ) || exit 1; \
 	done
+	@echo "==> Harness (build only; not shipped, not measured)"
+	@( cd Harness && swift build ) >/dev/null || exit 1
 	@echo "==> app target"
 	@set -o pipefail; xcodebuild test -project Itchy.xcodeproj -scheme Itchy \
 	  -derivedDataPath $(DD) -quiet 2>&1 | grep -vE "^$$" | tail -5
@@ -64,5 +66,5 @@ dmg: notarise ## Package a signed DMG
 	@echo "Not implemented until Sprint 5."; exit 1
 
 clean: ## Remove build products and the generated project
-	@rm -rf .build Packages/*/.build Tests/Fixtures/*/.build $(DD) Itchy.xcodeproj
+	@rm -rf .build Packages/*/.build Harness/.build Tests/Fixtures/*/.build $(DD) Itchy.xcodeproj
 	@echo "clean: done"

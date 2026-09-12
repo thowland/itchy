@@ -32,10 +32,17 @@ fi
 
 # --- 2. Only the store touches disk (CON-4) ----------------------------------
 # FileManager and file URLs are permitted in ItchyCore/Store and nowhere else.
+#
+# Scoped to shipping and harness *sources*. Tests reach for FileManager freely
+# and should: verifying what actually landed on disk is the whole point of the
+# storage suite, and a test asserting through the seam it is testing asserts
+# nothing. Comment lines are skipped so that naming the rule does not break it.
 HITS=$(grep -rn --include='*.swift' -E '\bFileManager\b|URL\(fileURLWithPath:' \
-  Packages App Shim Harness 2>/dev/null \
+  Packages/ItchyCore/Sources Packages/ItchyServices/Sources App Shim Harness/Sources \
+  2>/dev/null \
   | grep -v '/Store/' \
-  | grep -v '/\.build/' || true)
+  | grep -v '/\.build/' \
+  | grep -vE ':[[:space:]]*//' || true)
 if [ -n "$HITS" ]; then
   fail "disk access outside ItchyCore/Store (CON-4)"
   echo "$HITS" | sed 's/^/       /'
