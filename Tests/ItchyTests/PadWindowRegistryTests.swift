@@ -22,11 +22,10 @@ struct PadWindowRegistryTests {
   }
 
   private func content(store: PadStore) -> some View {
-    PadView(
+    PadTextEditor(
       coordinator: PadTextCoordinator(padID: PadID(), store: store),
-      mode: .styled,
-      initial: NSAttributedString(string: "scratch"),
-      segments: [StatusSegment(kind: .name, text: "scratch")])
+      mode: PadMode.styled,
+      initial: NSAttributedString(string: "scratch"))
   }
 
   /// `FR-3.3`: opening a pad that is already open brings the existing panel

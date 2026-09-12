@@ -22,6 +22,7 @@ struct MenuContentView: View {
       coordinator.createPad()
     }
     .keyboardShortcut("n")
+    PadsWindowLink()
     Divider()
     SettingsLink {
       Text("Settings…")
@@ -41,6 +42,17 @@ struct MenuRowButton: View {
   var body: some View {
     Button(MenuRowLabel.text(for: row), action: action)
       .keyboardShortcut(MenuRowLabel.shortcut(for: row), modifiers: [.control, .option])
+  }
+}
+
+/// Opens the pad management window, where rename, reorder, pin and delete live.
+struct PadsWindowLink: View {
+  @Environment(\.openWindow) private var openWindow
+
+  var body: some View {
+    Button("Pads…") {
+      openWindow(id: WindowIdentifier.pads)
+    }
   }
 }
 

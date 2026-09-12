@@ -6,6 +6,13 @@ import ItchyCore
 /// The UI suite runs against a throwaway root, because a test that creates and
 /// deletes pads must never be pointed at the user's real ones.
 enum AppStorage {
+  @MainActor
+  static func makeCoordinator(options: LaunchOptions = .current) -> PadCoordinator {
+    let resolved = layout(options: options)
+    return PadCoordinator(
+      store: PadStore(layout: resolved), layout: resolved, launchOptions: options)
+  }
+
   static func makeStore(options: LaunchOptions = .current) -> PadStore {
     PadStore(layout: layout(options: options))
   }

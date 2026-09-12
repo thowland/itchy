@@ -32,6 +32,31 @@ extension PadStore {
     }
   }
 
+  /// On-disk size of every pad, which is what the menubar marks past the
+  /// threshold (`FR-5.9`).
+  ///
+  /// A directory size, not a content read: `FR-1.6` forbids reading content at
+  /// launch and this does not read any.
+  public func sizes() -> [PadID: Int] {
+    var result: [PadID: Int] = [:]
+    for id in order {
+      let bytes = (try? fileSystem.sizeOfItem(at: layout.directory(for: id))) ?? 0
+      result[id] = bytes
+    }
+    return result
+  }
+
+  /// Replaces a pad's content with nothing (`FR-2.6`).
+  ///
+  /// Emptying is staged like any other edit, so when the pad's panel is open the
+  /// text view's undo manager carries it and one undo restores the content
+  /// exactly, images included.
+  public func empty(_ id: PadID) async throws {
+    guard metadata[id] != nil else { throw PadStoreFault.unknownPad(id) }
+    await stage(PadContent.empty(), for: id, origin: .user)
+    try await flush(id)
+  }
+
   public func stage(_ content: PadContent, for id: PadID, origin: WriteOrigin) async {
     guard metadata[id] != nil else { return }
     cachedContent[id] = content

@@ -1,25 +1,6 @@
 import ItchyCore
 import SwiftUI
 
-/// A pad's contents and its status line.
-///
-/// This file is on the coverage exclusion list, so it may not branch — anything
-/// resembling a decision belongs in `StatusBarModel` or `PadTextCoordinator`.
-struct PadView: View {
-  let coordinator: PadTextCoordinator
-  let mode: PadMode
-  let initial: NSAttributedString
-  let segments: [StatusSegment]
-
-  var body: some View {
-    VStack(spacing: 0) {
-      PadTextEditor(coordinator: coordinator, mode: mode, initial: initial)
-      Divider()
-      PadStatusBar(segments: segments)
-    }
-  }
-}
-
 /// The pad's state, legible without opening settings or a menu (`FR-3.6`).
 struct PadStatusBar: View {
   let segments: [StatusSegment]

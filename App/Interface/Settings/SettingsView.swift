@@ -1,20 +1,83 @@
+import ItchyCore
 import SwiftUI
 
 /// Settings window.
 ///
-/// Sprint 0 ships the window and nothing in it. Later sprints extend this rather
-/// than restructure it: General in Sprint 4 and 5, Agents in Sprint 8, Models in
-/// Sprint 10 (specification §10). Validation and clamping belong in
-/// `SettingsModel`, not in this file.
+/// Later sprints extend this rather than restructure it: General and Editor are
+/// real now, Agents arrives in Sprint 8 and Models in Sprint 10
+/// (specification §10). Validation and clamping live in `SettingsModel`.
 struct SettingsView: View {
+  @Environment(PadCoordinator.self) private var coordinator
+
   var body: some View {
     TabView {
-      Text("Nothing to configure yet.")
-        .padding(40)
-        .tabItem {
-          Label("General", systemImage: "gearshape")
-        }
+      GeneralSettingsView()
+        .tabItem { Label("General", systemImage: "gearshape") }
+      EditorSettingsView()
+        .tabItem { Label("Editor", systemImage: "textformat") }
     }
-    .frame(width: 460, height: 260)
+    .environment(coordinator)
+    .frame(width: 480, height: 280)
+  }
+}
+
+struct GeneralSettingsView: View {
+  @Environment(PadCoordinator.self) private var coordinator
+
+  var body: some View {
+    Form {
+      Section {
+        Stepper(
+          value: Binding(
+            get: { coordinator.settings.padLimit },
+            set: { coordinator.setPadLimit($0) }),
+          in: SettingsModel.padCountRange
+        ) {
+          Text("Pads: \(coordinator.settings.padLimit)")
+        }
+        Text(SettingsModel.padCountCaption)
+          .font(.caption)
+          .foregroundStyle(.secondary)
+        LoweringNotice(
+          notice: SettingsModel.loweringNotice(
+            padCount: coordinator.settings.padLimit, existing: coordinator.pads.count))
+      }
+    }
+    .formStyle(.grouped)
+    .padding()
+  }
+}
+
+/// Shown only when lowering the count below the pads that exist (`FR-2.2`).
+struct LoweringNotice: View {
+  let notice: String?
+
+  var body: some View {
+    Text(notice ?? "")
+      .font(.caption)
+      .foregroundStyle(.orange)
+      .opacity(notice == nil ? 0 : 1)
+  }
+}
+
+struct EditorSettingsView: View {
+  @Environment(PadCoordinator.self) private var coordinator
+
+  var body: some View {
+    Form {
+      Picker(
+        "New pads start as",
+        selection: Binding(
+          get: { coordinator.settings.defaultMode },
+          set: { coordinator.setDefaultMode($0) })
+      ) {
+        ForEach(PadMode.allCases, id: \.self) { mode in
+          Text(SettingsModel.defaultModeLabel(mode)).tag(mode)
+        }
+      }
+      .pickerStyle(.inline)
+    }
+    .formStyle(.grouped)
+    .padding()
   }
 }

@@ -14,25 +14,35 @@ import SwiftUI
 final class PadCoordinator {
   private(set) var rows: [MenuRow] = []
   private(set) var pads: [PadMetadata] = []
+  private(set) var settings = AppSettings()
 
   @ObservationIgnored private let store: PadStore
   @ObservationIgnored private lazy var registry = PadWindowRegistry(store: store)
   @ObservationIgnored private var sizes: [PadID: Int] = [:]
   @ObservationIgnored private var editors: [PadID: PadTextCoordinator] = [:]
+  @ObservationIgnored private lazy var settingsStore = SettingsStore(layout: layout)
+  @ObservationIgnored private let layout: PadStorageLayout
 
   @ObservationIgnored private let launchOptions: LaunchOptions
 
-  init(store: PadStore, launchOptions: LaunchOptions = .current) {
+  init(
+    store: PadStore,
+    layout: PadStorageLayout,
+    launchOptions: LaunchOptions = .current
+  ) {
     self.store = store
+    self.layout = layout
     self.launchOptions = launchOptions
   }
 
   /// Reads the index and metadata, then starts observing. Content is not read
   /// (`FR-1.6`).
   func start() async {
-    await store.load(padLimit: PadBounds.defaultCount)
+    settings = settingsStore.load()
+    await store.load(padLimit: settings.padLimit)
     await refreshFaults()
     await refresh()
+    await reopenPinnedPads()
     if launchOptions.opensPadOnLaunch {
       await openFirstPadForTesting()
     }
@@ -62,8 +72,17 @@ final class PadCoordinator {
   func refresh() async {
     let pads = await store.pads
     let faults = await store.faults
+    self.sizes = await store.sizes()
     self.pads = pads
     self.rows = MenuModel.rows(pads: pads, faults: faults, sizes: sizes)
+  }
+
+  /// `FR-2.7`: a pinned pad's panel is present after relaunch, at its stored
+  /// frame — and without taking keyboard focus (D-14).
+  private func reopenPinnedPads() async {
+    for pad in pads where pad.isPinned {
+      await openPad(pad.id, makingKey: false)
+    }
   }
 
   func open(_ padID: PadID, makingKey: Bool = true) {
@@ -87,11 +106,12 @@ final class PadCoordinator {
 
     registry.show(
       pad,
-      content: PadView(
-        coordinator: editor,
-        mode: pad.mode,
+      content: PadPanelContent(
+        pad: pad,
+        editor: editor,
         initial: initial,
-        segments: StatusBarModel.segments(for: pad, fault: fault)),
+        fault: fault,
+        coordinator: self),
       makingKey: makingKey)
   }
 
@@ -123,9 +143,99 @@ final class PadCoordinator {
   func createPad() {
     Task { [weak self] in
       guard let self else { return }
-      _ = try? await self.store.createPad(name: nil)
+      let created = try? await self.store.createPad(name: nil)
+      if let created {
+        try? await self.store.setMode(created.id, to: self.settings.defaultMode)
+      }
       await self.refresh()
     }
+  }
+
+  func rename(_ padID: PadID, to name: String) {
+    Task { [weak self] in
+      guard let self else { return }
+      try? await self.store.rename(padID, to: name)
+      await self.refresh()
+    }
+  }
+
+  func setPinned(_ padID: PadID, _ pinned: Bool) {
+    Task { [weak self] in
+      guard let self else { return }
+      try? await self.store.setPinned(padID, pinned)
+      await self.refresh()
+    }
+  }
+
+  /// `FR-2.6`: deletion is the one destructive action, and the only place a
+  /// confirmation is shown. The dialogue is in `PadsWindowView`; this is what it
+  /// calls once the user has said yes.
+  func deletePad(_ padID: PadID) {
+    Task { [weak self] in
+      guard let self else { return }
+      self.registry.close(padID)
+      self.editors[padID] = nil
+      try? await self.store.deletePad(padID)
+      await self.refresh()
+    }
+  }
+
+  /// `FR-2.6`: emptying is a single action and, while the panel is open, one
+  /// undo restores the content exactly.
+  func emptyPad(_ padID: PadID) {
+    Task { [weak self] in
+      guard let self else { return }
+      guard let editor = self.editors[padID] else {
+        try? await self.store.empty(padID)
+        await self.refresh()
+        return
+      }
+      editor.apply(NSAttributedString(), actionName: "Empty Pad")
+    }
+  }
+
+  /// `FR-4.9`: copying a pad's entire contents as plain text is a single action.
+  func copyAsPlainText(_ padID: PadID) {
+    Task { [weak self] in
+      guard let self else { return }
+      guard let content = try? await self.store.content(of: padID) else { return }
+      NSPasteboard.general.clearContents()
+      NSPasteboard.general.setString(content.plainText, forType: .string)
+    }
+  }
+
+  func reorder(from source: IndexSet, to destination: Int) {
+    var order = pads.map(\.id)
+    order.move(fromOffsets: source, toOffset: destination)
+    Task { [weak self] in
+      guard let self else { return }
+      try? await self.store.reorder(to: order)
+      await self.refresh()
+    }
+  }
+
+  func setPadLimit(_ requested: Int) {
+    settings.padLimit = SettingsModel.clampPadCount(requested)
+    persistSettings()
+    Task { [weak self] in
+      guard let self else { return }
+      await self.store.setPadLimit(self.settings.padLimit)
+    }
+  }
+
+  func setDefaultMode(_ mode: PadMode) {
+    settings.defaultMode = mode
+    persistSettings()
+  }
+
+  private func persistSettings() {
+    try? settingsStore.save(settings)
+  }
+
+  /// Opens the pad's directory in Finder, which is what a faulted pad offers
+  /// instead of an editor (specification §6.7).
+  func revealInFinder(_ padID: PadID) {
+    NSWorkspace.shared.activateFileViewerSelecting([layout.directory(for: padID)])
   }
 
   func close(_ padID: PadID) {
@@ -159,6 +269,12 @@ final class PadCoordinator {
   }
 
   var openPanelCount: Int { registry.openCount }
+
+  /// The recorded fault for a pad, if any. Used by the panel to decide between
+  /// the editor and the fault view (specification §6.7).
+  func fault(for padID: PadID) async -> PadStoreFault? {
+    await store.fault(for: padID)
+  }
 
   private var cachedFaults: [PadID: PadStoreFault] = [:]
 
