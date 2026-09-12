@@ -34,7 +34,7 @@ The gate is not a quality claim. Eighty per cent line coverage says the lines ra
 
 ### 3.1 Toolchain
 
-Swift 6.3 with strict concurrency (D-1), Xcode for the app target, SwiftPM for `ItchyCore` and `ItchyServices` (D-2). Swift Testing for new tests, XCTest where the machinery requires it, XCUITest for the UI smoke suite (D-3).
+Swift 6.3 with strict concurrency (D-1), Xcode for the app target via a generated project (D-12), SwiftPM for `ItchyCore` and `ItchyServices` (D-2). Swift Testing for new tests, XCTest where the machinery requires it, XCUITest for the UI smoke suite (D-3).
 
 ### 3.2 Linting
 
@@ -91,7 +91,7 @@ The point of the sprint is that every subsequent gate is mechanical. Standing up
 
 **Scope.**
 
-1. Repository skeleton per specification §3: Xcode project, `ItchyCore` and `ItchyServices` packages, `Shim/`, `Harness/`, `Tests/`.
+1. Repository skeleton per specification §3: `ItchyCore` and `ItchyServices` packages, `App/`, `Shim/`, `Harness/`, `Tests/`, and `project.yml` from which the Xcode project is generated (D-12).
 2. `.swiftlint.yml`, `.swift-format`, `.gitignore`, `.editorconfig`.
 3. Swift Testing wired for both packages; XCTest and XCUITest targets present with one trivial test each, so that the harness is proven rather than assumed.
 4. `Scripts/coverage.sh` with the exclusion list, the scoped complexity configuration that governs it (§3.3), and `Scripts/arch-lint.sh` with the four checks of §3.4.

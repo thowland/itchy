@@ -41,21 +41,31 @@ for PKG in $PACKAGES; do
   fi
 done
 
-# The app target is measured through xcodebuild once an Xcode project exists.
-if [ -d "Itchy.xcodeproj" ] && [ "$PKG_DIR" = "Packages" ]; then
+# The app target is measured through xcodebuild. project.yml is the source of
+# truth and Itchy.xcodeproj is generated (D-12), so generate it if absent rather
+# than silently skipping the app target and reporting a partial figure as whole.
+if [ "$PKG_DIR" = "Packages" ]; then
+  if [ ! -d "Itchy.xcodeproj" ]; then
+    command -v xcodegen >/dev/null 2>&1 || {
+      echo "coverage: xcodegen not installed, cannot measure the app target" >&2
+      exit 1
+    }
+    xcodegen generate --quiet >/dev/null 2>&1
+  fi
   xcodebuild test -project Itchy.xcodeproj -scheme Itchy \
     -enableCodeCoverage YES -derivedDataPath "$LCOV_DIR/dd" >/dev/null 2>&1 || {
       echo "coverage: app target tests failed" >&2
       exit 1
     }
-  PROF=$(find "$LCOV_DIR/dd" -name '*.profdata' | head -1)
-  APP=$(find "$LCOV_DIR/dd" -name 'Itchy' -type f -perm +111 | head -1)
+  PROF=$(find "$LCOV_DIR/dd" -name 'Coverage.profdata' 2>/dev/null | head -1)
+  APP=$(find "$LCOV_DIR/dd" -path '*Itchy.app/Contents/MacOS/Itchy' -type f 2>/dev/null | head -1)
   if [ -n "$PROF" ] && [ -n "$APP" ]; then
     xcrun llvm-cov export -format=lcov -instr-profile "$PROF" "$APP" \
       > "$LCOV_DIR/App.lcov" 2>/dev/null
+  else
+    echo "coverage: could not locate app coverage data" >&2
+    exit 1
   fi
-elif [ "$PKG_DIR" = "Packages" ]; then
-  echo "coverage: no Xcode project yet; measuring packages only"
 fi
 
 python3 - "$LCOV_DIR" "$MIN" "$EXCLUSIONS" <<'PY'

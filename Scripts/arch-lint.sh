@@ -62,6 +62,12 @@ fi
 # the exclusion list is linted under a configuration that permits no branching.
 EXCLUDED_FILES=()
 SECTION=""
+# The exclusion patterns are written against absolute-style paths, because that
+# is what lcov reports and what Scripts/coverage.sh matches. Candidates are
+# therefore tested with a leading slash so that both tools apply the same
+# patterns to the same files; without this the two silently diverge, which is
+# the exact failure this check exists to prevent.
+ALL_SWIFT=$(find App Packages Shim Harness -name '*.swift' 2>/dev/null | grep -v '/\.build/' || true)
 while IFS= read -r line; do
   case "$line" in
     '[capped]')     SECTION="capped"; continue ;;
@@ -69,10 +75,12 @@ while IFS= read -r line; do
     ''|'#'*)        continue ;;
   esac
   [ "$SECTION" = "capped" ] || continue
-  while IFS= read -r f; do
-    [ -n "$f" ] && EXCLUDED_FILES+=("$f")
-  done < <(find App Packages Shim Harness -name '*.swift' 2>/dev/null \
-             | grep -v '/\.build/' | grep -E "$line" || true)
+  while IFS= read -r rel; do
+    [ -n "$rel" ] || continue
+    if printf '/%s\n' "$rel" | grep -qE "$line"; then
+      EXCLUDED_FILES+=("$rel")
+    fi
+  done <<< "$ALL_SWIFT"
 done < Scripts/coverage-exclusions.txt
 
 if [ ${#EXCLUDED_FILES[@]} -eq 0 ]; then
@@ -86,7 +94,7 @@ else
     fail "coverage-excluded files contain branching (D-11, §15.3)"
     echo "$OUT" | sed 's/^/       /'
   else
-    pass "complexity cap holds over ${#EXCLUDED_FILES[@]} capped file(s)"
+    pass "complexity cap holds over ${#EXCLUDED_FILES[@]} capped file(s): ${EXCLUDED_FILES[*]}"
   fi
 fi
 

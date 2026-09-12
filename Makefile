@@ -5,8 +5,9 @@ SHELL := /bin/bash
 SWIFTLINT := swiftlint
 SWIFTFORMAT := xcrun swift-format
 PACKAGES := Packages/ItchyCore Packages/ItchyServices
+DD := .build/DerivedData
 
-.PHONY: help gate test lint format arch-lint coverage verify-gate app notarise dmg clean
+.PHONY: help gate project test lint format arch-lint coverage verify-gate app notarise dmg clean open
 
 help: ## Show this help
 	@grep -E '^[a-z-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -17,11 +18,21 @@ gate: lint arch-lint test coverage ## Run the full sprint exit gate (G1-G3)
 	@echo "Gate: G1 lint, G2 tests, G3 coverage — all green."
 	@echo "G4 (acceptance criteria demonstrated) is not automatable; see the plan."
 
-test: ## Run all tests
+project: ## Regenerate Itchy.xcodeproj from project.yml (D-12)
+	@command -v xcodegen >/dev/null || { echo "xcodegen not installed: brew install xcodegen"; exit 1; }
+	@xcodegen generate --quiet && echo "project: generated"
+
+open: project ## Regenerate and open in Xcode
+	@open Itchy.xcodeproj
+
+test: project ## Run all tests (packages and app target)
 	@for p in $(PACKAGES); do \
 	  echo "==> $$p"; \
 	  ( cd $$p && swift test ) || exit 1; \
 	done
+	@echo "==> app target"
+	@set -o pipefail; xcodebuild test -project Itchy.xcodeproj -scheme Itchy \
+	  -derivedDataPath $(DD) -quiet 2>&1 | grep -vE "^$$" | tail -5
 
 lint: ## Lint and check formatting (G1)
 	@$(SWIFTLINT) lint --quiet --strict
@@ -36,16 +47,15 @@ format: ## Apply formatting in place
 arch-lint: ## Check the four architectural invariants
 	@./Scripts/arch-lint.sh
 
-coverage: ## Measure coverage against the 80% floor (G3)
+coverage: project ## Measure coverage against the 80% floor (G3)
 	@./Scripts/coverage.sh
 
 verify-gate: ## Prove the gates fail when they should
 	@./Scripts/verify-gates.sh
 
-app: ## Build the application bundle
-	@test -d Itchy.xcodeproj || { \
-	  echo "No Itchy.xcodeproj yet — see docs/decisions/D-12-xcode-project.md"; exit 1; }
-	@xcodebuild -project Itchy.xcodeproj -scheme Itchy -configuration Release build
+app: project ## Build the application bundle
+	@xcodebuild -project Itchy.xcodeproj -scheme Itchy -configuration Release \
+	  -derivedDataPath $(DD) build -quiet && echo "app: built"
 
 notarise: app ## Sign, notarise and staple
 	@echo "Not implemented until Sprint 5 (NFR-4.2)."; exit 1
@@ -53,6 +63,6 @@ notarise: app ## Sign, notarise and staple
 dmg: notarise ## Package a signed DMG
 	@echo "Not implemented until Sprint 5."; exit 1
 
-clean: ## Remove build products
-	@rm -rf .build Packages/*/.build Tests/Fixtures/*/.build DerivedData
+clean: ## Remove build products and the generated project
+	@rm -rf .build Packages/*/.build Tests/Fixtures/*/.build $(DD) Itchy.xcodeproj
 	@echo "clean: done"

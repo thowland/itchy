@@ -1,0 +1,110 @@
+# Xcode project definition (D-12).
+#
+# Itchy.xcodeproj is generated from this file and is never committed: a pbxproj
+# is opaque, merge-hostile, and reviewable only by running it. This file is the
+# source of truth for the app target, and `make project` regenerates from it.
+#
+# Info.plist is generated from the properties below rather than hand-maintained,
+# so that the bundle identifier, the deployment floor and LSUIElement have one
+# definition each.
+
+name: Itchy
+
+options:
+  bundleIdPrefix: com.wdogsystems
+  deploymentTarget:
+    macOS: "26.0"
+  createIntermediateGroups: true
+  groupSortPosition: top
+  generateEmptyDirectories: false
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    # Real signing and the hardened runtime arrive in Sprint 5 (NFR-4.2).
+    # Ad-hoc signing keeps the build working until then.
+    CODE_SIGN_IDENTITY: "-"
+    CODE_SIGN_STYLE: Automatic
+    ENABLE_HARDENED_RUNTIME: NO
+    ENABLE_USER_SCRIPT_SANDBOXING: NO
+
+packages:
+  ItchyCore:
+    path: Packages/ItchyCore
+  ItchyServices:
+    path: Packages/ItchyServices
+
+targets:
+  Itchy:
+    type: application
+    platform: macOS
+    sources:
+      - path: App
+    dependencies:
+      - package: ItchyCore
+        product: ItchyCore
+      - package: ItchyServices
+        product: ItchyServices
+    info:
+      path: App/Info.plist
+      properties:
+        # Accessory application: no Dock icon, no application window (FR-1.1).
+        LSUIElement: true
+        CFBundleName: Itchy
+        CFBundleDisplayName: Itchy
+        CFBundlePackageType: APPL
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        LSMinimumSystemVersion: $(MACOSX_DEPLOYMENT_TARGET)
+        NSHumanReadableCopyright: Copyright © 2026 Tim Howland. All rights reserved.
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.wdogsystems.itchy
+        PRODUCT_NAME: Itchy
+
+  ItchyTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: Tests/ItchyTests
+    dependencies:
+      - target: Itchy
+    settings:
+      base:
+        # Test bundles need a plist to be signed; there is nothing worth
+        # hand-maintaining in one, so Xcode generates it.
+        GENERATE_INFOPLIST_FILE: YES
+        BUNDLE_LOADER: $(TEST_HOST)
+        TEST_HOST: $(BUILT_PRODUCTS_DIR)/Itchy.app/Contents/MacOS/Itchy
+
+  ItchyUITests:
+    type: bundle.ui-testing
+    platform: macOS
+    sources:
+      - path: Tests/ItchyUITests
+    dependencies:
+      - target: Itchy
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: Itchy
+
+schemes:
+  Itchy:
+    build:
+      targets:
+        Itchy: all
+        ItchyTests: [test]
+        ItchyUITests: [test]
+    test:
+      gatherCoverageData: true
+      coverageTargets:
+        - Itchy
+      targets:
+        - ItchyTests
+        - ItchyUITests
+    run:
+      config: Debug

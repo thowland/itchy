@@ -22,3 +22,9 @@ contradicts the specification updates the specification in the same commit.
 | D-9 | Undo lives on the text view; the store defers to it |
 | D-10 | Spotlight exclusion by `.metadata_never_index` |
 | D-11 | Decisions live in value-typed code; view files translate and apply |
+
+New decisions:
+
+| # | Decision |
+|---|---|
+| [D-12](D-12-xcode-project.md) | The Xcode project is generated from a checked-in `project.yml`; `Itchy.xcodeproj` is not committed |

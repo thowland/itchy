@@ -51,11 +51,28 @@ No sprint exits until all four hold, and they are cumulative — earlier sprints
 
 An obsolete test may be deleted, recorded with the requirement that changed — but never in a way that drops coverage below the floor.
 
+## Commands
+
+```
+make gate        # the sprint exit gate: lint, arch-lint, test, coverage (G1-G3)
+make open        # regenerate Itchy.xcodeproj and open it in Xcode
+make test        # packages and app target
+make coverage    # coverage against the 80% floor; COVERAGE_REPORT=1 for per-file
+make verify-gate # prove the gates fail when they should
+make format      # apply swift-format in place
+```
+
+`Itchy.xcodeproj` is generated from `project.yml` and is not committed (D-12).
+`make project` regenerates it, and `test`, `coverage` and `app` do so first.
+A file created in the editor is picked up on the next generate; adding it inside
+Xcode does not add it to `project.yml`.
+
 ## Conventions
 
 - Swift 6.3, strict concurrency from the first commit (D-1). The store is an actor; the view layer is `@MainActor`.
 - `swiftlint` from Homebrew; `swift-format` from the Xcode toolchain via `xcrun swift-format`, never from Homebrew (D-1).
 - Swift Testing for new tests; XCTest only where its machinery is required; XCUITest for the UI smoke suite.
+- `xcodegen` from Homebrew generates the project (D-12). It is a development tool, not a shipped dependency, so it sits outside D-4.
 - No third-party dependencies in R1 or R2 (D-4). The question reopens at R3 for the MCP stack only (D-5).
 - Documents are written in British spelling and in continuous prose with reasoning attached. A decision recorded without its reasoning cannot be reversed safely later.
 - A decision taken during implementation goes in `docs/decisions/`, numbered from D-12. If it contradicts the specification, update the specification in the same commit.

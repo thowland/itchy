@@ -14,8 +14,11 @@ jobs:
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode.app
 
-      - name: Install SwiftLint
-        run: brew install swiftlint
+      - name: Install tools
+        run: brew install swiftlint xcodegen
+
+      - name: Generate the Xcode project (D-12)
+        run: make project
 
       - name: Lint (G1)
         run: make lint
