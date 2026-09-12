@@ -60,6 +60,7 @@ struct PadRowView: View {
       }
       .buttonStyle(.borderless)
       .help("Pinned pads reopen at launch")
+      .accessibilityLabel(pad.isPinned ? "Unpin \(pad.name)" : "Pin \(pad.name)")
 
       TextField(
         "Name",
@@ -68,6 +69,7 @@ struct PadRowView: View {
           set: { coordinator.rename(pad.id, to: $0) })
       )
       .textFieldStyle(.plain)
+      .accessibilityLabel("Pad name")
 
       Picker(
         "",
@@ -81,6 +83,7 @@ struct PadRowView: View {
       }
       .labelsHidden()
       .frame(width: 90)
+      .accessibilityLabel("Mode for \(pad.name)")
     }
     .padding(.vertical, 2)
   }
@@ -95,9 +98,11 @@ struct PadsToolbar: View {
     HStack {
       Button(action: onCreate) { Image(systemName: "plus") }
         .help("New pad")
+        .accessibilityLabel("New pad")
       Button(action: onDelete) { Image(systemName: "minus") }
         .disabled(selection == nil)
         .help("Delete pad")
+        .accessibilityLabel("Delete selected pad")
       Spacer()
     }
     .buttonStyle(.borderless)

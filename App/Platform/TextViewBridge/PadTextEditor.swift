@@ -23,6 +23,7 @@ struct PadTextEditor: NSViewRepresentable {
     // wrapper, because that is the element carrying the accessibility value the
     // UI suite reads.
     textView.setAccessibilityIdentifier("pad.editor")
+    textView.setAccessibilityLabel("Pad contents")
     coordinator.attach(textView)
     return scrollView
   }

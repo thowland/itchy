@@ -15,20 +15,28 @@ public struct AppSettings: Sendable, Codable, Equatable {
   /// The mode a newly created pad starts in (`FR-2.8`).
   public var defaultMode: PadMode
 
-  /// R1, Sprint 5. Present from here so the settings file does not need a
-  /// migration the moment the login item arrives.
   public var launchesAtLogin: Bool
+
+  /// The global hotkey, stored as a key code and a Carbon modifier mask
+  /// (`FR-1.4`, D-6). Held as opaque numbers here so that the core needs no
+  /// Carbon dependency.
+  public var hotKeyCode: UInt32
+  public var hotKeyModifiers: UInt32
 
   public init(
     schemaVersion: Int = ItchyCore.schemaVersion,
     padLimit: Int = PadBounds.defaultCount,
     defaultMode: PadMode = .styled,
-    launchesAtLogin: Bool = true
+    launchesAtLogin: Bool = true,
+    hotKeyCode: UInt32 = 49,
+    hotKeyModifiers: UInt32 = 0x1000 | 0x0800
   ) {
     self.schemaVersion = schemaVersion
     self.padLimit = padLimit
     self.defaultMode = defaultMode
     self.launchesAtLogin = launchesAtLogin
+    self.hotKeyCode = hotKeyCode
+    self.hotKeyModifiers = hotKeyModifiers
   }
 
   /// Returns settings with every value forced into its permitted range.
@@ -36,6 +44,32 @@ public struct AppSettings: Sendable, Codable, Equatable {
   /// `FR-2.1`'s acceptance criterion specifically includes a hand-edited stored
   /// value above the ceiling, so this runs on the read path and the result is
   /// written back.
+  /// Decodes tolerantly: any field absent from the file takes its default.
+  ///
+  /// Synthesised decoding treats a missing key as a hard failure, which means
+  /// adding a property silently discards every existing user's settings —
+  /// `SettingsStore.load` falls back to defaults and the file is rewritten
+  /// without their choices. That happened once, when the hotkey fields were
+  /// added in Sprint 5, and this is the fix. Pad metadata has the equivalent
+  /// protection through `PreservingCodec` (`FR-5.7`); settings needed its own.
+  public init(from decoder: any Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    let fallback = AppSettings()
+    schemaVersion =
+      try container.decodeIfPresent(Int.self, forKey: .schemaVersion) ?? fallback.schemaVersion
+    padLimit = try container.decodeIfPresent(Int.self, forKey: .padLimit) ?? fallback.padLimit
+    defaultMode =
+      try container.decodeIfPresent(PadMode.self, forKey: .defaultMode) ?? fallback.defaultMode
+    launchesAtLogin =
+      try container.decodeIfPresent(Bool.self, forKey: .launchesAtLogin)
+      ?? fallback.launchesAtLogin
+    hotKeyCode =
+      try container.decodeIfPresent(UInt32.self, forKey: .hotKeyCode) ?? fallback.hotKeyCode
+    hotKeyModifiers =
+      try container.decodeIfPresent(UInt32.self, forKey: .hotKeyModifiers)
+      ?? fallback.hotKeyModifiers
+  }
+
   public func clamped() -> AppSettings {
     var result = self
     result.padLimit = PadBounds.clamp(padLimit)

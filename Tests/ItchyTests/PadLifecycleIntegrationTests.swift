@@ -22,15 +22,17 @@ struct PadLifecycleIntegrationTests {
   /// Waits for the coordinator's fire-and-forget work to settle.
   ///
   /// Its mutators return immediately so the interface never blocks; tests need
-  /// the state that follows, so they wait on the observable rather than sleeping.
+  /// the state that follows. Failing at the boundary rather than returning
+  /// quietly means a hang reports itself instead of surfacing as whichever
+  /// assertion runs next (`TestTiming`).
   private func settle(
     _ coordinator: PadCoordinator,
-    until condition: @escaping @MainActor () -> Bool
+    until condition: @escaping @MainActor () -> Bool,
+    sourceLocation: SourceLocation = #_sourceLocation
   ) async {
-    for _ in 0..<200 {
-      if condition() { return }
-      try? await Task.sleep(for: .milliseconds(5))
-    }
+    await expect(
+      "the coordinator to reach the expected state",
+      toBecomeTrue: condition, sourceLocation: sourceLocation)
   }
 
   @Test("A created pad takes the configured default mode (FR-2.8)")

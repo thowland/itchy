@@ -24,12 +24,22 @@ settings:
     SWIFT_STRICT_CONCURRENCY: complete
     MARKETING_VERSION: "0.1.0"
     CURRENT_PROJECT_VERSION: "1"
-    # Real signing and the hardened runtime arrive in Sprint 5 (NFR-4.2).
-    # Ad-hoc signing keeps the build working until then.
+    # Ad-hoc by default so a clone builds and tests without a certificate.
+    # `make release` overrides both for a distributable build (NFR-4.2).
     CODE_SIGN_IDENTITY: "-"
-    CODE_SIGN_STYLE: Automatic
-    ENABLE_HARDENED_RUNTIME: NO
+    CODE_SIGN_STYLE: Manual
+    CODE_SIGN_ENTITLEMENTS: App/Itchy.entitlements
     ENABLE_USER_SCRIPT_SANDBOXING: NO
+  configs:
+    Debug:
+      # The hardened runtime refuses to load a test bundle signed with a
+      # different team, which is every ad-hoc signed XCTest bundle. It is a
+      # release property, so it belongs in the release configuration.
+      ENABLE_HARDENED_RUNTIME: NO
+    Release:
+      # Required for notarisation, and compatible with running unsandboxed
+      # (NFR-4.2, CON-6).
+      ENABLE_HARDENED_RUNTIME: YES
 
 packages:
   ItchyCore:

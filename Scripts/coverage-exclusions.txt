@@ -36,5 +36,9 @@
 # and the decisions they would otherwise make live in PadTextCoordinator seams.
 /App/Platform/TextViewBridge/PadTextEditor\.swift$
 
+# (The hot-key recorder needs no entry of its own: the pattern above already
+# matches App/Interface/Settings/HotKeyRecorderView.swift. Its rules live in
+# HotKeyCapture, which is covered.)
+
 # Application lifecycle stub: @main, activation policy, delegate wiring.
 /App/ItchyApp\.swift$

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- No App Sandbox (CON-6). The sandbox would complicate the loopback
+	     server, the Keychain-held token and any future local process
+	     invocation, and buys nothing given that distribution is direct. -->
+	<!-- The hardened runtime is required for notarisation and is compatible
+	     with running unsandboxed (NFR-4.2). Nothing below relaxes it; the
+	     entitlements file exists so that additions are deliberate. -->
+</dict>
+</plist>

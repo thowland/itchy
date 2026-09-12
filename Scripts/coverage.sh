@@ -48,14 +48,17 @@ done
 # unmeasured rather than failing. xccov reads the same run's result bundle and
 # gives per-file covered/executable counts, which is what the denominator needs.
 if [ "$PKG_DIR" = "Packages" ]; then
-  if [ ! -d "Itchy.xcodeproj" ]; then
+  # Only when project.yml is newer: regenerating rewrites the project file and
+  # forces a full rebuild, which would be most of what a coverage run spends.
+  if [ ! -d "Itchy.xcodeproj" ] || [ project.yml -nt Itchy.xcodeproj ]; then
     command -v xcodegen >/dev/null 2>&1 || {
       echo "coverage: xcodegen not installed, cannot measure the app target" >&2
       exit 1
     }
-    xcodegen generate --quiet >/dev/null 2>&1
+    xcodegen generate --quiet >/dev/null 2>&1 && touch Itchy.xcodeproj
   fi
   xcodebuild test -project Itchy.xcodeproj -scheme Itchy \
+    -destination "platform=macOS,arch=$(uname -m)" \
     -enableCodeCoverage YES -derivedDataPath "$LCOV_DIR/dd" >/dev/null 2>&1 || {
       echo "coverage: app target tests failed" >&2
       exit 1

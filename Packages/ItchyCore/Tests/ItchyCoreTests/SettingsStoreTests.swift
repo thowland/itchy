@@ -92,3 +92,46 @@ struct SettingsStoreTests {
     #expect(settings.needsRewrite == expected)
   }
 }
+
+@Suite("Settings forward compatibility")
+struct SettingsCompatibilityTests {
+  /// Adding a property must not discard an existing user's settings.
+  ///
+  /// Synthesised decoding treats a missing key as a hard failure, so before the
+  /// tolerant decoder a settings file written by an earlier build failed to
+  /// decode entirely — and `load()` quietly returned defaults, losing the pad
+  /// limit and the default mode the user had chosen.
+  @Test("A settings file predating a new property keeps the values it does have")
+  func missingFieldsTakeDefaults() throws {
+    let root = TemporaryRoot()
+    let older = """
+      {"schemaVersion":1,"padLimit":12,"defaultMode":"plain","launchesAtLogin":false}
+      """
+    try Data(older.utf8).write(to: root.layout.settingsFile)
+
+    let loaded = SettingsStore(layout: root.layout).load()
+
+    #expect(loaded.padLimit == 12, "the user's choice must survive")
+    #expect(loaded.defaultMode == .plain)
+    #expect(!loaded.launchesAtLogin)
+    #expect(loaded.hotKeyCode == AppSettings().hotKeyCode, "the new field takes its default")
+  }
+
+  @Test("A settings file with only a schema version still loads")
+  func almostEmptyFile() throws {
+    let root = TemporaryRoot()
+    try Data(#"{"schemaVersion":1}"#.utf8).write(to: root.layout.settingsFile)
+    #expect(SettingsStore(layout: root.layout).load() == AppSettings())
+  }
+
+  @Test("An unknown future field does not prevent loading")
+  func unknownField() throws {
+    let root = TemporaryRoot()
+    let newer = """
+      {"schemaVersion":1,"padLimit":7,"defaultMode":"styled","launchesAtLogin":true,
+       "hotKeyCode":49,"hotKeyModifiers":6144,"somethingFromLater":true}
+      """
+    try Data(newer.utf8).write(to: root.layout.settingsFile)
+    #expect(SettingsStore(layout: root.layout).load().padLimit == 7)
+  }
+}

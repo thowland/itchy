@@ -23,9 +23,29 @@ struct SettingsView: View {
 
 struct GeneralSettingsView: View {
   @Environment(PadCoordinator.self) private var coordinator
+  @State private var isRecordingHotKey = false
 
   var body: some View {
     Form {
+      Section {
+        Toggle(
+          "Start Itchy at login",
+          isOn: Binding(
+            get: { coordinator.settings.launchesAtLogin },
+            set: { coordinator.setLaunchesAtLogin($0) }))
+
+        LabeledContent("Global hotkey") {
+          HotKeyRecorderView(
+            binding: Binding(
+              get: { coordinator.hotKeyBinding },
+              set: { coordinator.setHotKeyBinding($0) }),
+            isRecording: $isRecordingHotKey
+          )
+          .frame(width: 160, height: 24)
+        }
+        HotKeyStatus(isRegistered: coordinator.isHotKeyRegistered)
+      }
+
       Section {
         Stepper(
           value: Binding(
@@ -45,6 +65,27 @@ struct GeneralSettingsView: View {
     }
     .formStyle(.grouped)
     .padding()
+  }
+}
+
+/// Says so when the hotkey could not be registered, which usually means another
+/// application already holds the combination.
+struct HotKeyStatus: View {
+  let isRegistered: Bool
+
+  var body: some View {
+    Text(HotKeyStatusText.text(isRegistered: isRegistered))
+      .font(.caption)
+      .foregroundStyle(isRegistered ? AnyShapeStyle(.secondary) : AnyShapeStyle(.orange))
+  }
+}
+
+/// The wording, out of the view body (D-11).
+enum HotKeyStatusText {
+  static func text(isRegistered: Bool) -> String {
+    isRegistered
+      ? "Opens the pad you used last, from anywhere."
+      : "This combination is already taken by another application. Try a different one."
   }
 }
 

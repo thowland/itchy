@@ -14,13 +14,18 @@ import SwiftUI
 final class PadCoordinator {
   private(set) var rows: [MenuRow] = []
   private(set) var pads: [PadMetadata] = []
-  private(set) var settings = AppSettings()
+  /// Not `private(set)`: the hotkey and login-item extension in
+  /// PadCoordinator+HotKey.swift writes to it, and Swift's access control does
+  /// not reach across files for a setter.
+  internal var settings = AppSettings()
 
   @ObservationIgnored private let store: PadStore
-  @ObservationIgnored private lazy var registry = PadWindowRegistry(store: store)
+  @ObservationIgnored internal lazy var registry = PadWindowRegistry(store: store)
   @ObservationIgnored private var sizes: [PadID: Int] = [:]
   @ObservationIgnored private var editors: [PadID: PadTextCoordinator] = [:]
   @ObservationIgnored private lazy var settingsStore = SettingsStore(layout: layout)
+  @ObservationIgnored internal let hotKey = GlobalHotKey()
+  @ObservationIgnored internal let signposter = LaunchSignposter()
   @ObservationIgnored private let layout: PadStorageLayout
 
   @ObservationIgnored private let launchOptions: LaunchOptions
@@ -38,10 +43,14 @@ final class PadCoordinator {
   /// Reads the index and metadata, then starts observing. Content is not read
   /// (`FR-1.6`).
   func start() async {
+    let launch = signposter.beginLaunch()
     settings = settingsStore.load()
+    registerHotKey()
+    reconcileLoginItem()
     await store.load(padLimit: settings.padLimit)
     await refreshFaults()
     await refresh()
+    signposter.endLaunch(launch)
     await reopenPinnedPads()
     if launchOptions.opensPadOnLaunch {
       await openFirstPadForTesting()
@@ -73,6 +82,7 @@ final class PadCoordinator {
     let pads = await store.pads
     let faults = await store.faults
     self.sizes = await store.sizes()
+    self.lastOpenedPad = await store.lastOpenedPad
     self.pads = pads
     self.rows = MenuModel.rows(pads: pads, faults: faults, sizes: sizes)
   }
@@ -228,7 +238,16 @@ final class PadCoordinator {
     persistSettings()
   }
 
-  private func persistSettings() {
+  /// The pad the hotkey would target, exposed so the store's record and the
+  /// interface agree about it.
+  /// The pad the hotkey would target. Read by the hotkey extension.
+  @ObservationIgnored internal var lastOpenedPad: PadID?
+
+  func refreshLastOpened() async {
+    lastOpenedPad = await store.lastOpenedPad
+  }
+
+  internal func persistSettings() {
     try? settingsStore.save(settings)
   }
 

@@ -62,6 +62,14 @@ final class PadWindowRegistry {
     return controller.isVisible && controller.isKey
   }
 
+  /// The pad whose panel is frontmost and holds keyboard focus, if any.
+  ///
+  /// What `FR-1.4`'s toggle turns on, and the reason `HotKeyAction.decide` takes
+  /// it as a value rather than reaching for the window server itself.
+  func frontmostKeyPad() -> PadID? {
+    controllers.first { $0.value.isVisible && $0.value.isKey }?.key
+  }
+
   private func observeClosure(of controller: PadWindowController) {
     NotificationCenter.default.addObserver(
       forName: NSWindow.willCloseNotification,

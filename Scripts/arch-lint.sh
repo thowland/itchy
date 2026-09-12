@@ -90,13 +90,23 @@ while IFS= read -r line; do
   done <<< "$ALL_SWIFT"
 done < Scripts/coverage-exclusions.txt
 
+# Two patterns can match one file. Passing it to swiftlint twice makes
+# sourcekit complain about reopening the document, which is noise rather than a
+# violation — and noise this check would otherwise report as a failure.
+if [ ${#EXCLUDED_FILES[@]} -gt 0 ]; then
+  IFS=$'\n' read -r -d '' -a EXCLUDED_FILES < <(
+    printf '%s\n' "${EXCLUDED_FILES[@]}" | sort -u && printf '\0')
+fi
+
 if [ ${#EXCLUDED_FILES[@]} -eq 0 ]; then
   pass "complexity cap: no capped source files present yet"
 elif ! command -v swiftlint >/dev/null 2>&1; then
   fail "swiftlint not installed; cannot verify the complexity cap"
 else
+  # Only actual violations count; swiftlint writes sourcekit diagnostics to the
+  # same stream.
   OUT=$(swiftlint lint --quiet --strict --config Scripts/swiftlint-excluded.yml \
-          "${EXCLUDED_FILES[@]}" 2>&1)
+          "${EXCLUDED_FILES[@]}" 2>&1 | grep -E "error:|warning:" | grep -v "^sourcekit")
   if [ -n "$OUT" ]; then
     fail "coverage-excluded files contain branching (D-11, §15.3)"
     echo "$OUT" | sed 's/^/       /'

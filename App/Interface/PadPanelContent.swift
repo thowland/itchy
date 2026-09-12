@@ -76,6 +76,7 @@ struct PadActionsMenu: View {
     .fixedSize()
     .padding(.trailing, 8)
     .accessibilityIdentifier("pad.actions")
+    .accessibilityLabel("Actions for \(pad.name)")
   }
 }
 

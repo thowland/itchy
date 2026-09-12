@@ -27,5 +27,7 @@ struct FaultedPadView: View {
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .padding(24)
     .accessibilityIdentifier("pad.fault")
+    .accessibilityElement(children: .contain)
+    .accessibilityLabel(presentation.headline)
   }
 }
