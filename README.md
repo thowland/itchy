@@ -5,375 +5,107 @@ window you can summon over whatever you are working in, type or paste into, and
 close without being asked to name or file anything. Content stays until you
 remove it.
 
-The differentiating idea is that pads are eventually addressable by software
-agents over the Model Context Protocol — a surface both you and a coding agent
-can read from and write to. That arrives in a later release; see
-[docs/itchy-vision.md](docs/itchy-vision.md) for why it is the point.
-
 <p align="center">
   <img src="docs/images/pad-panel.png" width="420" alt="A pad panel holding a tracking number, a JSON fragment and a note">
 </p>
 
-On first launch it says once where to look, because an application with no Dock
-icon and no window otherwise appears not to have started at all:
+> **Status: early, and not yet signed for distribution.** Version 0.1.x is in
+> daily use by its author. There is no notarised release yet, so for now Itchy
+> is built from source. The agent integration described below has not been built.
 
-<p align="center">
-  <img src="docs/images/welcome.png" width="380" alt="The first-run window explaining that Itchy runs from the menubar">
-</p>
+## What it does
 
-A pad floats over other applications without bringing Itchy forward, and its
-status line shows the pad's name and mode. The menubar item is a cat:
+- **A handful of pads, one click away.** Nine by default, never more than twenty,
+  listed under the cat in the menubar.
+- **Pads float.** A pad opens over whatever you are doing, including fullscreen
+  applications, and stays where you put it.
+- **One hotkey.** ⌃⌥Space brings back the pad you used last, from anywhere.
+  Press it again to put the pad away.
+- **Styled text and pictures, or plain text.** Paste from a browser or a word
+  processor and the formatting survives, screenshots included. Switch a pad to
+  plain mode for code and JSON, where smart quotes are never welcome.
+- **Nothing to save.** No titles, folders or save prompts. Close a pad and it is
+  still there next time. Name a pad only if you want to.
+- **Backups you control.** A copy is kept when something has changed, as many as
+  you choose, and zero is one of the choices.
+- **Your files, readable.** Pads are plain files on your Mac, kept out of
+  Spotlight, and Itchy makes no network connections.
 
-<p align="center">
-  <img src="docs/images/menubar-icon.png" height="26" alt="The Itchy menubar icon">
-  &nbsp;&nbsp;&nbsp;
-  <img src="docs/images/app-icon.png" height="64" alt="The Itchy application icon">
-</p>
+## What it will not become
 
-A pad whose content cannot be read opens onto the fault rather than onto an
-empty editor. That is deliberate: an empty editor over unreadable content would
-destroy it on the next save.
+Itchy is for content that is passing through: a tracking number, a failing
+request's JSON, a paragraph still being argued over. It is not a note-taking
+application and will not grow into one. There is no document library, no
+folders, no tags and no search across everything, because the whole collection
+fits in a glance.
 
-<p align="center">
-  <img src="docs/images/pad-faulted.png" width="420" alt="A pad reporting that its content is missing, offering Reveal in Finder">
-</p>
+The longer-term idea is that pads become a surface both you and a coding agent
+can read and write, over the Model Context Protocol. That is the reason the
+project exists, and [the vision document](docs/itchy-vision.md) explains why.
 
-## Requirements
+## Installing
+
+There is no signed download yet. Build it from source:
+
+```bash
+brew install swiftlint xcodegen
+git clone <repository> itchy && cd itchy
+make app
+```
+
+Then drag `build/Itchy.app` into `/Applications` and open it. Itchy has no Dock
+icon and no main window; look for the cat in the menubar. It only offers to start
+at login when it runs from `/Applications`.
+
+The [user guide](docs/user-guide.md) covers everything from there.
+
+## Building from source
 
 | | |
 |---|---|
-| macOS | 26 or later. There is no back-compatibility story and there will not be one |
-| Xcode | 26 or later, for the toolchain and for `swift-format` |
-| SwiftLint | `brew install swiftlint` |
-| XcodeGen | `brew install xcodegen` |
-
-`swift-format` comes from the Xcode toolchain and is invoked as
-`xcrun swift-format`. Do not install it from Homebrew: a separately installed
-formatter drifts from the compiler that builds the code.
-
-## Building
+| macOS | 26 or later |
+| Xcode | 26 or later, which also provides `swift-format` |
+| SwiftLint, XcodeGen | `brew install swiftlint xcodegen` |
 
 ```bash
-git clone <repository> itchy && cd itchy
-make open        # generates Itchy.xcodeproj and opens it in Xcode
+make open        # generate the Xcode project and open it
+make run         # build and launch
+make test        # the test suite, without the UI tests
+make gate        # lint, architecture checks, tests and coverage
+make help        # everything else
 ```
 
-`Itchy.xcodeproj` is generated from `project.yml` and is not committed. Files
-you create on disk are picked up on the next generate; adding a file inside
-Xcode does not add it to `project.yml`. See
-[docs/decisions/D-12-xcode-project.md](docs/decisions/D-12-xcode-project.md).
-
-```bash
-make app         # build the application bundle into ./build
-make run         # build and launch it
-make reveal      # build and show it in Finder
-make package     # build a DMG into ./build
-make test        # everything, with hard time limits
-make gate        # the full sprint exit gate: lint, architecture, tests, coverage
-make help        # every target
-```
-
-`make app` leaves the bundle at `build/Itchy.app` and prints the path. Xcode's
-own build products live under `.build/`, which Finder hides because the name
-begins with a dot — `make app` copies out of there for that reason.
-
-Itchy has no Dock icon and opens no window: when it launches, look for the cat
-in the menubar.
-
-A warm `make test` takes about twenty seconds. If it takes minutes, something
-is wrong — see Troubleshooting.
-
-## Running the tests
-
-```bash
-make test        # packages, harness, app target — no permissions needed
-make test-ui     # the XCUITest suite, which does need automation permission
-make test-all    # both
-make coverage    # coverage against the 80% floor; COVERAGE_REPORT=1 for per-file
-make verify-gate # proves the gates fail when they should
-```
-
-`make test` deliberately skips the UI suite. It is the only part that needs
-macOS automation permission, and a permission prompt blocks invisibly — the
-symptom is a run that hangs rather than a question you can answer. Keeping it
-out of the default path means the everyday loop never stops to ask.
-
-No individual test should take more than ten seconds. One that does has not
-found a slow path, it has hung, and the harness treats that as a failure. The
-rules live in `Tests/ItchyTests/TestTiming.swift`.
-
-## Layout
-
-```
-App/            application: menubar, panels, text bridge, settings
-Packages/
-  ItchyCore/    pad model, store, transforms. Links no UI framework, by construction
-  ItchyServices/transforms, MCP server, model client
-Harness/        itchyctl, a development-only command-line driver for the store
-Shim/           itchy-mcp, the stdio proxy (arrives with the MCP server)
-Scripts/        gates, coverage, release
-docs/           vision, architecture, requirements, specification, plan, decisions
-```
-
-Backups live beside the pads, in `archives.noindex/`, one timestamped directory
-per snapshot. One is taken when Itchy starts and quits, and optionally once a
-day — only when something has changed. Restoring is copying a directory back;
-there is no restore path in code, because a recovery mechanism only ever runs
-when something has already gone wrong and one made of `cp` cannot itself break.
-
-Backups hold copies of pads you have since deleted. How many to keep is in
-Settings → Backups, **and zero is one of the answers**. See
-[docs/decisions/D-18-archives.md](docs/decisions/D-18-archives.md).
-
-Pads are stored as flat files under
-`~/Library/Application Support/Itchy/pads.noindex/`, one directory per pad,
-holding `content.rtfd`, `content.txt` and `meta.json`. There is no database, and
-everything is readable with `ls` and `cat`. The `.noindex` suffix keeps pad
-contents out of Spotlight while leaving them readable to `grep` and to tooling —
-see [docs/decisions/D-16-spotlight-exclusion.md](docs/decisions/D-16-spotlight-exclusion.md).
-
-`itchyctl` drives the store without the interface, which is useful for looking
-at what is actually on disk:
-
-```bash
-cd Harness && swift build
-ITCHY_ROOT=/tmp/scratch .build/debug/itchyctl create "notes"
-ITCHY_ROOT=/tmp/scratch .build/debug/itchyctl list
-ITCHY_ROOT=/tmp/scratch .build/debug/itchyctl fault content   # damage a pad on purpose
-```
-
-### Repeated permission prompts
-
-There are two different prompts, with different fixes.
-
-**Automation Mode asking for authentication.** XCUITest switches macOS into
-Automation Mode for every run, and by default the system asks for a password
-each time. This is a device policy, so signing does not affect it. Check with:
-
-```bash
-automationmodetool
-# "This device requires user authentication to enable Automation Mode."
-```
-
-`make test-ui` handles this itself (`Scripts/automation-mode.sh`). It switches
-the authentication requirement off for the duration of the run and puts it back
-when the run ends, including a failed or interrupted run:
-
-- From a terminal, `automationmodetool` asks for your password at the start,
-  before the build, and may ask again at the end to put the setting back.
-- If the setting is already off, as on a CI runner configured for UI testing,
-  nothing is asked and nothing is restored.
-- With no terminal to ask in (an editor task, an agent, a CI runner that has not
-  been configured), it stops immediately and says why, rather than hanging on a
-  dialog. `ITCHY_UI_ALLOW_PROMPT=1 make test-ui` runs anyway and relies on
-  someone answering the dialog.
-
-To make it permanent instead, on a machine you use only for development or on a
-self-hosted runner:
-
-```bash
-automationmodetool enable-automationmode-without-authentication
-# and to undo:
-automationmodetool disable-automationmode-without-authentication
-```
-
-Not under `sudo`. The tool asks for the password of the user running it, so
-under `sudo` it asks for root's, which on macOS normally has none.
-
-The trade-off is that any process running as you can then enter Automation Mode,
-which allows synthesised input, without asking. A self-hosted runner must also
-run inside a logged-in user session (a LaunchAgent, not a LaunchDaemon), or UI
-tests cannot drive windows at all.
-
-**The test runner or Itchy being asked for permission again after a rebuild.**
-If macOS asks for automation permission every time you rebuild, run:
-
-```bash
-make sign-setup
-make regenerate
-```
-
-An ad-hoc signed application has no stable designated requirement, so TCC keys
-its grant on the code hash — and the hash changes on every build. Every rebuild
-therefore looks like a different application, and the prompt comes back. Signing
-Debug builds with a real identity gives a stable requirement:
-
-```
-designated => identifier "com.wdogsystems.itchy" and anchor apple generic
-              and certificate leaf[subject.CN] = "Apple Development: …"
-```
-
-That is stable across rebuilds, so answering the prompt once is enough.
-
-`make sign-setup` picks an identity from the keychain — preferring Developer ID,
-then Apple Development — and writes `Config/Signing.local.xcconfig`, which is not
-committed. Without an identity, builds stay ad-hoc and everything still works
-except that the prompt returns.
-
-To see what is available, or to choose a particular one:
-
-```bash
-./Scripts/sign-setup.sh --list
-./Scripts/sign-setup.sh 6H7J8U4DNR   # team, name fragment or certificate hash
-```
-
-The chosen identity is recorded by certificate hash rather than by name. One
-common name can cover many certificates — annual renewals accumulate, and this
-machine has seven under a single name — and `codesign` given an ambiguous name
-is free to pick any of them, including one that expired years ago.
-
-## Shipping: certificates and notarisation
-
-Itchy is distributed directly, signed with a Developer ID and notarised — not
-through the App Store. The sandbox would complicate the loopback MCP server, the
-Keychain-held token and any future local process invocation, and buys nothing
-when distribution is direct.
-
-Check what this machine can do:
-
-```bash
-make ship-check
-```
-
-It reports each requirement and what to do about it. Both items below need a
-person; neither can be done from a build script.
-
-### 1. A Developer ID Application certificate
-
-Requires membership of the Apple Developer Program. A free account issues
-*Apple Development* certificates, which cannot sign for direct distribution —
-if `make ship-check` lists only those, this is the step that is missing.
-
-The straightforward route is through Xcode:
-
-1. **Xcode → Settings → Accounts**, and add the Apple ID if it is not there.
-2. Select the team, then **Manage Certificates…**
-3. **+** → **Developer ID Application**.
-4. Confirm with `security find-identity -v -p codesigning`. The line should read
-   `Developer ID Application: <name> (<team id>)`.
-
-Through the portal instead, if you need the certificate on a machine other than
-the one generating the request: create a Certificate Signing Request in
-**Keychain Access → Certificate Assistant → Request a Certificate From a
-Certificate Authority**, upload it at
-**developer.apple.com → Certificates, Identifiers & Profiles → Certificates →
-+ → Developer ID Application**, then download and double-click the result.
-
-Keep the private key. A Developer ID certificate cannot be re-downloaded with
-its key, and losing it means revoking and reissuing.
-
-### 2. A notarytool credential profile
-
-Notarisation authenticates with an app-specific password rather than your Apple
-ID password.
-
-1. At **appleid.apple.com → Sign-In and Security → App-Specific Passwords**,
-   generate one and copy it.
-2. Find the team identifier at
-   **developer.apple.com → Membership details**, or in the parentheses of the
-   `security find-identity` output above.
-3. Store the credentials in the keychain, once:
-
-```bash
-xcrun notarytool store-credentials notarytool \
-  --apple-id "you@example.com" \
-  --team-id "ABCDE12345" \
-  --password "abcd-efgh-ijkl-mnop"
-```
-
-The profile name `notarytool` is what the release script expects; override it
-with `ITCHY_NOTARY_PROFILE` if you use another.
-
-### Packaging without a certificate
-
-`make package` builds a disk image from the current build, containing the
-application, a link to `/Applications` to drag it onto, and this README. It
-signs the image if a Developer ID is present and says so plainly when there is
-none:
-
-```
-build/Itchy.dmg   →   Itchy.app, Applications, README.md
-```
-
-That is enough to hand a build to someone who already trusts where it came from.
-It is not enough for anyone else: without notarisation Gatekeeper will refuse it
-on a machine that has never seen it, and the person opening it will be told the
-application is damaged rather than that it is unsigned. `make dmg` below is the
-article that opens anywhere.
-
-### 3. Releasing
-
-```bash
-make ship-check   # confirm both of the above
-make release      # Developer ID signed, hardened runtime, verified
-make notarise     # submit, wait, staple
-make dmg          # package a signed disk image
-```
-
-The hardened runtime is required for notarisation and applies to Release builds
-only — it blocks XCTest bundle injection, so Debug builds do not use it.
-
-Verify the result on a machine that has never seen the build: it should open
-from Finder without a Gatekeeper override. That check is on the manual list
-because it cannot be made from the machine that produced the build.
-
-## Troubleshooting
-
-**`make test` takes minutes.** Something is forcing a full rebuild. The usual
-cause is `Itchy.xcodeproj` being regenerated on every invocation; it is a file
-target that should only regenerate when `project.yml` changes. `make regenerate`
-forces one deliberately.
-
-**A test run never finishes.** Two causes, in order of likelihood.
-
-A permission dialog is waiting on screen. It blocks the test runner and is easy
-to miss on a second display. Usually it is Automation Mode asking for
-authentication, which `make test-ui` now switches off for the run (see *Repeated
-permission prompts*); otherwise `make sign-setup` stops it recurring. To check
-whether one is up right now:
-
-```bash
-osascript -e 'tell application "System Events" to get name of every process whose frontmost is true'
-```
-
-Or an Itchy instance was left behind by an interrupted run — `XCUIApplication`
-expects to own the process it launches. `Scripts/test.sh` kills strays before
-starting; by hand:
-
-```bash
-pkill -f "Itchy.app/Contents/MacOS/Itchy"
-```
-
-**`make app` says it built, but the app is nowhere.** It is at
-`build/Itchy.app`; `make reveal` shows it in Finder. Earlier builds went to
-`.build/DerivedData/Build/Products/Release/`, which Finder hides. And once
-launched there is nothing to see but the menubar cat — Itchy is an accessory
-application with no Dock icon and no window of its own.
-
-**`xcodebuild: WARNING: Using the first of multiple matching destinations`.**
-Harmless, and now silenced by naming the destination explicitly. It appears when
-a command does not say whether it wants arm64 or x86_64.
-
-**The global hotkey does nothing.** Another application probably holds the
-combination; Settings says so under the recorder. Itchy needs no Accessibility
-permission for the hotkey and will never ask for one.
-
-**A login item appears pointing at a build directory.** It should not: Itchy
-only registers itself automatically when running from `/Applications`. If an
-older build left one, remove it in **System Settings → General → Login Items**.
+[docs/development.md](docs/development.md) covers the rest: the test suites and
+their permissions, signing for development, the repository layout, and
+troubleshooting.
 
 ## Documentation
 
 | | |
 |---|---|
+| [User guide](docs/user-guide.md) | Using Itchy |
+| [Development](docs/development.md) | Building, testing, permissions, troubleshooting |
+| [Releasing](docs/releasing.md) | Versions, certificates, notarisation, packaging |
+| [Changelog](CHANGELOG.md) | What changed, by version |
 | [Vision](docs/itchy-vision.md) | Why this exists, and what it must never become |
 | [Architecture](docs/itchy-architecture.md) | Layers, storage, build order |
-| [Architecture diagram](docs/itchy-architecture-diagram.html) | The system in one view, including external collaborators |
 | [Requirements](docs/itchy-requirements.md) | Numbered, with acceptance criteria |
-| [Specification](docs/itchy-specification.md) | How it is assembled; decisions D-1…D-11 |
+| [Specification](docs/itchy-specification.md) | How it is assembled |
 | [Implementation plan](docs/itchy-implementation-plan.md) | Sprints and the exit gate |
-| [Decisions](docs/decisions/) | The log, including everything decided since |
+| [Decisions](docs/decisions/) | Every design decision, with its reasoning |
 
-Itchy is for transient content. Before adding anything, the question is whether
-the feature serves content that is passing through or content that has earned a
-place — and if the latter, the answer is no.
+## Contributing
+
+Itchy is a personal tool first, and its main risk is growing into the
+application it was built to avoid. Bug reports are welcome. Before proposing a
+feature, read [CONTRIBUTING.md](CONTRIBUTING.md), which explains the one
+question every addition has to answer.
+
+Security issues: see [SECURITY.md](SECURITY.md).
+
+## Licence
+
+Copyright © 2026 Tim Howland.
+
+Itchy is free software, released under the
+[GNU General Public License, version 3](LICENSE).

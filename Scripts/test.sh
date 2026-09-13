@@ -167,7 +167,7 @@ else
     if [ "$RUN_UI" = "1" ]; then
       echo "       UI tests need macOS automation permission. If a dialog is" >&2
       echo "       waiting on screen, it is probably Automation Mode asking for" >&2
-      echo "       authentication; see 'Repeated permission prompts' in the README." >&2
+      echo "       authentication; see 'Permission prompts' in docs/development.md." >&2
     fi
     grep -E "Test Case.*started" /tmp/itchy-app.log | grep -v linkd | tail -1 \
       | sed 's/^/       last started: /'
