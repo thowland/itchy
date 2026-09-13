@@ -76,7 +76,8 @@ restarting several times and seeing only two backups.
 - **Test runs killed the author's running copy.** `Scripts/test.sh` and the UI
   suite's cleanup matched any Itchy process and sent it SIGKILL, which meant no
   quit archive and a lost last second of typing. Both now match only builds
-  running from a DerivedData directory.
+  running from a `Build/Products` directory, which covers every derived data
+  path, including the coverage script's temporary one.
 
 ## The privacy cost, and who decides
 

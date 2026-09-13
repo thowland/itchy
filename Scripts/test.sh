@@ -44,13 +44,15 @@ source Scripts/automation-mode.sh
 pass() { printf '  \033[32mok\033[0m   %s\n' "$1"; }
 fail() { printf '  \033[31mFAIL\033[0m %s\n' "$1"; }
 
-# Only instances built for testing are killed: those under a DerivedData
-# directory, which is where the test host and the UI suite's target run from.
-# The earlier pattern matched any Itchy, so a test run SIGKILLed the copy the
-# author was actually using — no quit backup, and the last second of typing
-# never saved.
+# Only instances built by xcodebuild are killed: those under a Build/Products
+# directory, which is where the test host and the UI suite's target run from,
+# whatever the derived data path is called. The coverage script's is a
+# temporary directory with no "DerivedData" in its name. The earlier pattern
+# matched any Itchy, so a test run SIGKILLed the copy the author was actually
+# using — no quit backup, and the last second of typing never saved. An
+# installed copy never lives under Build/Products.
 reap() {
-  pkill -9 -f "/DerivedData/.*Itchy.app/Contents/MacOS/Itchy" 2>/dev/null
+  pkill -9 -f "/Build/Products/.*Itchy.app/Contents/MacOS/Itchy" 2>/dev/null
   pkill -9 -f "ItchyUITests-Runner" 2>/dev/null
   pkill -9 -f "ItchyCorePackageTests" 2>/dev/null
   pkill -9 -f "ItchyServicesPackageTests" 2>/dev/null
