@@ -127,8 +127,16 @@ make verify-gate # prove the gates fail when they should
 make sign-setup  # point Debug builds at a keychain identity (see below)
 make format      # apply swift-format in place
 make icon        # regenerate the app icon from the cat.fill symbol
+make app         # build the bundle into ./build and print its path
+make run         # build and launch it
 make ship-check  # report whether this machine can produce a shippable build
 ```
+
+`make app` copies the bundle to `build/Itchy.app` rather than leaving it under
+`.build/`, because Finder hides directories whose names begin with a dot and an
+app nobody can find is an app nobody can run. Every `xcodebuild` invocation
+names its destination: without that it warns about choosing between arm64 and
+x86_64, which reads as an error.
 
 `Itchy.xcodeproj` is generated from `project.yml` and is not committed (D-12).
 It regenerates only when `project.yml` changed; `make regenerate` forces one. A

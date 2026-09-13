@@ -57,11 +57,20 @@ Xcode does not add it to `project.yml`. See
 [docs/decisions/D-12-xcode-project.md](docs/decisions/D-12-xcode-project.md).
 
 ```bash
-make app         # build the application bundle
+make app         # build the application bundle into ./build
+make run         # build and launch it
+make reveal      # build and show it in Finder
 make test        # everything, with hard time limits
 make gate        # the full sprint exit gate: lint, architecture, tests, coverage
 make help        # every target
 ```
+
+`make app` leaves the bundle at `build/Itchy.app` and prints the path. Xcode's
+own build products live under `.build/`, which Finder hides because the name
+begins with a dot — `make app` copies out of there for that reason.
+
+Itchy has no Dock icon and opens no window: when it launches, look for the cat
+in the menubar.
 
 A warm `make test` takes about twenty seconds. If it takes minutes, something
 is wrong — see Troubleshooting.
@@ -243,6 +252,16 @@ starting; by hand:
 ```bash
 pkill -f "Itchy.app/Contents/MacOS/Itchy"
 ```
+
+**`make app` says it built, but the app is nowhere.** It is at
+`build/Itchy.app`; `make reveal` shows it in Finder. Earlier builds went to
+`.build/DerivedData/Build/Products/Release/`, which Finder hides. And once
+launched there is nothing to see but the menubar cat — Itchy is an accessory
+application with no Dock icon and no window of its own.
+
+**`xcodebuild: WARNING: Using the first of multiple matching destinations`.**
+Harmless, and now silenced by naming the destination explicitly. It appears when
+a command does not say whether it wants arm64 or x86_64.
 
 **The global hotkey does nothing.** Another application probably holds the
 combination; Settings says so under the recorder. Itchy needs no Accessibility

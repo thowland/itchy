@@ -14,3 +14,6 @@ Harness/.build/
 
 # Names a signing identity that exists only in one machine's keychain.
 Config/Signing.local.xcconfig
+
+# Built applications, put somewhere Finder will actually show them.
+build/

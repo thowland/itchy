@@ -75,7 +75,8 @@ build() {
   rm -rf "$EXPORT_DIR"
   mkdir -p "$EXPORT_DIR"
   xcodebuild -project "$APP_NAME.xcodeproj" -scheme "$APP_NAME" \
-    -configuration Release -derivedDataPath "$DD" \
+    -configuration Release -destination "platform=macOS,arch=$(uname -m)" \
+    -derivedDataPath "$DD" \
     CODE_SIGN_IDENTITY="$id" CODE_SIGN_STYLE=Manual \
     OTHER_CODE_SIGN_FLAGS="--timestamp --options=runtime" \
     build || exit 1

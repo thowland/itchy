@@ -6,8 +6,15 @@ SWIFTLINT := swiftlint
 SWIFTFORMAT := xcrun swift-format
 PACKAGES := Packages/ItchyCore Packages/ItchyServices
 DD := .build/DerivedData
+# Where a built application is left for a person to find. Deliberately not
+# inside .build: Finder hides any directory whose name begins with a dot, so an
+# app built there is invisible unless you know to press Cmd-Shift-period.
+OUT := build
+# Named explicitly. Without it xcodebuild prints a warning about choosing
+# between arm64 and x86_64 destinations, which reads as an error.
+DEST := platform=macOS,arch=$(shell uname -m)
 
-.PHONY: help gate project regenerate test test-ui test-all sign-setup lint format arch-lint coverage verify-gate app release notarise dmg ship-check icon clean open
+.PHONY: help gate project regenerate test test-ui test-all sign-setup lint format arch-lint coverage verify-gate app run reveal release notarise dmg ship-check icon clean open
 
 help: ## Show this help
 	@grep -E '^[a-z-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -64,9 +71,20 @@ coverage: project ## Measure coverage against the 80% floor (G3)
 verify-gate: ## Prove the gates fail when they should
 	@./Scripts/verify-gates.sh
 
-app: project ## Build the application bundle
+app: project ## Build the application bundle into ./build
 	@xcodebuild -project Itchy.xcodeproj -scheme Itchy -configuration Release \
-	  -derivedDataPath $(DD) build -quiet && echo "app: built"
+	  -destination "$(DEST)" -derivedDataPath $(DD) build -quiet
+	@mkdir -p $(OUT)
+	@rm -rf $(OUT)/Itchy.app
+	@cp -R $(DD)/Build/Products/Release/Itchy.app $(OUT)/Itchy.app
+	@echo "app: $(CURDIR)/$(OUT)/Itchy.app"
+	@echo "     open it with 'make run', or 'make reveal' to show it in Finder"
+
+run: app ## Build and launch the application
+	@open $(OUT)/Itchy.app && echo "run: launched (look for the cat in the menubar)"
+
+reveal: app ## Build and show the application in Finder
+	@open -R $(OUT)/Itchy.app
 
 release: ## Build a Developer ID signed, hardened release (NFR-4.2)
 	@./Scripts/release.sh build
@@ -84,5 +102,5 @@ icon: ## Regenerate the app icon from the cat.fill symbol
 	@swift Scripts/make-appicon.swift && echo "icon: regenerated"
 
 clean: ## Remove build products and the generated project
-	@rm -rf .build Packages/*/.build Harness/.build Tests/Fixtures/*/.build $(DD) Itchy.xcodeproj
+	@rm -rf .build Packages/*/.build Harness/.build Tests/Fixtures/*/.build $(DD) $(OUT) Itchy.xcodeproj
 	@echo "clean: done"
