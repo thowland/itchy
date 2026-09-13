@@ -22,7 +22,9 @@ final class PadCoordinator {
   @ObservationIgnored private let store: PadStore
   @ObservationIgnored internal lazy var registry = PadWindowRegistry(store: store)
   @ObservationIgnored private var sizes: [PadID: Int] = [:]
-  @ObservationIgnored private var editors: [PadID: PadTextCoordinator] = [:]
+  /// Internal rather than private so the editor-font extension can restyle
+  /// open pads; see the note on `settings`.
+  @ObservationIgnored internal var editors: [PadID: PadTextCoordinator] = [:]
   @ObservationIgnored private lazy var settingsStore = SettingsStore(layout: layout)
   @ObservationIgnored internal let hotKey = GlobalHotKey()
   @ObservationIgnored internal let signposter = LaunchSignposter()
@@ -145,7 +147,8 @@ final class PadCoordinator {
     guard let pad = pads.first(where: { $0.id == padID }) else { return }
     let fault = await store.fault(for: padID)
     let content = try? await store.content(of: padID)
-    let initial = content.flatMap { try? ContentCodec.decode($0) } ?? NSAttributedString()
+    let decoded = content.flatMap { try? ContentCodec.decode($0) } ?? NSAttributedString()
+    let initial = restyledForDisplay(decoded, mode: pad.mode)
     let editor = editorCoordinator(for: padID)
 
     registry.show(
@@ -154,6 +157,7 @@ final class PadCoordinator {
         pad: pad,
         editor: editor,
         initial: initial,
+        font: editorFont,
         fault: fault,
         coordinator: self),
       makingKey: makingKey)

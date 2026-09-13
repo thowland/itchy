@@ -49,6 +49,19 @@ public struct AppSettings: Sendable, Codable, Equatable {
   /// exception of telling someone the application exists.
   public var hasCompletedFirstRun: Bool
 
+  /// The editor font family, or `nil` for the built-in monospaced font (D-19).
+  ///
+  /// Held as a family name rather than a font, because the core links no UI
+  /// framework (D-2) and a family name is what survives an OS update.
+  public var editorFontFamily: String?
+
+  /// The editor text size in points, clamped on every read (D-19).
+  public var editorFontSize: Double
+
+  /// Families previously chosen, most recent first, so that body text set in
+  /// them is still recognised when a pad closed at the time is reopened (D-19).
+  public var formerEditorFontFamilies: [String]
+
   public init(
     schemaVersion: Int = ItchyCore.schemaVersion,
     padLimit: Int = PadBounds.defaultCount,
@@ -60,7 +73,10 @@ public struct AppSettings: Sendable, Codable, Equatable {
     archiveRetention: Int = ArchiveBounds.defaultRetention,
     archivesDaily: Bool = true,
     lastArchiveAt: Date? = nil,
-    lastArchiveFingerprint: String? = nil
+    lastArchiveFingerprint: String? = nil,
+    editorFontFamily: String? = nil,
+    editorFontSize: Double = EditorFontBounds.defaultSize,
+    formerEditorFontFamilies: [String] = []
   ) {
     self.schemaVersion = schemaVersion
     self.padLimit = padLimit
@@ -73,6 +89,9 @@ public struct AppSettings: Sendable, Codable, Equatable {
     self.archivesDaily = archivesDaily
     self.lastArchiveAt = lastArchiveAt
     self.lastArchiveFingerprint = lastArchiveFingerprint
+    self.editorFontFamily = editorFontFamily
+    self.editorFontSize = editorFontSize
+    self.formerEditorFontFamilies = formerEditorFontFamilies
   }
 
   /// Returns settings with every value forced into its permitted range.
@@ -115,12 +134,22 @@ public struct AppSettings: Sendable, Codable, Equatable {
     lastArchiveAt = try container.decodeIfPresent(Date.self, forKey: .lastArchiveAt)
     lastArchiveFingerprint =
       try container.decodeIfPresent(String.self, forKey: .lastArchiveFingerprint)
+    editorFontFamily = try container.decodeIfPresent(String.self, forKey: .editorFontFamily)
+    editorFontSize =
+      try container.decodeIfPresent(Double.self, forKey: .editorFontSize)
+      ?? fallback.editorFontSize
+    formerEditorFontFamilies =
+      try container.decodeIfPresent([String].self, forKey: .formerEditorFontFamilies)
+      ?? fallback.formerEditorFontFamilies
   }
 
   public func clamped() -> AppSettings {
     var result = self
     result.padLimit = PadBounds.clamp(padLimit)
     result.archiveRetention = ArchiveBounds.clamp(archiveRetention)
+    result.editorFontSize = EditorFontBounds.clamp(editorFontSize)
+    result.formerEditorFontFamilies = Array(
+      formerEditorFontFamilies.prefix(EditorFontBounds.formerFamilyLimit))
     return result
   }
 

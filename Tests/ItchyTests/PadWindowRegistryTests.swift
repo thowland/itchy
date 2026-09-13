@@ -25,7 +25,8 @@ struct PadWindowRegistryTests {
     PadTextEditor(
       coordinator: PadTextCoordinator(padID: PadID(), store: store),
       mode: PadMode.styled,
-      initial: NSAttributedString(string: "scratch"))
+      initial: NSAttributedString(string: "scratch"),
+      font: ContentCodec.defaultFont)
   }
 
   /// `FR-3.3`: opening a pad that is already open brings the existing panel

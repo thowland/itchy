@@ -11,12 +11,14 @@ struct PadTextEditor: NSViewRepresentable {
   let coordinator: PadTextCoordinator
   let mode: PadMode
   let initial: NSAttributedString
+  let font: NSFont
 
   func makeNSView(context: Context) -> NSScrollView {
     let scrollView = PadTextView.scrollableTextView()
     scrollView.hasVerticalScroller = true
     scrollView.drawsBackground = false
     let textView = scrollView.documentView as? PadTextView ?? PadTextView()
+    textView.bodyFont = font
     textView.configure(for: mode)
     textView.textStorage?.setAttributedString(initial)
     // The identifier goes on the text view itself rather than on the SwiftUI

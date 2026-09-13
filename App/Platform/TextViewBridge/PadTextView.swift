@@ -13,6 +13,9 @@ final class PadTextView: NSTextView {
   var onPaste: ((ProvenanceEntry) -> Void)?
   /// The pad's mode, which governs what a paste is allowed to carry.
   var mode: PadMode = .styled
+  /// The editor font from settings, which typing uses and plain pads are set in
+  /// entirely (D-19).
+  var bodyFont: NSFont = ContentCodec.defaultFont
 
   /// Routes every paste through the interceptor, so that provenance capture and
   /// image downsampling have one entry point (specification §9.4).
@@ -52,7 +55,7 @@ final class PadTextView: NSTextView {
     isAutomaticTextReplacementEnabled = mode == .styled
     isContinuousSpellCheckingEnabled = true
     isAutomaticSpellingCorrectionEnabled = false
-    typingAttributes = [.font: ContentCodec.defaultFont]
+    typingAttributes = [.font: bodyFont]
     allowsUndo = true
   }
 }

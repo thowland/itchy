@@ -110,19 +110,69 @@ struct EditorSettingsView: View {
 
   var body: some View {
     Form {
-      Picker(
-        "New pads start as",
-        selection: Binding(
-          get: { coordinator.settings.defaultMode },
-          set: { coordinator.setDefaultMode($0) })
-      ) {
-        ForEach(PadMode.allCases, id: \.self) { mode in
-          Text(SettingsModel.defaultModeLabel(mode)).tag(mode)
+      Section {
+        Picker(
+          "New pads start as",
+          selection: Binding(
+            get: { coordinator.settings.defaultMode },
+            set: { coordinator.setDefaultMode($0) })
+        ) {
+          ForEach(PadMode.allCases, id: \.self) { mode in
+            Text(SettingsModel.defaultModeLabel(mode)).tag(mode)
+          }
         }
+        .pickerStyle(.inline)
       }
-      .pickerStyle(.inline)
+
+      EditorFontSection()
     }
     .formStyle(.grouped)
     .padding()
+  }
+}
+
+/// The editor font (D-19). Choices and wording are `EditorFontModel`'s; which
+/// text the setting reaches is `EditorFontPolicy`'s.
+struct EditorFontSection: View {
+  @Environment(PadCoordinator.self) private var coordinator
+
+  var body: some View {
+    Section {
+      Picker(
+        "Font",
+        selection: Binding(
+          get: { coordinator.settings.editorFontFamily },
+          set: { coordinator.setEditorFont(family: $0, size: coordinator.settings.editorFontSize) })
+      ) {
+        Text(EditorFontModel.builtInLabel).tag(String?.none)
+        Divider()
+        ForEach(
+          EditorFontModel.familyChoices(
+            available: BodyFont.installedFamilies, current: coordinator.settings.editorFontFamily),
+          id: \.self
+        ) { family in
+          Text(family).tag(String?.some(family))
+        }
+      }
+      .accessibilityIdentifier("settings.editorFont")
+
+      Stepper(
+        value: Binding(
+          get: { coordinator.settings.editorFontSize },
+          set: { coordinator.setEditorFont(family: coordinator.settings.editorFontFamily, size: $0) }),
+        in: EditorFontModel.sizeRange,
+        step: 1
+      ) {
+        Text(EditorFontModel.sizeLabel(coordinator.settings.editorFontSize))
+      }
+      .accessibilityIdentifier("settings.editorFontSize")
+
+      Text(EditorFontModel.sample)
+        .font(Font(coordinator.editorFont as CTFont))
+        .lineLimit(2)
+      Text(EditorFontModel.caption)
+        .font(.caption)
+        .foregroundStyle(.secondary)
+    }
   }
 }

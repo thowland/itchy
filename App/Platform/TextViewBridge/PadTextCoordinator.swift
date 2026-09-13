@@ -85,11 +85,20 @@ final class PadTextCoordinator: NSObject, NSTextViewDelegate {
   /// undoable operation.
   func flatten() {
     guard let textView else { return }
-    let flattened = ContentCodec.flatten(textView.attributedString())
+    let flattened = ContentCodec.flatten(textView.attributedString(), font: textView.bodyFont)
     apply(flattened, actionName: "Flatten Styling")
   }
 
   func setMode(_ mode: PadMode) {
     textView?.configure(for: mode)
+  }
+
+  /// Sets the pad's text in a new editor font, in place (D-19). The runs it
+  /// touches are `EditorFontPolicy`'s decision.
+  func applyBodyFont(_ font: NSFont, bodyFamilies: Set<String>) {
+    guard let textView, let storage = textView.textStorage else { return }
+    BodyFont.restyle(storage, to: font, mode: textView.mode, bodyFamilies: bodyFamilies)
+    textView.bodyFont = font
+    textView.configure(for: textView.mode)
   }
 }

@@ -135,3 +135,73 @@ struct SettingsCompatibilityTests {
     #expect(SettingsStore(layout: root.layout).load().padLimit == 7)
   }
 }
+
+/// D-19: the editor font is a stored preference like any other, with the same
+/// protections — a range enforced on read, and a file from before the setting
+/// existed keeping everything it does have.
+@Suite("Editor font settings")
+struct EditorFontSettingsTests {
+  @Test("The default is the built-in font at the size the editor always used")
+  func defaults() {
+    let settings = AppSettings()
+    #expect(settings.editorFontFamily == nil)
+    #expect(settings.editorFontSize == EditorFontBounds.defaultSize)
+    #expect(settings.formerEditorFontFamilies.isEmpty)
+  }
+
+  @Test("A chosen font round-trips through disk")
+  func roundTrip() throws {
+    let root = TemporaryRoot()
+    let store = SettingsStore(layout: root.layout)
+    var settings = AppSettings()
+    settings.editorFontFamily = "Menlo"
+    settings.editorFontSize = 18
+    settings.formerEditorFontFamilies = ["Courier"]
+
+    try store.save(settings)
+
+    #expect(store.load() == settings)
+  }
+
+  @Test(
+    "A stored size outside the range is clamped on read and written back",
+    arguments: [(999.0, EditorFontBounds.maximumSize), (2.0, EditorFontBounds.minimumSize)])
+  func clampsOnRead(stored: Double, expected: Double) throws {
+    let root = TemporaryRoot()
+    let handEdited = #"{"schemaVersion":1,"editorFontSize":\#(stored)}"#
+    try Data(handEdited.utf8).write(to: root.layout.settingsFile)
+
+    #expect(SettingsStore(layout: root.layout).load().editorFontSize == expected)
+    let onDisk = try JSONCoding.decoder()
+      .decode(AppSettings.self, from: try Data(contentsOf: root.layout.settingsFile))
+    #expect(onDisk.editorFontSize == expected)
+  }
+
+  @Test("Sizes are whole points")
+  func wholePoints() {
+    #expect(EditorFontBounds.clamp(15.4) == 15)
+    #expect(EditorFontBounds.clamp(.nan) == EditorFontBounds.defaultSize)
+  }
+
+  @Test("The remembered families are bounded")
+  func formerFamiliesBounded() {
+    var settings = AppSettings()
+    settings.formerEditorFontFamilies = (0..<20).map { "Family \($0)" }
+    #expect(settings.clamped().formerEditorFontFamilies.count == EditorFontBounds.formerFamilyLimit)
+    #expect(settings.needsRewrite)
+  }
+
+  @Test("A file from before the setting existed keeps its values and takes the default font")
+  func olderFile() throws {
+    let root = TemporaryRoot()
+    let older = #"{"schemaVersion":1,"padLimit":12,"archiveRetention":3}"#
+    try Data(older.utf8).write(to: root.layout.settingsFile)
+
+    let loaded = SettingsStore(layout: root.layout).load()
+
+    #expect(loaded.padLimit == 12)
+    #expect(loaded.archiveRetention == 3)
+    #expect(loaded.editorFontFamily == nil)
+    #expect(loaded.editorFontSize == EditorFontBounds.defaultSize)
+  }
+}

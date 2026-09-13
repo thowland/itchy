@@ -66,7 +66,9 @@ enum PasteInterceptor {
   ) -> ProvenanceEntry? {
     guard plan.representation != .nothing else { return nil }
     let insertion = textView.selectedRange().location
-    let inserted = attributedValue(for: plan, descriptor: descriptor, pasteboard: pasteboard)
+    let font = (textView as? PadTextView)?.bodyFont ?? ContentCodec.defaultFont
+    let inserted = attributedValue(
+      for: plan, descriptor: descriptor, pasteboard: pasteboard, font: font)
     guard inserted.length > 0 else { return nil }
 
     textView.undoManager?.beginUndoGrouping()
@@ -82,27 +84,26 @@ enum PasteInterceptor {
   static func attributedValue(
     for plan: PastePlan,
     descriptor: PasteDescriptor,
-    pasteboard: NSPasteboard
+    pasteboard: NSPasteboard,
+    font: NSFont = ContentCodec.defaultFont
   ) -> NSAttributedString {
     guard !plan.discardsStyling else {
-      return NSAttributedString(
-        string: descriptor.plainText ?? "", attributes: [.font: ContentCodec.defaultFont])
+      return NSAttributedString(string: descriptor.plainText ?? "", attributes: [.font: font])
     }
     switch plan.representation {
     case .rtfd, .rtf, .html:
-      return readStyled(from: pasteboard) ?? plainFallback(descriptor)
+      return readStyled(from: pasteboard) ?? plainFallback(descriptor, font: font)
     case .image:
       return imageAttachment(plan: plan, pasteboard: pasteboard) ?? NSAttributedString()
     case .plainText:
-      return plainFallback(descriptor)
+      return plainFallback(descriptor, font: font)
     case .nothing:
       return NSAttributedString()
     }
   }
 
-  private static func plainFallback(_ descriptor: PasteDescriptor) -> NSAttributedString {
-    NSAttributedString(
-      string: descriptor.plainText ?? "", attributes: [.font: ContentCodec.defaultFont])
+  private static func plainFallback(_ descriptor: PasteDescriptor, font: NSFont) -> NSAttributedString {
+    NSAttributedString(string: descriptor.plainText ?? "", attributes: [.font: font])
   }
 
   private static func readStyled(from pasteboard: NSPasteboard) -> NSAttributedString? {

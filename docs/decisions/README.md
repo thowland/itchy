@@ -34,3 +34,4 @@ New decisions:
 | [D-16](D-16-spotlight-exclusion.md) | Spotlight exclusion is a `.noindex` directory, not `.metadata_never_index`; supersedes D-10 |
 | [D-17](D-17-spike-s1-s4.md) | Spikes S-1 and S-4 resolved: Carbon hotkey stands, MCP SDK adopted |
 | [D-18](D-18-archives.md) | Pads are archived automatically; retention, including none, is the user's |
+| [D-19](D-19-editor-font.md) | The editor font and size are settings, and body text already in a pad follows them |

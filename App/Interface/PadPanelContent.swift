@@ -10,6 +10,7 @@ struct PadPanelContent: View {
   let pad: PadMetadata
   let editor: PadTextCoordinator
   let initial: NSAttributedString
+  let font: NSFont
   let fault: PadStoreFault?
   let coordinator: PadCoordinator
 
@@ -20,6 +21,7 @@ struct PadPanelContent: View {
         pad: pad,
         editor: editor,
         initial: initial,
+        font: font,
         onReveal: { coordinator.revealInFinder(pad.id) })
       Divider()
       HStack(spacing: 0) {
@@ -36,13 +38,14 @@ struct PadBody: View {
   let pad: PadMetadata
   let editor: PadTextCoordinator
   let initial: NSAttributedString
+  let font: NSFont
   let onReveal: () -> Void
 
   var body: some View {
     if let presentation, !presentation.allowsEditing {
       FaultedPadView(presentation: presentation, onReveal: onReveal)
     } else {
-      PadTextEditor(coordinator: editor, mode: pad.mode, initial: initial)
+      PadTextEditor(coordinator: editor, mode: pad.mode, initial: initial, font: font)
     }
   }
 }

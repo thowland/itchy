@@ -206,6 +206,10 @@ Undo MUST be per-pad. An undo performed in one panel MUST NOT affect another pad
 Copying a pad's entire contents as plain text MUST be a single action.
 *Acceptance:* the action places the shadow-file equivalent of the content on the pasteboard.
 
+**FR-4.10 — Editor font** *(R1, SHOULD)*
+The editor's font family and size SHOULD be settable in settings, and a change SHOULD reach text already in a pad, not only new typing. Text set in the editor's own font follows the setting. Text that arrived in a font of its own keeps it. In a plain pad, all text follows the setting. Added after R1 was feature-complete, at the author's request, for reading comfort (D-19).
+*Acceptance:* raising the size enlarges the body text of an open pad immediately, and of a closed pad when it is next opened; bold survives; text pasted from a web page in its own font does not change; the choice persists across relaunch.
+
 ### FR-5 Storage and persistence
 
 **FR-5.1 — Indefinite retention** *(R1, MUST)*
@@ -460,7 +464,7 @@ Panels, the menubar listing, and settings SHOULD be navigable and labelled under
 | 2. Panel subclass, window controller, frame persistence | FR-3.1–FR-3.5, FR-3.7 |
 | 3. Text bridge, RTFD, shadow file, debounced atomic saves | FR-4.1–FR-4.3, FR-4.6–FR-4.8, FR-5.1–FR-5.6, NFR-2.1 |
 | 4. Store-backed pad list, creation, rename, reorder, modes | FR-2.1–FR-2.8, FR-4.4, FR-4.5, FR-5.7–FR-5.9 |
-| — R1 completion items not in the build order | FR-1.3, FR-1.4, FR-1.6, FR-3.6, FR-4.9, NFR-1.1, NFR-3.4 |
+| — R1 completion items not in the build order | FR-1.3, FR-1.4, FR-1.6, FR-3.6, FR-4.9, FR-4.10, NFR-1.1, NFR-3.4 |
 | 5. Transform menu | FR-6.1–FR-6.6 |
 | 6. Provenance | FR-7.1–FR-7.5 |
 | 7. MCP server and shim | FR-8.1–FR-8.10, NFR-3.2, NFR-3.3 |

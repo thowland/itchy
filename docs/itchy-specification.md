@@ -571,7 +571,7 @@ Configuration per mode:
 | `isRichText` | `true` | `false` |
 | `allowsImageEditing` | `true` | `false` |
 | `importsGraphics` | `true` | `false` |
-| `typingAttributes` | inherited from insertion point | pinned to default font |
+| `typingAttributes` | inherited from insertion point | pinned to the editor font (D-19) |
 | `isAutomaticQuoteSubstitutionEnabled` | user default | `false` |
 | `isAutomaticDashSubstitutionEnabled` | user default | `false` |
 
@@ -814,6 +814,7 @@ The naming convention is load-bearing, because it is what makes a misplacement v
 | External-write banner | `BannerModel.state(for:now:)` | Visible or not, wording, whether undo is offered | Render the banner |
 | MCP request handling | `ToolRouter.route(_:) -> StoreOperation` | Pad resolution by id or name, ambiguity errors, the not-found/not-exposed equivalence of §11.5 | Transport, framing, authentication |
 | Settings | `SettingsModel` | Validation and clamping, including the pad-count ceiling | Bind controls |
+| Editor font | `EditorFontPolicy.treatment(runFamily:mode:bodyFamilies:)` | Which runs follow the font setting, which keep their own, and which families count as body text (D-19) | `BodyFont` resolves the font and applies the treatment to the text storage |
 
 Each extracted unit is a value type or a namespace of pure functions, is `Sendable`, and is `Equatable` wherever it returns a value rather than performing an action — so that a test compares one whole expected value against one actual value, rather than poking at six fields and hoping it has checked the ones that matter.
 
