@@ -11,8 +11,10 @@ import SwiftUI
 final class WelcomeWindowController: NSObject, NSWindowDelegate {
   private var window: NSWindow?
   private let onDismiss: () -> Void
+  let presentation: WelcomePresentation
 
-  init(onDismiss: @escaping () -> Void) {
+  init(presentation: WelcomePresentation = .firstRun, onDismiss: @escaping () -> Void) {
+    self.presentation = presentation
     self.onDismiss = onDismiss
   }
 
@@ -41,7 +43,7 @@ final class WelcomeWindowController: NSObject, NSWindowDelegate {
   private func existingOrNewWindow() -> NSWindow {
     if let window { return window }
     let created = NSWindow(
-      contentRect: NSRect(x: 0, y: 0, width: 460, height: 520),
+      contentRect: NSRect(x: 0, y: 0, width: 460, height: 540),
       styleMask: [.titled, .closable, .fullSizeContentView],
       backing: .buffered,
       defer: false)
@@ -52,7 +54,8 @@ final class WelcomeWindowController: NSObject, NSWindowDelegate {
     created.level = .floating
     created.delegate = self
     created.contentView = NSHostingView(
-      rootView: WelcomeView(onDismiss: { [weak self] in self?.dismiss() }))
+      rootView: WelcomeView(
+        presentation: presentation, onDismiss: { [weak self] in self?.dismiss() }))
     return created
   }
 }

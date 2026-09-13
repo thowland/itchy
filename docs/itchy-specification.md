@@ -814,6 +814,10 @@ The naming convention is load-bearing, because it is what makes a misplacement v
 | External-write banner | `BannerModel.state(for:now:)` | Visible or not, wording, whether undo is offered | Render the banner |
 | MCP request handling | `ToolRouter.route(_:) -> StoreOperation` | Pad resolution by id or name, ambiguity errors, the not-found/not-exposed equivalence of §11.5 | Transport, framing, authentication |
 | Settings | `SettingsModel` | Validation and clamping, including the pad-count ceiling | Bind controls |
+| Formatting controls | `FormattingPlan` | Which traits read as on, whether a toggle applies or removes, which chords are shortcuts, availability by mode (D-20) | `TextFormatter` reads the selection and applies the change through the text view's undo |
+| `updateNSView` | `ModeConfigurationPlan.decide(configured:requested:)` | Whether an update reconfigures the text view, so typing attributes survive unrelated refreshes (D-20) | `PadTextView.configureIfNeeded` |
+| Pad settings sheet | `PadSettingsModel` | Name trimming and the empty-name rule, the duplicate-name notice (D-21) | Bind controls; apply the name on Return and close |
+| About | `FirstRunPolicy.dismissal(for:)`, `aboutRequest(showing:)`, `AppVersion.display` | Whether closing records the first run, whether About opens or raises, the version wording (D-22) | Show the window |
 | Editor font | `EditorFontPolicy.treatment(runFamily:mode:bodyFamilies:)` | Which runs follow the font setting, which keep their own, and which families count as body text (D-19) | `BodyFont` resolves the font and applies the treatment to the text storage |
 
 Each extracted unit is a value type or a namespace of pure functions, is `Sendable`, and is `Equatable` wherever it returns a value rather than performing an action — so that a test compares one whole expected value against one actual value, rather than poking at six fields and hoping it has checked the ones that matter.
@@ -830,7 +834,7 @@ The effect is that exclusion is available only to files that are genuinely boile
 
 Signing with Developer ID Application, hardened runtime enabled, notarised via `notarytool`, stapled, distributed as a signed DMG. No entitlements beyond what the hardened runtime requires; specifically no App Sandbox (`CON-6`), and the Keychain access group shared between the app and the shim.
 
-Versioning is `MAJOR.MINOR.PATCH` with the build number from the commit count. A `Makefile` carries `make test`, `make app`, `make notarise`, `make dmg`, so that the release sequence is not a remembered list of commands.
+Versioning is `MAJOR.MINOR.PATCH` with the build number from the commit count, biased toward patch releases and set in `Config/Version.xcconfig` (D-22). A `Makefile` carries `make test`, `make app`, `make notarise`, `make dmg`, so that the release sequence is not a remembered list of commands.
 
 CI runs `make test` plus the grep-based structural checks that enforce the architecture: no `import AppKit` in `ItchyCore`, no `FileManager` use outside the store, and exactly one call site for `Transform.apply`. Those three greps encode `CON-4`, D-2 and §12's single enforcement point respectively, and each is a rule that would otherwise decay silently.
 

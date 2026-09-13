@@ -103,4 +103,74 @@ final class LaunchUITests: XCTestCase {
     let window = app.windows.firstMatch
     XCTAssertTrue(window.staticTexts["styled"].exists, "the mode should be on the pad")
   }
+
+  private func waitForValue(_ element: XCUIElement, _ value: String) -> Bool {
+    let predicate = NSPredicate(format: "value == %@", value)
+    let expectation = XCTNSPredicateExpectation(predicate: predicate, object: element)
+    return XCTWaiter().wait(for: [expectation], timeout: Self.appearance) == .completed
+  }
+
+  /// `FR-4.11`, D-20: the bold control reaches a real panel, and clicking it
+  /// leaves keyboard focus in the pad — `typeText` fails outright on an element
+  /// that does not have focus, so the final keystroke is the focus assertion.
+  func testBoldButtonFormatsTheSelection() {
+    let app = launchApp()
+    let field = padInput(in: app)
+    XCTAssertTrue(field.waitForExistence(timeout: Self.appearance))
+    field.click()
+    field.typeKey(.downArrow, modifierFlags: .command)
+    field.typeText("\nbold me")
+    field.typeKey(.leftArrow, modifierFlags: [.command, .shift])
+
+    let bold = app.windows.buttons["pad.format.bold"]
+    XCTAssertTrue(bold.waitForExistence(timeout: Self.appearance), "no bold control on a styled pad")
+    bold.click()
+
+    XCTAssertTrue(waitForValue(bold, "on"), "bold did not apply to the selection")
+    field.typeKey(.rightArrow, modifierFlags: [])
+    field.typeText("!")
+    XCTAssertTrue((field.value as? String)?.contains("bold me!") == true)
+  }
+
+  /// D-20: an accessory application has no Format menu, so ⌘B only works
+  /// because the text view answers it. This is the case unit tests cannot
+  /// reach — whether the chord arrives at a non-activating panel at all.
+  func testCommandBTogglesBoldInThePanel() {
+    let app = launchApp()
+    let field = padInput(in: app)
+    XCTAssertTrue(field.waitForExistence(timeout: Self.appearance))
+    field.click()
+    field.typeKey(.downArrow, modifierFlags: .command)
+    field.typeText("\nshortcut")
+    field.typeKey(.leftArrow, modifierFlags: [.command, .shift])
+
+    field.typeKey("b", modifierFlags: .command)
+
+    XCTAssertTrue(
+      waitForValue(app.windows.buttons["pad.format.bold"], "on"), "⌘B did not reach the pad")
+  }
+
+  /// `FR-2.9`, D-21: renaming from the pad's own settings sheet. The sheet is
+  /// an ordinary window, so this is also the test that it accepts typing from a
+  /// non-activating panel, and that the open panel is retitled.
+  func testPadSettingsSheetRenamesThePad() {
+    let app = launchApp()
+    XCTAssertTrue(padInput(in: app).waitForExistence(timeout: Self.appearance))
+    let actions = app.windows.menuButtons["pad.actions"]
+    XCTAssertTrue(actions.waitForExistence(timeout: Self.appearance))
+    actions.click()
+    app.menuItems["Pad Settings…"].click()
+
+    let name = app.textFields["pad.settings.name"]
+    XCTAssertTrue(name.waitForExistence(timeout: Self.appearance), "the settings sheet did not open")
+    name.click()
+    name.typeKey(.rightArrow, modifierFlags: .command)
+    name.typeKey(.leftArrow, modifierFlags: [.command, .shift])
+    let renamed = "Renamed \(Int.random(in: 1000...9999))"
+    name.typeText(renamed + "\r")
+
+    XCTAssertTrue(
+      app.windows[renamed].waitForExistence(timeout: Self.appearance),
+      "the panel was not retitled")
+  }
 }

@@ -13,21 +13,32 @@ struct PadPanelContent: View {
   let font: NSFont
   let fault: PadStoreFault?
   let coordinator: PadCoordinator
+  @State private var isShowingSettings = false
 
   var body: some View {
+    let current = coordinator.metadata(for: pad)
     VStack(spacing: 0) {
       PadBody(
         presentation: FaultPresentation.presentation(for: fault),
-        pad: pad,
+        pad: current,
         editor: editor,
         initial: initial,
         font: font,
         onReveal: { coordinator.revealInFinder(pad.id) })
       Divider()
       HStack(spacing: 0) {
-        PadStatusBar(segments: StatusBarModel.segments(for: pad, fault: fault))
-        PadActionsMenu(pad: pad, coordinator: coordinator)
+        PadStatusBar(segments: StatusBarModel.segments(for: current, fault: fault))
+        FormattingControls(formatting: editor.formatting, mode: current.mode) { trait in
+          editor.toggle(trait)
+        }
+        PadActionsMenu(pad: current, coordinator: coordinator) {
+          coordinator.prepareForPadSettings()
+          isShowingSettings = true
+        }
       }
+    }
+    .sheet(isPresented: $isShowingSettings) {
+      PadSettingsView(pad: current, coordinator: coordinator)
     }
   }
 }
@@ -57,9 +68,12 @@ struct PadBody: View {
 struct PadActionsMenu: View {
   let pad: PadMetadata
   let coordinator: PadCoordinator
+  let onShowSettings: () -> Void
 
   var body: some View {
     Menu {
+      Button("Pad Settings…", action: onShowSettings)
+      Divider()
       Button("Copy All as Plain Text") {
         coordinator.copyAsPlainText(pad.id)
       }

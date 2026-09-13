@@ -31,6 +31,7 @@ struct LaunchOptionsTests {
     let testing = AppStorage.layout(options: LaunchOptions(usesTemporaryStorage: true))
     let real = AppStorage.layout(options: LaunchOptions(usesTemporaryStorage: false))
     #expect(testing.root.path != real.root.path)
-    #expect(testing.root.lastPathComponent == "ItchyUITests")
+    #expect(testing.root.deletingLastPathComponent().lastPathComponent == "ItchyUITests")
+    #expect(testing.root.lastPathComponent == AppStorage.uiTestRun, "one directory per launch")
   }
 }

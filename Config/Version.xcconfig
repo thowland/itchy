@@ -1,0 +1,14 @@
+// The application version (D-22).
+//
+// MAJOR.MINOR.PATCH, raised with `make bump` — patch by default, because
+// development moves quickly and most changes are fixes and finish rather than
+// new capability. `make bump PART=minor` when a release adds something a user
+// would describe as a feature.
+//
+// Kept here rather than in project.yml so that bumping it does not regenerate
+// the Xcode project, which would force a full rebuild.
+MARKETING_VERSION = 0.1.1
+
+// The build number is the commit count, stamped into the built Info.plist by a
+// build phase (specification §16). Zero here means the stamp did not run.
+CURRENT_PROJECT_VERSION = 0

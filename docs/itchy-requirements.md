@@ -97,6 +97,10 @@ A user-configurable global hotkey MUST open the most recently used pad and bring
 A settings window MUST exist and MUST be reachable from the menubar. In R1 it carries the login item, the hotkey, and the pad count; later releases extend it rather than restructure it.
 *Acceptance:* each setting present in a given release is readable, writable, and persistent across relaunch.
 
+**FR-1.7 — About and version** *(R1, SHOULD)*
+The menubar menu SHOULD offer an About item that shows the application's version and build number, reusing the first-run window. Opening it MUST NOT alter whether the first run has been seen. Added after R1, at the author's request (D-22).
+*Acceptance:* About opens the welcome window with a Close button and a line reading "Version MAJOR.MINOR.PATCH (build)"; closing it leaves the first-run record unchanged.
+
 **FR-1.6 — Cold launch cost** *(R1, MUST)*
 Launching Itchy MUST NOT block on reading pad content. Pad metadata and order are read at launch; content is read when a pad is first opened.
 *Acceptance:* with every pad at its maximum practical size, the menubar item is present and responsive within the budget set in NFR-1.1.
@@ -121,6 +125,10 @@ Creating a pad MUST require no input from the user. A new pad receives a default
 **FR-2.4 — Pad naming** *(R1, MUST)*
 A pad MUST have a display name, MUST be renameable, and MUST NOT require the user to supply one at any point. Names need not be unique.
 *Acceptance:* a renamed pad shows its new name in the menubar and panel title, and the name persists across relaunch.
+
+**FR-2.9 — Per-pad settings** *(R1, SHOULD)*
+Each pad SHOULD have a settings sheet reached from the pad itself, holding its name, mode and pinned state, and later its exposure and routing policy. An empty name MUST NOT be saved. A name shared with another pad SHOULD be pointed out, since it prevents asking for the pad by name. Added after R1, at the author's request (D-21).
+*Acceptance:* renaming from the sheet updates the menubar, the panel title and the status bar without reopening the pad; clearing the name keeps the old one; a duplicate name, in any case, shows a notice.
 
 **FR-2.5 — Reordering** *(R1, MUST)*
 Slot order MUST be user-controllable and MUST persist.
@@ -209,6 +217,10 @@ Copying a pad's entire contents as plain text MUST be a single action.
 **FR-4.10 — Editor font** *(R1, SHOULD)*
 The editor's font family and size SHOULD be settable in settings, and a change SHOULD reach text already in a pad, not only new typing. Text set in the editor's own font follows the setting. Text that arrived in a font of its own keeps it. In a plain pad, all text follows the setting. Added after R1 was feature-complete, at the author's request, for reading comfort (D-19).
 *Acceptance:* raising the size enlarges the body text of an open pad immediately, and of a closed pad when it is next opened; bold survives; text pasted from a web page in its own font does not change; the choice persists across relaunch.
+
+**FR-4.11 — Bold, italic and underline** *(R1, SHOULD)*
+A styled pad SHOULD offer bold, italic and underline as on-screen controls reflecting the selection and as ⌘B, ⌘I and ⌘U. Each application MUST be one undoable step. The controls MUST NOT be available in a plain pad. Added after R1, at the author's request (D-20).
+*Acceptance:* each control and shortcut toggles its trait over a selection and for subsequent typing; undo reverses one toggle; the controls are absent in a plain pad.
 
 ### FR-5 Storage and persistence
 
@@ -464,7 +476,7 @@ Panels, the menubar listing, and settings SHOULD be navigable and labelled under
 | 2. Panel subclass, window controller, frame persistence | FR-3.1–FR-3.5, FR-3.7 |
 | 3. Text bridge, RTFD, shadow file, debounced atomic saves | FR-4.1–FR-4.3, FR-4.6–FR-4.8, FR-5.1–FR-5.6, NFR-2.1 |
 | 4. Store-backed pad list, creation, rename, reorder, modes | FR-2.1–FR-2.8, FR-4.4, FR-4.5, FR-5.7–FR-5.9 |
-| — R1 completion items not in the build order | FR-1.3, FR-1.4, FR-1.6, FR-3.6, FR-4.9, FR-4.10, NFR-1.1, NFR-3.4 |
+| — R1 completion items not in the build order | FR-1.3, FR-1.4, FR-1.6, FR-1.7, FR-2.9, FR-3.6, FR-4.9, FR-4.10, FR-4.11, NFR-1.1, NFR-3.4 |
 | 5. Transform menu | FR-6.1–FR-6.6 |
 | 6. Provenance | FR-7.1–FR-7.5 |
 | 7. MCP server and shim | FR-8.1–FR-8.10, NFR-3.2, NFR-3.3 |

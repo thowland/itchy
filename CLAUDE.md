@@ -126,6 +126,8 @@ make coverage    # coverage against the 80% floor; COVERAGE_REPORT=1 for per-fil
 make verify-gate # prove the gates fail when they should
 make sign-setup  # point Debug builds at a keychain identity (see below)
 make format      # apply swift-format in place
+make bump        # raise the patch version; PART=minor or PART=major (D-22)
+make version     # print the current version
 make icon        # regenerate the app icon from the cat.fill symbol
 make app         # build the bundle into ./build and print its path
 make run         # build and launch it
