@@ -27,7 +27,7 @@ final class PadCoordinator {
   @ObservationIgnored internal let hotKey = GlobalHotKey()
   @ObservationIgnored internal let signposter = LaunchSignposter()
   @ObservationIgnored private var welcome: WelcomeWindowController?
-  @ObservationIgnored private let layout: PadStorageLayout
+  @ObservationIgnored internal let layout: PadStorageLayout
 
   @ObservationIgnored internal let launchOptions: LaunchOptions
 
@@ -52,6 +52,10 @@ final class PadCoordinator {
     await refreshFaults()
     await refresh()
     signposter.endLaunch(launch)
+    // After the launch interval closes: a backup must not count against the
+    // budget in NFR-1.1, and nothing depends on it having finished.
+    archiveIfNeeded(trigger: .launch)
+    archiveIfNeeded(trigger: settings.archivesDaily ? .daily : .launch)
     await reopenPinnedPads()
     showWelcomeIfNeeded()
     if launchOptions.opensPadOnLaunch {
@@ -179,14 +183,16 @@ final class PadCoordinator {
     editors[padID]?.flatten()
   }
 
+  /// `FR-2.3`: creation requires no input and the pad is immediately ready to
+  /// accept typing — so it opens, focused, rather than only appearing in a list
+  /// the user then has to go and click.
   func createPad() {
     Task { [weak self] in
       guard let self else { return }
-      let created = try? await self.store.createPad(name: nil)
-      if let created {
-        try? await self.store.setMode(created.id, to: self.settings.defaultMode)
-      }
+      guard let created = try? await self.store.createPad(name: nil) else { return }
+      try? await self.store.setMode(created.id, to: self.settings.defaultMode)
       await self.refresh()
+      await self.openPad(created.id, makingKey: true)
     }
   }
 
@@ -303,6 +309,7 @@ final class PadCoordinator {
   }
 
   func flushOnTermination() {
+    archiveOnTermination()
     let store = store
     let editors = Array(editors.values)
     let semaphore = DispatchSemaphore(value: 0)
@@ -314,6 +321,12 @@ final class PadCoordinator {
       semaphore.signal()
     }
     _ = semaphore.wait(timeout: .now() + 2)
+  }
+
+  /// Taken before the flush, so the archive holds what was last written rather
+  /// than a half-saved state — and after it the live store is current anyway.
+  private func archiveOnTermination() {
+    archiveIfNeeded(trigger: .quit)
   }
 
   var openPanelCount: Int { registry.openCount }

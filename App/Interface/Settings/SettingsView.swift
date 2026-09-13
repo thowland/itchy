@@ -15,9 +15,13 @@ struct SettingsView: View {
         .tabItem { Label("General", systemImage: "gearshape") }
       EditorSettingsView()
         .tabItem { Label("Editor", systemImage: "textformat") }
+      ArchiveSettingsView()
+        .tabItem { Label("Backups", systemImage: "clock.arrow.circlepath") }
     }
     .environment(coordinator)
-    .frame(width: 480, height: 280)
+    // Tall enough for General with the lowering notice showing; the previous
+    // height cut the pad-count section off at the bottom.
+    .frame(width: 480, height: 420)
   }
 }
 

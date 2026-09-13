@@ -23,6 +23,24 @@ public struct AppSettings: Sendable, Codable, Equatable {
   public var hotKeyCode: UInt32
   public var hotKeyModifiers: UInt32
 
+  /// How many archives to keep. Zero disables archiving entirely (D-18).
+  ///
+  /// Archives hold copies of pad content, including pads the user has since
+  /// deleted, so the number of them is the user's decision and turning it off
+  /// has to be one of the available answers.
+  public var archiveRetention: Int
+
+  /// Take an archive once a day in addition to on launch and quit.
+  public var archivesDaily: Bool
+
+  /// When the last archive was taken, so the daily one knows whether it is due.
+  public var lastArchiveAt: Date?
+
+  /// The pads' state when the last archive was taken. An archive is skipped
+  /// when this has not changed, so a day of restarts does not push the one
+  /// useful snapshot off the end of the retention limit.
+  public var lastArchiveFingerprint: String?
+
   /// Whether the welcome window has been shown and dismissed.
   ///
   /// An accessory application with no Dock icon and no window gives "I launched
@@ -38,7 +56,11 @@ public struct AppSettings: Sendable, Codable, Equatable {
     launchesAtLogin: Bool = true,
     hotKeyCode: UInt32 = 49,
     hotKeyModifiers: UInt32 = 0x1000 | 0x0800,
-    hasCompletedFirstRun: Bool = false
+    hasCompletedFirstRun: Bool = false,
+    archiveRetention: Int = ArchiveBounds.defaultRetention,
+    archivesDaily: Bool = true,
+    lastArchiveAt: Date? = nil,
+    lastArchiveFingerprint: String? = nil
   ) {
     self.schemaVersion = schemaVersion
     self.padLimit = padLimit
@@ -47,6 +69,10 @@ public struct AppSettings: Sendable, Codable, Equatable {
     self.hotKeyCode = hotKeyCode
     self.hotKeyModifiers = hotKeyModifiers
     self.hasCompletedFirstRun = hasCompletedFirstRun
+    self.archiveRetention = archiveRetention
+    self.archivesDaily = archivesDaily
+    self.lastArchiveAt = lastArchiveAt
+    self.lastArchiveFingerprint = lastArchiveFingerprint
   }
 
   /// Returns settings with every value forced into its permitted range.
@@ -81,11 +107,20 @@ public struct AppSettings: Sendable, Codable, Equatable {
     hasCompletedFirstRun =
       try container.decodeIfPresent(Bool.self, forKey: .hasCompletedFirstRun)
       ?? fallback.hasCompletedFirstRun
+    archiveRetention =
+      try container.decodeIfPresent(Int.self, forKey: .archiveRetention)
+      ?? fallback.archiveRetention
+    archivesDaily =
+      try container.decodeIfPresent(Bool.self, forKey: .archivesDaily) ?? fallback.archivesDaily
+    lastArchiveAt = try container.decodeIfPresent(Date.self, forKey: .lastArchiveAt)
+    lastArchiveFingerprint =
+      try container.decodeIfPresent(String.self, forKey: .lastArchiveFingerprint)
   }
 
   public func clamped() -> AppSettings {
     var result = self
     result.padLimit = PadBounds.clamp(padLimit)
+    result.archiveRetention = ArchiveBounds.clamp(archiveRetention)
     return result
   }
 

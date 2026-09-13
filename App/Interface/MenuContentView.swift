@@ -24,9 +24,10 @@ struct MenuContentView: View {
     .keyboardShortcut("n")
     PadsWindowLink()
     Divider()
-    SettingsLink {
-      Text("Settings…")
+    Button("Settings…") {
+      SettingsPresenter.show()
     }
+    .keyboardShortcut(",")
     Button("Quit Itchy") {
       NSApplication.shared.terminate(nil)
     }

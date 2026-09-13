@@ -19,4 +19,12 @@ public protocol FileSystemOperations: Sendable {
   func contentsOfDirectory(at url: URL) throws -> [URL]
   func modificationDate(of url: URL) throws -> Date
   func sizeOfItem(at url: URL) throws -> Int
+
+  /// Copies a tree, sharing storage where the filesystem can.
+  ///
+  /// On APFS this is copy-on-write, so an archive of twenty pads holding
+  /// screenshots costs almost no space until one of them is edited. Without it,
+  /// ten retained archives of a full store would be measured in gigabytes
+  /// (D-18).
+  func cloneItem(at source: URL, to destination: URL) throws
 }

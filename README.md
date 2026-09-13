@@ -115,6 +115,16 @@ Scripts/        gates, coverage, release
 docs/           vision, architecture, requirements, specification, plan, decisions
 ```
 
+Backups live beside the pads, in `archives.noindex/`, one timestamped directory
+per snapshot. One is taken when Itchy starts and quits, and optionally once a
+day — only when something has changed. Restoring is copying a directory back;
+there is no restore path in code, because a recovery mechanism only ever runs
+when something has already gone wrong and one made of `cp` cannot itself break.
+
+Backups hold copies of pads you have since deleted. How many to keep is in
+Settings → Backups, **and zero is one of the answers**. See
+[docs/decisions/D-18-archives.md](docs/decisions/D-18-archives.md).
+
 Pads are stored as flat files under
 `~/Library/Application Support/Itchy/pads.noindex/`, one directory per pad,
 holding `content.rtfd`, `content.txt` and `meta.json`. There is no database, and

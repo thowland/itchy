@@ -1,3 +1,4 @@
+import Darwin
 import Foundation
 
 /// The real filesystem.
@@ -66,6 +67,22 @@ public struct LocalFileSystem: FileSystemOperations {
       throw CocoaError(.fileReadUnknown)
     }
     return date
+  }
+
+  /// `clonefile` first, falling back to an ordinary copy.
+  ///
+  /// The fallback matters: `clonefile` fails across filesystems and on anything
+  /// that is not APFS, and an archive that refuses to be taken is worse than one
+  /// that costs disk space.
+  public func cloneItem(at source: URL, to destination: URL) throws {
+    let cloned = source.withUnsafeFileSystemRepresentation { from in
+      destination.withUnsafeFileSystemRepresentation { to in
+        guard let from, let to else { return Int32(-1) }
+        return clonefile(from, to, 0)
+      }
+    }
+    guard cloned != 0 else { return }
+    try manager.copyItem(at: source, to: destination)
   }
 
   public func sizeOfItem(at url: URL) throws -> Int {

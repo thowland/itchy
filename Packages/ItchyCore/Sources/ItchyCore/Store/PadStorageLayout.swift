@@ -33,6 +33,12 @@ public struct PadStorageLayout: Sendable {
   /// without it silently restores Spotlight indexing of every pad.
   public static let padsDirectoryName = "pads.noindex"
 
+  /// Archives hold copies of pad content, so they carry the same suffix for the
+  /// same reason. A backup that is indexed when the original is not would be a
+  /// privacy hole opened by the thing meant to protect against data loss
+  /// (D-18).
+  public static let archivesDirectoryName = "archives.noindex"
+
   /// What the pads directory was called before D-16. Migrated on load.
   public static let legacyPadsDirectoryName = "pads"
 
@@ -69,6 +75,14 @@ public struct PadStorageLayout: Sendable {
 
   public var settingsFile: URL {
     root.appendingPathComponent(Self.settingsFileName)
+  }
+
+  public var archivesDirectory: URL {
+    root.appendingPathComponent(Self.archivesDirectoryName)
+  }
+
+  public func archiveDirectory(named name: String) -> URL {
+    archivesDirectory.appendingPathComponent(name)
   }
 
   /// Where pads lived before D-16, so an existing install can be moved.

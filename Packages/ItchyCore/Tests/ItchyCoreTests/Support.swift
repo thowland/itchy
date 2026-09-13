@@ -207,4 +207,9 @@ final class FaultInjectingFileSystem: FileSystemOperations, @unchecked Sendable 
 
   func modificationDate(of url: URL) throws -> Date { try inner.modificationDate(of: url) }
   func sizeOfItem(at url: URL) throws -> Int { try inner.sizeOfItem(at: url) }
+
+  func cloneItem(at source: URL, to destination: URL) throws {
+    guard !isArmed(.write, for: destination) else { throw CocoaError(.fileWriteUnknown) }
+    try inner.cloneItem(at: source, to: destination)
+  }
 }
