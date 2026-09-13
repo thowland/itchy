@@ -60,6 +60,7 @@ Xcode does not add it to `project.yml`. See
 make app         # build the application bundle into ./build
 make run         # build and launch it
 make reveal      # build and show it in Finder
+make package     # build a DMG into ./build
 make test        # everything, with hard time limits
 make gate        # the full sprint exit gate: lint, architecture, tests, coverage
 make help        # every target
@@ -211,6 +212,23 @@ xcrun notarytool store-credentials notarytool \
 
 The profile name `notarytool` is what the release script expects; override it
 with `ITCHY_NOTARY_PROFILE` if you use another.
+
+### Packaging without a certificate
+
+`make package` builds a disk image from the current build, containing the
+application, a link to `/Applications` to drag it onto, and this README. It
+signs the image if a Developer ID is present and says so plainly when there is
+none:
+
+```
+build/Itchy.dmg   →   Itchy.app, Applications, README.md
+```
+
+That is enough to hand a build to someone who already trusts where it came from.
+It is not enough for anyone else: without notarisation Gatekeeper will refuse it
+on a machine that has never seen it, and the person opening it will be told the
+application is damaged rather than that it is unsigned. `make dmg` below is the
+article that opens anywhere.
 
 ### 3. Releasing
 

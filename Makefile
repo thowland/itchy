@@ -14,7 +14,7 @@ OUT := build
 # between arm64 and x86_64 destinations, which reads as an error.
 DEST := platform=macOS,arch=$(shell uname -m)
 
-.PHONY: help gate project regenerate test test-ui test-all sign-setup lint format arch-lint coverage verify-gate app run reveal release notarise dmg ship-check icon clean open
+.PHONY: help gate project regenerate test test-ui test-all sign-setup lint format arch-lint coverage verify-gate app run reveal package release notarise dmg ship-check icon clean open
 
 help: ## Show this help
 	@grep -E '^[a-z-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -85,6 +85,9 @@ run: app ## Build and launch the application
 
 reveal: app ## Build and show the application in Finder
 	@open -R $(OUT)/Itchy.app
+
+package: app ## Build a DMG from the current build (no Developer ID needed)
+	@./Scripts/release.sh package
 
 release: ## Build a Developer ID signed, hardened release (NFR-4.2)
 	@./Scripts/release.sh build

@@ -129,6 +129,7 @@ make format      # apply swift-format in place
 make icon        # regenerate the app icon from the cat.fill symbol
 make app         # build the bundle into ./build and print its path
 make run         # build and launch it
+make package     # DMG from the current build — app, Applications link, README
 make ship-check  # report whether this machine can produce a shippable build
 ```
 
