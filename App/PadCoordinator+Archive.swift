@@ -28,7 +28,9 @@ extension PadCoordinator {
     guard ArchivePolicy.hasChanged(since: settings.lastArchiveFingerprint, current: fingerprint)
     else { return }
 
-    guard let taken = try? store.takeArchive(now: now), taken != nil else { return }
+    // `try?` flattens the optional result, so this is nil both when the copy
+    // failed and when there was nothing to archive; either way, nothing was taken.
+    guard (try? store.takeArchive(now: now)) != nil else { return }
     store.prune(retention: settings.archiveRetention)
 
     settings.lastArchiveAt = now
