@@ -144,7 +144,49 @@ ITCHY_ROOT=/tmp/scratch .build/debug/itchyctl fault content   # damage a pad on 
 
 ### Repeated permission prompts
 
-If macOS asks for automation permission every time you run the UI suite, run:
+There are two different prompts, with different fixes.
+
+**Automation Mode asking for authentication.** XCUITest switches macOS into
+Automation Mode for every run, and by default the system asks for a password
+each time. This is a device policy, so signing does not affect it. Check with:
+
+```bash
+automationmodetool
+# "This device requires user authentication to enable Automation Mode."
+```
+
+`make test-ui` handles this itself (`Scripts/automation-mode.sh`). It switches
+the authentication requirement off for the duration of the run and puts it back
+when the run ends, including a failed or interrupted run:
+
+- From a terminal, `automationmodetool` asks for your password at the start,
+  before the build, and may ask again at the end to put the setting back.
+- If the setting is already off, as on a CI runner configured for UI testing,
+  nothing is asked and nothing is restored.
+- With no terminal to ask in (an editor task, an agent, a CI runner that has not
+  been configured), it stops immediately and says why, rather than hanging on a
+  dialog. `ITCHY_UI_ALLOW_PROMPT=1 make test-ui` runs anyway and relies on
+  someone answering the dialog.
+
+To make it permanent instead, on a machine you use only for development or on a
+self-hosted runner:
+
+```bash
+automationmodetool enable-automationmode-without-authentication
+# and to undo:
+automationmodetool disable-automationmode-without-authentication
+```
+
+Not under `sudo`. The tool asks for the password of the user running it, so
+under `sudo` it asks for root's, which on macOS normally has none.
+
+The trade-off is that any process running as you can then enter Automation Mode,
+which allows synthesised input, without asking. A self-hosted runner must also
+run inside a logged-in user session (a LaunchAgent, not a LaunchDaemon), or UI
+tests cannot drive windows at all.
+
+**The test runner or Itchy being asked for permission again after a rebuild.**
+If macOS asks for automation permission every time you rebuild, run:
 
 ```bash
 make sign-setup
@@ -285,7 +327,9 @@ forces one deliberately.
 **A test run never finishes.** Two causes, in order of likelihood.
 
 A permission dialog is waiting on screen. It blocks the test runner and is easy
-to miss on a second display. `make sign-setup` stops it recurring; to check
+to miss on a second display. Usually it is Automation Mode asking for
+authentication, which `make test-ui` now switches off for the run (see *Repeated
+permission prompts*); otherwise `make sign-setup` stops it recurring. To check
 whether one is up right now:
 
 ```bash

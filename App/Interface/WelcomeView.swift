@@ -6,6 +6,7 @@ import SwiftUI
 /// This file is on the coverage exclusion list and may not branch; the wording
 /// lives in `WelcomeText` and the decision to show it in `FirstRunPolicy`.
 struct WelcomeView: View {
+  let presentation: WelcomePresentation
   let onDismiss: () -> Void
 
   var body: some View {
@@ -33,7 +34,7 @@ struct WelcomeView: View {
       Spacer(minLength: 24)
 
       VStack(spacing: 14) {
-        Button(WelcomeText.dismiss, action: onDismiss)
+        Button(WelcomeText.dismiss(for: presentation), action: onDismiss)
           .buttonStyle(.borderedProminent)
           .controlSize(.large)
           .keyboardShortcut(.defaultAction)
@@ -48,10 +49,16 @@ struct WelcomeView: View {
             .foregroundStyle(.tint)
         }
         .font(.caption)
+
+        Text(WelcomeText.versionLine)
+          .font(.caption)
+          .foregroundStyle(.tertiary)
+          .textSelection(.enabled)
+          .accessibilityIdentifier("welcome.version")
       }
       .padding(.bottom, 28)
     }
-    .frame(width: 460, height: 520)
+    .frame(width: 460, height: 540)
     .accessibilityIdentifier("welcome.window")
   }
 }

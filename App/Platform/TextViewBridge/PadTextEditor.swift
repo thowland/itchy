@@ -32,6 +32,6 @@ struct PadTextEditor: NSViewRepresentable {
 
   func updateNSView(_ scrollView: NSScrollView, context: Context) {
     let textView = scrollView.documentView as? PadTextView
-    textView.map { $0.configure(for: mode) }
+    textView.map { $0.configureIfNeeded(for: mode) }
   }
 }

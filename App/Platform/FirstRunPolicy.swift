@@ -19,6 +19,42 @@ enum FirstRunPolicy {
   }
 }
 
+/// Why the welcome window is on screen.
+///
+/// The same window serves as the About screen. What differs is the button, and
+/// whether closing it counts as having seen the first run.
+enum WelcomePresentation: Equatable, Sendable {
+  case firstRun
+  case about
+}
+
+/// What dismissing the welcome window records.
+enum WelcomeDismissal: Equatable, Sendable {
+  case recordFirstRun
+  case leaveSettingsAlone
+}
+
+/// What a request for the About screen does.
+enum AboutRequest: Equatable, Sendable {
+  case open
+  /// The window is already up, as About or as the first run. Replacing a first
+  /// run with About would lose the record that it was seen.
+  case raiseExisting
+}
+
+extension FirstRunPolicy {
+  static func dismissal(for presentation: WelcomePresentation) -> WelcomeDismissal {
+    switch presentation {
+    case .firstRun: .recordFirstRun
+    case .about: .leaveSettingsAlone
+    }
+  }
+
+  static func aboutRequest(showing: WelcomePresentation?) -> AboutRequest {
+    showing == nil ? .open : .raiseExisting
+  }
+}
+
 /// What the welcome window says.
 ///
 /// Held here rather than in the view so the wording is reviewable in one place —
@@ -64,5 +100,12 @@ enum WelcomeText {
     URL(string: websiteAddress) ?? URL.temporaryDirectory
   }
 
-  static let dismiss = "Start Scratching"
+  static func dismiss(for presentation: WelcomePresentation) -> String {
+    switch presentation {
+    case .firstRun: "Start Scratching"
+    case .about: "Close"
+    }
+  }
+
+  static var versionLine: String { AppVersion.current.display }
 }

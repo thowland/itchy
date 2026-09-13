@@ -23,7 +23,18 @@ PKG_DIR="${COVERAGE_PKG_DIR:-Packages}"
 PACKAGES="${COVERAGE_PACKAGES:-ItchyCore ItchyServices}"
 EXCLUSIONS="${COVERAGE_EXCLUSIONS:-Scripts/coverage-exclusions.txt}"
 LCOV_DIR=$(mktemp -d)
-trap 'rm -rf "$LCOV_DIR"' EXIT
+# Launching a built app registers it with LaunchServices, and deleting the
+# directory does not unregister it. Every coverage run used to leave a dead
+# record behind for com.wdogsystems.itchy — thirty-seven of them by the time
+# anyone looked — beside the installed copy that Spotlight should be showing.
+LSREGISTER=/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister
+unregister_built_apps() {
+  [ -x "$LSREGISTER" ] || return 0
+  find "$LCOV_DIR" -name '*.app' -type d -prune 2>/dev/null | while IFS= read -r app; do
+    "$LSREGISTER" -u "$app" >/dev/null 2>&1
+  done
+}
+trap 'unregister_built_apps; rm -rf "$LCOV_DIR"' EXIT
 
 for PKG in $PACKAGES; do
   DIR="$PKG_DIR/$PKG"

@@ -16,6 +16,10 @@ final class PadTextView: NSTextView {
   /// The editor font from settings, which typing uses and plain pads are set in
   /// entirely (D-19).
   var bodyFont: NSFont = ContentCodec.defaultFont
+  /// Called with a formatting shortcut's trait (D-20).
+  var onFormat: ((FormatTrait) -> Void)?
+  /// The mode last applied by `configure(for:)`.
+  private(set) var configuredMode: PadMode?
 
   /// Routes every paste through the interceptor, so that provenance capture and
   /// image downsampling have one entry point (specification §9.4).
@@ -29,6 +33,44 @@ final class PadTextView: NSTextView {
   ) -> Bool {
     handleIncoming(pboard)
     return true
+  }
+
+  /// ⌘B, ⌘I and ⌘U. An accessory application has no Format menu for these to
+  /// arrive through, so the text view answers them itself (D-20).
+  ///
+  /// Answered in `keyDown` as well. In a non-activating panel of an inactive
+  /// application the chord is not always offered as a key equivalent, and then
+  /// arrives here as an ordinary key press — which is what the UI suite found.
+  override func performKeyEquivalent(with event: NSEvent) -> Bool {
+    guard window?.firstResponder === self, handleFormattingShortcut(event) else {
+      return super.performKeyEquivalent(with: event)
+    }
+    return true
+  }
+
+  override func keyDown(with event: NSEvent) {
+    guard handleFormattingShortcut(event) else {
+      super.keyDown(with: event)
+      return
+    }
+  }
+
+  private func handleFormattingShortcut(_ event: NSEvent) -> Bool {
+    guard
+      let trait = FormattingPlan.shortcut(
+        characters: event.charactersIgnoringModifiers, modifiers: event.modifierFlags, mode: mode)
+    else { return false }
+    onFormat?(trait)
+    return true
+  }
+
+  /// Reconfigures only when the mode has changed, so that an unrelated SwiftUI
+  /// update does not reset the typing attributes (`ModeConfigurationPlan`).
+  func configureIfNeeded(for mode: PadMode) {
+    switch ModeConfigurationPlan.decide(configured: configuredMode, requested: mode) {
+    case .reconfigure: configure(for: mode)
+    case .unchanged: break
+    }
   }
 
   private func handleIncoming(_ pasteboard: NSPasteboard) {
@@ -47,6 +89,7 @@ final class PadTextView: NSTextView {
   /// can do.
   func configure(for mode: PadMode) {
     self.mode = mode
+    configuredMode = mode
     isRichText = mode == .styled
     importsGraphics = mode == .styled
     allowsImageEditing = mode == .styled

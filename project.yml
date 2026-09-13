@@ -22,8 +22,9 @@ settings:
   base:
     SWIFT_VERSION: "6.0"
     SWIFT_STRICT_CONCURRENCY: complete
-    MARKETING_VERSION: "0.1.0"
-    CURRENT_PROJECT_VERSION: "1"
+    # MARKETING_VERSION and CURRENT_PROJECT_VERSION are deliberately absent:
+    # they live in Config/Version.xcconfig (D-22), and a project-level value
+    # here would override it exactly as CODE_SIGN_IDENTITY would below.
     # CODE_SIGN_IDENTITY is deliberately absent here. A project-level value
     # overrides an xcconfig, which would defeat Config/Debug.xcconfig and leave
     # every build ad-hoc — and TCC re-prompting on each one. Debug takes it from
@@ -48,6 +49,7 @@ settings:
 # every rebuild.
 configFiles:
   Debug: Config/Debug.xcconfig
+  Release: Config/Release.xcconfig
 
 packages:
   ItchyCore:
@@ -66,6 +68,22 @@ targets:
         product: ItchyCore
       - package: ItchyServices
         product: ItchyServices
+    postBuildScripts:
+      # The build number is the commit count (specification §16, D-22), stamped
+      # into the built Info.plist rather than written into project.yml, which
+      # would change on every commit and regenerate the project each time. Code
+      # signing runs after every script phase, so the signature covers it.
+      - name: Stamp build number
+        basedOnDependencyAnalysis: false
+        # Declared as an input so the build system orders this after the
+        # Info.plist is processed; without it the stamp ran first and was
+        # overwritten, and every build read 0.
+        inputFiles:
+          - $(TARGET_BUILD_DIR)/$(INFOPLIST_PATH)
+        script: |
+          count=$(git -C "$SRCROOT" rev-list --count HEAD 2>/dev/null || true)
+          [ -n "$count" ] || exit 0
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $count" "$TARGET_BUILD_DIR/$INFOPLIST_PATH"
     info:
       path: App/Info.plist
       properties:

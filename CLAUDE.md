@@ -102,7 +102,16 @@ macOS automation permission, and a permission prompt blocks invisibly — what y
 see is a hang, not a question. `make test` skips it; `make test-ui` runs it; CI
 runs it as a separate job that does not gate a merge.
 
-**If the prompt keeps coming back, run `make sign-setup`.** An ad-hoc signed
+**Automation Mode is switched for the run.** XCUITest enters macOS Automation
+Mode, which by default asks for authentication every time: a device policy that
+signing does not touch. `make test-ui` turns the authentication requirement off
+for the run and restores it afterwards (`Scripts/automation-mode.sh`). From a
+terminal, the tool asks for your password at the start and may ask again at the
+end. Never under `sudo`: it then asks for root's password. With no terminal, as
+when an agent runs it, it stops and says so instead of hanging;
+`ITCHY_UI_ALLOW_PROMPT=1` accepts the on-screen dialog instead.
+
+**If the prompt keeps coming back after rebuilds, run `make sign-setup`.** An ad-hoc signed
 application has no stable designated requirement, so TCC keys its grant on the
 code hash, and the hash changes on every build — so every rebuild looks like a
 new application. Signing Debug with a real identity makes the requirement stable
@@ -126,6 +135,8 @@ make coverage    # coverage against the 80% floor; COVERAGE_REPORT=1 for per-fil
 make verify-gate # prove the gates fail when they should
 make sign-setup  # point Debug builds at a keychain identity (see below)
 make format      # apply swift-format in place
+make bump        # raise the patch version; PART=minor or PART=major (D-22)
+make version     # print the current version
 make icon        # regenerate the app icon from the cat.fill symbol
 make app         # build the bundle into ./build and print its path
 make run         # build and launch it

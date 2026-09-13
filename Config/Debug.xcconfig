@@ -13,6 +13,8 @@
 // `make sign-setup` writes Signing.local.xcconfig with an identity found in
 // this machine's keychain. That file is not committed.
 
+#include "Version.xcconfig"
+
 ITCHY_SIGN_IDENTITY = -
 ITCHY_DEVELOPMENT_TEAM =
 

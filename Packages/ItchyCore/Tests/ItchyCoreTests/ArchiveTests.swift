@@ -77,21 +77,72 @@ struct ArchivePolicyTests {
     #expect(ArchiveBounds.clamp(9_999) == ArchiveBounds.maximumRetention)
   }
 
+  private func snapshot(
+    id: String = "A",
+    document: String = "hello",
+    attachments: [String: Int] = [:],
+    name: String = "scratch",
+    isPinned: Bool = false
+  ) -> PadSnapshot {
+    PadSnapshot(
+      id: id, document: Data(document.utf8), attachments: attachments,
+      metadata: .readable(name: name, mode: "styled", isPinned: isPinned))
+  }
+
   /// Without this, a launch-and-quit cycle takes two identical snapshots and a
   /// day of restarts pushes the useful one off the end.
-  @Test("An unchanged store is recognised as unchanged")
+  @Test("An unchanged store is recognised as unchanged, in any order")
   func fingerprints() {
-    let modified = Date(timeIntervalSince1970: 1_788_000_000)
-    let first = ArchivePolicy.fingerprint(padCount: 3, latestModification: modified)
-    let same = ArchivePolicy.fingerprint(padCount: 3, latestModification: modified)
-    let edited = ArchivePolicy.fingerprint(
-      padCount: 3, latestModification: modified.addingTimeInterval(60))
-    let added = ArchivePolicy.fingerprint(padCount: 4, latestModification: modified)
-
+    let first = ArchivePolicy.fingerprint(of: [snapshot(id: "A"), snapshot(id: "B")])
+    let same = ArchivePolicy.fingerprint(of: [snapshot(id: "B"), snapshot(id: "A")])
     #expect(!ArchivePolicy.hasChanged(since: first, current: same))
-    #expect(ArchivePolicy.hasChanged(since: first, current: edited))
-    #expect(ArchivePolicy.hasChanged(since: first, current: added))
     #expect(ArchivePolicy.hasChanged(since: nil, current: first), "never archived is a change")
+  }
+
+  @Test("What an archive preserves changes the fingerprint")
+  func fingerprintChanges() {
+    let base = ArchivePolicy.fingerprint(of: [snapshot()])
+    let variants = [
+      [snapshot(document: "hello!")],
+      [snapshot(attachments: ["Attachment.tiff": 1_024])],
+      [snapshot(name: "json")],
+      [snapshot(isPinned: true)],
+      [snapshot(), snapshot(id: "B")],
+      [snapshot(id: "C")],
+    ]
+    for variant in variants {
+      #expect(ArchivePolicy.hasChanged(since: base, current: ArchivePolicy.fingerprint(of: variant)))
+    }
+  }
+
+  /// A deleted pad and a new one leave the count the same.
+  @Test("Replacing one pad with another is a change")
+  func replacement() {
+    let before = ArchivePolicy.fingerprint(of: [snapshot(id: "A")])
+    let after = ArchivePolicy.fingerprint(of: [snapshot(id: "B")])
+    #expect(ArchivePolicy.hasChanged(since: before, current: after))
+  }
+
+  @Test("Quit archives only after a save that finished")
+  func quitArchive() {
+    #expect(ArchivePolicy.quitArchive(after: .completed) == .take)
+    #expect(ArchivePolicy.quitArchive(after: .timedOut) == .skip)
+  }
+
+  @Test("The stable hash is the same on every run, and separates its parts")
+  func stableHash() {
+    var first = StableHash()
+    first.combine("ab")
+    first.combine("c")
+    var second = StableHash()
+    second.combine("a")
+    second.combine("bc")
+    #expect(first.hex != second.hex)
+
+    var again = StableHash()
+    again.combine("ab")
+    again.combine("c")
+    #expect(first.hex == again.hex, "the same input must give the same value")
   }
 
   /// Colons are what ISO 8601 uses and what Finder renders as a slash.
@@ -230,11 +281,48 @@ struct ArchiveStoreTests {
     let before = archives.fingerprint()
 
     let padID = try #require(await store.pads.first?.id)
-    try await Task.sleep(for: .milliseconds(1_100))
     await store.stage(PadContent.plainText("changed"), for: padID, origin: .user)
     try await store.flush(padID)
 
     #expect(ArchivePolicy.hasChanged(since: before, current: archives.fingerprint()))
+  }
+
+  /// What the author saw: restarts that opened and moved pads each looked like
+  /// an edit, or — with the time-based fingerprint — like nothing at all
+  /// depending on timing. Opening and moving preserve nothing worth a backup.
+  @Test("Opening, moving and re-saving unchanged content is not a change")
+  func fingerprintIgnoresNoise() async throws {
+    let root = TemporaryRoot()
+    let store = try await storeWithPads(1, root: root)
+    let archives = ArchiveStore(layout: root.layout)
+    let padID = try #require(await store.pads.first?.id)
+    let before = archives.fingerprint()
+
+    await store.markOpened(padID)
+    await store.setFrame(padID, PadFrame(x: 10, y: 20, width: 300, height: 400, displayID: nil))
+    let content = try await store.content(of: padID)
+    await store.stage(content, for: padID, origin: .user)
+    try await store.flushAll()
+
+    #expect(!ArchivePolicy.hasChanged(since: before, current: archives.fingerprint()))
+  }
+
+  @Test("Renaming or pinning a pad is a change")
+  func fingerprintTracksMetadata() async throws {
+    let root = TemporaryRoot()
+    let store = try await storeWithPads(1, root: root)
+    let archives = ArchiveStore(layout: root.layout)
+    let padID = try #require(await store.pads.first?.id)
+    let before = archives.fingerprint()
+
+    try await store.rename(padID, to: "renamed")
+    try await store.flushAll()
+    let renamed = archives.fingerprint()
+    #expect(ArchivePolicy.hasChanged(since: before, current: renamed))
+
+    try await store.setPinned(padID, true)
+    try await store.flushAll()
+    #expect(ArchivePolicy.hasChanged(since: renamed, current: archives.fingerprint()))
   }
 
   @Test("An interrupted archive leaves no half-written directory")

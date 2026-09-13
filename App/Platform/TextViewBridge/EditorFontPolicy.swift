@@ -45,7 +45,9 @@ enum EditorFontPolicy {
   static func bodyFamilies(for settings: AppSettings) -> Set<String> {
     var families: Set<String> = [builtInFamily]
     families.formUnion(settings.formerEditorFontFamilies)
-    settings.editorFontFamily.map { families.insert($0) }
+    if let current = settings.editorFontFamily {
+      families.insert(current)
+    }
     return families
   }
 

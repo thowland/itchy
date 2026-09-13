@@ -35,3 +35,6 @@ New decisions:
 | [D-17](D-17-spike-s1-s4.md) | Spikes S-1 and S-4 resolved: Carbon hotkey stands, MCP SDK adopted |
 | [D-18](D-18-archives.md) | Pads are archived automatically; retention, including none, is the user's |
 | [D-19](D-19-editor-font.md) | The editor font and size are settings, and body text already in a pad follows them |
+| [D-20](D-20-formatting-controls.md) | Styled pads get bold, italic and underline, as buttons and as ⌘B/⌘I/⌘U |
+| [D-21](D-21-pad-settings.md) | Each pad has its own settings sheet, reached from the pad; open panels see live metadata |
+| [D-22](D-22-versioning.md) | Semantic versions biased toward patches, set in an xcconfig; About shows version and build |

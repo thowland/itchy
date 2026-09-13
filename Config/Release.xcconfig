@@ -1,0 +1,4 @@
+// Release build settings. Signing for Release is set in project.yml and
+// overridden by `make release`; this file exists to share the version (D-22).
+
+#include "Version.xcconfig"

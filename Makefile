@@ -14,7 +14,7 @@ OUT := build
 # between arm64 and x86_64 destinations, which reads as an error.
 DEST := platform=macOS,arch=$(shell uname -m)
 
-.PHONY: help gate project regenerate test test-ui test-all sign-setup lint format arch-lint coverage verify-gate app run reveal package release notarise dmg ship-check icon clean open
+.PHONY: help gate project regenerate test test-ui test-all sign-setup bump version lint format arch-lint coverage verify-gate app run reveal package release notarise dmg ship-check icon clean open
 
 help: ## Show this help
 	@grep -E '^[a-z-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -58,6 +58,12 @@ test-all: project ## Run everything, UI suite included
 
 sign-setup: ## Point Debug builds at a keychain identity, so TCC stops re-asking
 	@./Scripts/sign-setup.sh
+
+bump: ## Raise the version: patch by default, PART=minor or PART=major (D-22)
+	@./Scripts/bump-version.sh $(or $(PART),patch)
+
+version: ## Print the current version
+	@sed -n 's/^MARKETING_VERSION = //p' Config/Version.xcconfig
 
 lint: ## Lint and check formatting (G1)
 	@$(SWIFTLINT) lint --quiet --strict

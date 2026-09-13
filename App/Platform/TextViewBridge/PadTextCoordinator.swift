@@ -1,5 +1,13 @@
 import AppKit
 import ItchyCore
+import Observation
+
+/// Which formatting traits the selection carries, observed by the controls.
+@MainActor
+@Observable
+final class FormattingState {
+  var active: Set<FormatTrait> = []
+}
 
 /// Bridges the text view's edits to the store.
 ///
@@ -15,6 +23,8 @@ final class PadTextCoordinator: NSObject, NSTextViewDelegate {
   static let serialisationDebounce: Duration = .milliseconds(120)
 
   let padID: PadID
+  /// What the formatting controls show (D-20).
+  let formatting = FormattingState()
   private let store: PadStore
   private weak var textView: PadTextView?
   private var serialisationTask: Task<Void, Never>?
@@ -30,10 +40,34 @@ final class PadTextCoordinator: NSObject, NSTextViewDelegate {
     textView.onPaste = { [weak self] entry in
       self?.recordProvenance(entry)
     }
+    textView.onFormat = { [weak self] trait in
+      self?.toggle(trait)
+    }
+    refreshFormatting()
   }
 
   func textDidChange(_ notification: Notification) {
     scheduleStaging()
+    refreshFormatting()
+  }
+
+  func textViewDidChangeSelection(_ notification: Notification) {
+    refreshFormatting()
+  }
+
+  /// Bold, italic or underline over the selection, as one undoable step. Does
+  /// nothing in a plain pad (`FR-4.4`).
+  func toggle(_ trait: FormatTrait) {
+    guard let textView, FormattingPlan.availability(for: textView.mode) == .available else {
+      return
+    }
+    TextFormatter.toggle(trait, in: textView, fallbackFont: textView.bodyFont)
+    refreshFormatting()
+  }
+
+  func refreshFormatting() {
+    guard let textView else { return }
+    formatting.active = FormattingPlan.active(in: TextFormatter.runs(in: textView))
   }
 
   /// Serialises and stages, debounced.

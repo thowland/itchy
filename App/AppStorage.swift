@@ -17,9 +17,15 @@ enum AppStorage {
     PadStore(layout: layout(options: options))
   }
 
+  /// One directory per launch under the UI-test flag, so each case starts from
+  /// an empty store. A shared one let text typed by one case turn up in the
+  /// next, and whether it did depended on whether a save beat termination.
+  /// Chosen once per process, so every store built in a launch agrees.
+  static let uiTestRun = UUID().uuidString
+
   static func layout(options: LaunchOptions) -> PadStorageLayout {
     guard !options.usesTemporaryStorage else {
-      return PadStorageLayout.at(path: NSTemporaryDirectory() + "ItchyUITests")
+      return PadStorageLayout.at(path: NSTemporaryDirectory() + "ItchyUITests/" + uiTestRun)
     }
     return (try? PadStorageLayout.standard())
       ?? PadStorageLayout.at(path: NSTemporaryDirectory() + "Itchy")
