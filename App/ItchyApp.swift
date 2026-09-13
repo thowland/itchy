@@ -24,11 +24,8 @@ struct ItchyApp: App {
         .environment(delegate.coordinator)
     }
     .defaultSize(width: 460, height: 320)
-
-    Settings {
-      SettingsView()
-        .environment(delegate.coordinator)
-    }
+    // No `Settings` scene: from macOS 14 only `SettingsLink` opens one, so the
+    // window is owned by SettingsWindowController instead.
   }
 }
 

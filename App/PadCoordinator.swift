@@ -27,6 +27,7 @@ final class PadCoordinator {
   @ObservationIgnored internal let hotKey = GlobalHotKey()
   @ObservationIgnored internal let signposter = LaunchSignposter()
   @ObservationIgnored private var welcome: WelcomeWindowController?
+  @ObservationIgnored internal lazy var settingsWindow = SettingsWindowController(coordinator: self)
   @ObservationIgnored internal let layout: PadStorageLayout
 
   @ObservationIgnored internal let launchOptions: LaunchOptions

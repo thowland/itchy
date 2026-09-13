@@ -25,7 +25,7 @@ struct MenuContentView: View {
     PadsWindowLink()
     Divider()
     Button("Settings…") {
-      SettingsPresenter.show()
+      coordinator.showSettings()
     }
     .keyboardShortcut(",")
     Button("Quit Itchy") {
