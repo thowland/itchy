@@ -1,5 +1,37 @@
 import Foundation
 
+/// What an archive fingerprint is computed from, one per pad directory.
+public struct PadSnapshot: Sendable, Equatable {
+  public enum Metadata: Sendable, Equatable {
+    case readable(name: String, mode: String, isPinned: Bool)
+    /// The raw bytes, so that any change to an unreadable file still registers.
+    case unreadable(Data)
+  }
+
+  public var id: String
+  public var document: Data
+  public var attachments: [String: Int]
+  public var metadata: Metadata
+
+  public init(id: String, document: Data, attachments: [String: Int], metadata: Metadata) {
+    self.id = id
+    self.document = document
+    self.attachments = attachments
+    self.metadata = metadata
+  }
+}
+
+/// How the save at quit ended.
+public enum FlushOutcome: Equatable, Sendable {
+  case completed
+  case timedOut
+}
+
+public enum QuitArchive: Equatable, Sendable {
+  case take
+  case skip
+}
+
 /// Decides when to archive and what to discard (D-11, D-18).
 ///
 /// Separated from the copying because the rules are where the surprises are:
@@ -51,11 +83,47 @@ public enum ArchivePolicy {
     fingerprint != current
   }
 
-  /// A cheap summary of the pads' state: how many there are and when the most
-  /// recent was modified. Content is not read (`FR-1.6` applies here too).
-  public static func fingerprint(padCount: Int, latestModification: Date?) -> String {
-    let stamp = latestModification.map { String(Int($0.timeIntervalSince1970)) } ?? "none"
-    return "\(padCount):\(stamp)"
+  /// A summary of what an archive would preserve: which pads exist, what they
+  /// say, and their name, mode and pinning.
+  ///
+  /// Deliberately not modification times. Opening a pad records when it was
+  /// opened and moving one records its frame, and each rewrites the pad's files,
+  /// so a time-based fingerprint counted both as changes and took identical
+  /// backups. Neither is worth preserving.
+  ///
+  /// The document is hashed in full because RTFD serialisation is deterministic
+  /// — re-saving unchanged text produces identical bytes — and it is small
+  /// beside the images, which are summarised by name and size instead.
+  public static func fingerprint(of pads: [PadSnapshot]) -> String {
+    var hash = StableHash()
+    for pad in pads.sorted(by: { $0.id < $1.id }) {
+      hash.combine(pad.id)
+      hash.combine(pad.document)
+      for (name, size) in pad.attachments.sorted(by: { $0.key < $1.key }) {
+        hash.combine(name)
+        hash.combine(size)
+      }
+      switch pad.metadata {
+      case .readable(let name, let mode, let isPinned):
+        hash.combine(name)
+        hash.combine(mode)
+        hash.combine(isPinned ? 1 : 0)
+      case .unreadable(let bytes):
+        hash.combine(bytes)
+      }
+    }
+    return "2:\(pads.count):\(hash.hex)"
+  }
+
+  /// Whether to archive at quit, given how the final save went.
+  ///
+  /// A save that did not finish in time may still be writing, and a copy taken
+  /// then could hold a pad half-saved. The next launch archives instead.
+  public static func quitArchive(after outcome: FlushOutcome) -> QuitArchive {
+    switch outcome {
+    case .completed: .take
+    case .timedOut: .skip
+    }
   }
 
   /// Directory name for an archive: sortable, and legal on every filesystem.

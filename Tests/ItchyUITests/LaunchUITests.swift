@@ -23,10 +23,14 @@ final class LaunchUITests: XCTestCase {
 
   /// An instance left behind by an interrupted run confuses XCUIApplication,
   /// which expects to own the process it launches. This cost an afternoon once.
+  ///
+  /// Only test builds, which run from DerivedData. Matching the bundle
+  /// identifier alone also force-quit the copy the author was using, taking its
+  /// quit backup and its last unsaved edit with it.
   private func terminateStrayInstances() {
     let running = NSRunningApplication.runningApplications(
       withBundleIdentifier: "com.wdogsystems.itchy")
-    for instance in running {
+    for instance in running where instance.bundleURL?.path.contains("/DerivedData/") == true {
       instance.forceTerminate()
     }
   }

@@ -5,7 +5,8 @@
 # macOS automation permission — and a permission prompt blocks invisibly, which
 # presents as a hang rather than as a question. `--ui` includes them, and CI runs
 # them as a separate job so an environment that cannot grant automation does not
-# block everything else.
+# block everything else. A UI run switches Automation Mode's authentication off
+# for its duration and restores it afterwards (Scripts/automation-mode.sh).
 #
 # Everything here runs locally against a store of at most twenty small files.
 # Nothing legitimately takes minutes, so every stage has a hard ceiling and a
@@ -37,11 +38,19 @@ UI_ONLY="${UI_ONLY:-0}"
 # destination and simply waits, which reads as a hung test run.
 DESTINATION="platform=macOS,arch=$(uname -m)"
 
+# shellcheck source=Scripts/automation-mode.sh
+source Scripts/automation-mode.sh
+
 pass() { printf '  \033[32mok\033[0m   %s\n' "$1"; }
 fail() { printf '  \033[31mFAIL\033[0m %s\n' "$1"; }
 
+# Only instances built for testing are killed: those under a DerivedData
+# directory, which is where the test host and the UI suite's target run from.
+# The earlier pattern matched any Itchy, so a test run SIGKILLed the copy the
+# author was actually using — no quit backup, and the last second of typing
+# never saved.
 reap() {
-  pkill -9 -f "Itchy.app/Contents/MacOS/Itchy" 2>/dev/null
+  pkill -9 -f "/DerivedData/.*Itchy.app/Contents/MacOS/Itchy" 2>/dev/null
   pkill -9 -f "ItchyUITests-Runner" 2>/dev/null
   pkill -9 -f "ItchyCorePackageTests" 2>/dev/null
   pkill -9 -f "ItchyServicesPackageTests" 2>/dev/null
@@ -68,7 +77,34 @@ run_with_timeout() {
 
 echo "Tests"
 reap
-trap reap EXIT
+trap 'automation_restore; reap' EXIT
+# Turned into an ordinary exit, so that Ctrl-C still runs the EXIT trap and
+# Automation Mode is put back.
+trap 'exit 130' INT TERM
+
+# Before anything is built, so that a password is asked for while someone is
+# still watching rather than several minutes in.
+if [ "$RUN_UI" = "1" ]; then
+  automation_prepare
+  case $? in
+    0) ;;
+    1)
+      fail "could not switch Automation Mode for the UI suite"
+      exit 1
+      ;;
+    2)
+      if [ "${ITCHY_UI_ALLOW_PROMPT:-0}" = "1" ]; then
+        echo "  UI tests: Automation Mode will ask for authentication on screen."
+      else
+        fail "UI suite: Automation Mode needs authentication, and there is no terminal to ask in"
+        echo "       Run 'make test-ui' from a terminal, where automationmodetool can ask" >&2
+        echo "       for your password; or set ITCHY_UI_ALLOW_PROMPT=1 to answer the" >&2
+        echo "       on-screen dialog." >&2
+        exit 1
+      fi
+      ;;
+  esac
+fi
 
 FAILED=0
 
@@ -127,9 +163,9 @@ else
   if [ $code -eq 124 ]; then
     fail "app tests exceeded ${APP_TIMEOUT}s — a hung run is a failed run"
     if [ "$RUN_UI" = "1" ]; then
-      echo "       UI tests need macOS automation permission. If a prompt is" >&2
-      echo "       waiting on screen, answering it once is enough — provided" >&2
-      echo "       'make sign-setup' has been run, or it returns every build." >&2
+      echo "       UI tests need macOS automation permission. If a dialog is" >&2
+      echo "       waiting on screen, it is probably Automation Mode asking for" >&2
+      echo "       authentication; see 'Repeated permission prompts' in the README." >&2
     fi
     grep -E "Test Case.*started" /tmp/itchy-app.log | grep -v linkd | tail -1 \
       | sed 's/^/       last started: /'

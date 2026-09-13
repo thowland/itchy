@@ -111,13 +111,45 @@ public struct ArchiveStore: Sendable {
     return layout.archivesDirectory
   }
 
-  /// A cheap summary of the current pads, used to skip an archive when nothing
-  /// has changed since the last one.
+  /// A summary of what an archive would preserve, used to skip one when nothing
+  /// worth keeping has changed (`ArchivePolicy.fingerprint(of:)`).
+  ///
+  /// Reads each pad's document and metadata, though not its images. That is why
+  /// archiving runs after the launch interval closes rather than inside it
+  /// (`NFR-1.1`).
   public func fingerprint() -> String {
     let pads =
       (try? fileSystem.contentsOfDirectory(at: layout.padsDirectory))?
       .filter { fileSystem.isDirectory(at: $0) } ?? []
-    let latest = pads.compactMap { try? fileSystem.modificationDate(of: $0) }.max()
-    return ArchivePolicy.fingerprint(padCount: pads.count, latestModification: latest)
+    return ArchivePolicy.fingerprint(of: pads.map(snapshot(of:)))
+  }
+
+  private func snapshot(of directory: URL) -> PadSnapshot {
+    let content = directory.appendingPathComponent(PadStorageLayout.contentDirectoryName)
+    let document =
+      (try? fileSystem.contents(of: content.appendingPathComponent(PadContent.documentName)))
+      ?? Data()
+    let attachments =
+      ((try? fileSystem.contentsOfDirectory(at: content)) ?? [])
+      .filter { $0.lastPathComponent != PadContent.documentName }
+      .reduce(into: [String: Int]()) { result, url in
+        result[url.lastPathComponent] = (try? fileSystem.sizeOfItem(at: url)) ?? 0
+      }
+    return PadSnapshot(
+      id: directory.lastPathComponent, document: document, attachments: attachments,
+      metadata: metadata(in: directory))
+  }
+
+  /// Name, mode and pinning only. Frame and last-opened change when a pad is
+  /// moved or opened, and neither is worth a backup.
+  private func metadata(in directory: URL) -> PadSnapshot.Metadata {
+    let bytes =
+      (try? fileSystem.contents(
+        of: directory.appendingPathComponent(PadStorageLayout.metadataFileName))) ?? Data()
+    guard let decoded = try? PreservingCodec.decode(PadMetadata.self, from: bytes) else {
+      return .unreadable(bytes)
+    }
+    let meta = decoded.value
+    return .readable(name: meta.name, mode: meta.mode.rawValue, isPinned: meta.isPinned)
   }
 }

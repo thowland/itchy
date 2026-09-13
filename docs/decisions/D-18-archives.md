@@ -47,9 +47,36 @@ would be a privacy hole opened by the thing meant to prevent data loss.
 On launch, on quit, and optionally once a day — but only when the pads have
 changed since the last archive. Without that check, a launch-and-quit cycle
 takes two identical copies and a day of restarts fills the retention limit with
-duplicates, pushing out the one snapshot that mattered. The comparison is a
-fingerprint of pad count and latest modification time, so no content is read
-(`FR-1.6` applies here too).
+duplicates, pushing out the one snapshot that mattered. The comparison is a fingerprint of what an archive would preserve, revised below.
+
+### Revised: what counts as a change, and when quit archives
+
+Three things were wrong with the first version. The author found them by
+restarting several times and seeing only two backups.
+
+- **The fingerprint was modification times.** Opening a pad records when it was
+  opened, and moving one records its frame. Each rewrites the pad's files, so
+  a restart that only opened a pad looked like an edit, while whether a real
+  edit registered depended on timing. The fingerprint is now a hash of what an
+  archive preserves: which pads exist, each pad's RTFD document bytes, its
+  attachments by name and size, and its name, mode and pinning. Re-saving
+  unchanged content produces identical bytes (verified), so it does not
+  register. Reading the documents costs a few kilobytes per pad, after the
+  launch interval has closed.
+- **The quit archive ran before the final save, and the final save could not
+  run at all.** `applicationWillTerminate` blocked the main thread on a
+  semaphore while a detached task saved. Saving an open pad's editor needs the
+  main actor, so the task waited out the two-second timeout and the process
+  exited with the last edit unsaved. Quitting now uses
+  `applicationShouldTerminate` with `.terminateLater`: editors and the store are
+  saved, bounded at two seconds, and only then is the archive taken. If the save
+  does not finish, the quit archive is skipped
+  (`ArchivePolicy.quitArchive(after:)`) rather than copying a store mid-write,
+  and the next launch archives it.
+- **Test runs killed the author's running copy.** `Scripts/test.sh` and the UI
+  suite's cleanup matched any Itchy process and sent it SIGKILL, which meant no
+  quit archive and a lost last second of typing. Both now match only builds
+  running from a DerivedData directory.
 
 ## The privacy cost, and who decides
 

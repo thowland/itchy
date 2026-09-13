@@ -289,25 +289,11 @@ final class PadCoordinator {
     }
   }
 
-  func flushOnTermination() {
-    archiveOnTermination()
-    let store = store
-    let editors = Array(editors.values)
-    let semaphore = DispatchSemaphore(value: 0)
-    Task.detached {
-      for editor in editors {
-        await editor.flush()
-      }
-      try? await store.flushAll()
-      semaphore.signal()
-    }
-    _ = semaphore.wait(timeout: .now() + 2)
-  }
-
-  /// Taken before the flush, so the archive holds what was last written rather
-  /// than a half-saved state — and after it the live store is current anyway.
-  private func archiveOnTermination() {
-    archiveIfNeeded(trigger: .quit)
+  /// Every editor's unserialised edit, then the store. What quitting waits on
+  /// (`prepareForTermination`).
+  func flushEverything() async {
+    await flushEditors()
+    try? await store.flushAll()
   }
 
   var openPanelCount: Int { registry.openCount }

@@ -38,9 +38,12 @@ jobs:
         run: make coverage
 
   # The UI suite drives the application through XCUITest, which needs macOS
-  # automation permission. A hosted runner grants it to its ephemeral user, but
-  # it is the part most likely to fail for environmental reasons rather than for
-  # a defect — so it runs on its own and does not block the gate above.
+  # automation permission, including Automation Mode not requiring
+  # authentication. Hosted runner images are expected to be configured that way;
+  # if one is not, `make test-ui` stops at once and says so rather than hanging
+  # (Scripts/automation-mode.sh). It is the part most likely to fail for
+  # environmental reasons rather than for a defect, so it runs on its own and
+  # does not block the gate above.
   ui:
     runs-on: macos-26
     continue-on-error: true

@@ -51,8 +51,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     Task { await coordinator.start() }
   }
 
-  /// `FR-5.5`: content is force-saved on termination.
-  func applicationWillTerminate(_ notification: Notification) {
-    coordinator.flushOnTermination()
+  /// `FR-5.5`: content is force-saved on termination, then archived (D-18).
+  ///
+  /// `.terminateLater` rather than saving in `applicationWillTerminate`, where
+  /// the main thread has to block: saving an open pad needs the main actor, so
+  /// a blocking wait could only ever time out. The save is bounded, so a hung
+  /// write cannot stop Itchy from quitting.
+  func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+    Task {
+      await coordinator.prepareForTermination()
+      sender.reply(toApplicationShouldTerminate: true)
+    }
+    return .terminateLater
   }
 }
