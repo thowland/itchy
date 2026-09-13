@@ -14,6 +14,13 @@ can read from and write to. That arrives in a later release; see
   <img src="docs/images/pad-panel.png" width="420" alt="A pad panel holding a tracking number, a JSON fragment and a note">
 </p>
 
+On first launch it says once where to look, because an application with no Dock
+icon and no window otherwise appears not to have started at all:
+
+<p align="center">
+  <img src="docs/images/welcome.png" width="380" alt="The first-run window explaining that Itchy runs from the menubar">
+</p>
+
 A pad floats over other applications without bringing Itchy forward, and its
 status line shows the pad's name and mode. The menubar item is a cat:
 

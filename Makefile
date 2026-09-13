@@ -27,8 +27,15 @@ gate: lint arch-lint test coverage ## Run the full sprint exit gate (G1-G3)
 
 # Regenerating unconditionally rewrites the project file on every invocation,
 # which invalidates Xcode's build cache and turns every test run into a full
-# rebuild. As a file target it regenerates only when project.yml changed (D-12).
-Itchy.xcodeproj: project.yml
+# rebuild. So it is a file target — but depending on project.yml alone is not
+# enough: adding a source file needs a regeneration too, and forgetting produces
+# "cannot find X in scope" for a type that is plainly there.
+#
+# Directory mtimes change when a file is added or removed and not when one is
+# merely edited, which is exactly the condition (D-12).
+SOURCE_DIRS := $(shell find App Packages/*/Sources Packages/*/Tests Tests -type d 2>/dev/null)
+
+Itchy.xcodeproj: project.yml $(SOURCE_DIRS)
 	@command -v xcodegen >/dev/null || { echo "xcodegen not installed: brew install xcodegen"; exit 1; }
 	@xcodegen generate --quiet && touch Itchy.xcodeproj && echo "project: generated"
 

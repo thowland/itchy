@@ -26,9 +26,10 @@ final class PadCoordinator {
   @ObservationIgnored private lazy var settingsStore = SettingsStore(layout: layout)
   @ObservationIgnored internal let hotKey = GlobalHotKey()
   @ObservationIgnored internal let signposter = LaunchSignposter()
+  @ObservationIgnored private var welcome: WelcomeWindowController?
   @ObservationIgnored private let layout: PadStorageLayout
 
-  @ObservationIgnored private let launchOptions: LaunchOptions
+  @ObservationIgnored internal let launchOptions: LaunchOptions
 
   init(
     store: PadStore,
@@ -52,6 +53,7 @@ final class PadCoordinator {
     await refresh()
     signposter.endLaunch(launch)
     await reopenPinnedPads()
+    showWelcomeIfNeeded()
     if launchOptions.opensPadOnLaunch {
       await openFirstPadForTesting()
     }
@@ -85,6 +87,33 @@ final class PadCoordinator {
     self.lastOpenedPad = await store.lastOpenedPad
     self.pads = pads
     self.rows = MenuModel.rows(pads: pads, faults: faults, sizes: sizes)
+  }
+
+  /// Says once where to look, because an accessory application with no Dock
+  /// icon and no window otherwise starts silently. The decision is
+  /// `FirstRunPolicy`'s.
+  func showWelcomeIfNeeded() {
+    guard FirstRunPolicy.shouldShowWelcome(settings: settings, launchOptions: launchOptions)
+    else { return }
+    let controller = WelcomeWindowController { [weak self] in
+      self?.completeFirstRun()
+    }
+    welcome = controller
+    controller.show()
+  }
+
+  private func completeFirstRun() {
+    settings.hasCompletedFirstRun = true
+    persistSettings()
+    welcome = nil
+  }
+
+  var isShowingWelcome: Bool { welcome?.isVisible ?? false }
+
+  /// Closes the welcome window. Exactly what its button does, reachable without
+  /// a mouse so the flow can be tested.
+  func dismissWelcome() {
+    welcome?.dismiss()
   }
 
   /// `FR-2.7`: a pinned pad's panel is present after relaunch, at its stored

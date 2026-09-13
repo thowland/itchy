@@ -23,13 +23,22 @@ public struct AppSettings: Sendable, Codable, Equatable {
   public var hotKeyCode: UInt32
   public var hotKeyModifiers: UInt32
 
+  /// Whether the welcome window has been shown and dismissed.
+  ///
+  /// An accessory application with no Dock icon and no window gives "I launched
+  /// it and nothing happened" as its first experience, so it says once where to
+  /// look. Once only — `CON-2` prohibits prompts, and this is the narrow
+  /// exception of telling someone the application exists.
+  public var hasCompletedFirstRun: Bool
+
   public init(
     schemaVersion: Int = ItchyCore.schemaVersion,
     padLimit: Int = PadBounds.defaultCount,
     defaultMode: PadMode = .styled,
     launchesAtLogin: Bool = true,
     hotKeyCode: UInt32 = 49,
-    hotKeyModifiers: UInt32 = 0x1000 | 0x0800
+    hotKeyModifiers: UInt32 = 0x1000 | 0x0800,
+    hasCompletedFirstRun: Bool = false
   ) {
     self.schemaVersion = schemaVersion
     self.padLimit = padLimit
@@ -37,6 +46,7 @@ public struct AppSettings: Sendable, Codable, Equatable {
     self.launchesAtLogin = launchesAtLogin
     self.hotKeyCode = hotKeyCode
     self.hotKeyModifiers = hotKeyModifiers
+    self.hasCompletedFirstRun = hasCompletedFirstRun
   }
 
   /// Returns settings with every value forced into its permitted range.
@@ -68,6 +78,9 @@ public struct AppSettings: Sendable, Codable, Equatable {
     hotKeyModifiers =
       try container.decodeIfPresent(UInt32.self, forKey: .hotKeyModifiers)
       ?? fallback.hotKeyModifiers
+    hasCompletedFirstRun =
+      try container.decodeIfPresent(Bool.self, forKey: .hasCompletedFirstRun)
+      ?? fallback.hasCompletedFirstRun
   }
 
   public func clamped() -> AppSettings {
