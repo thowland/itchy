@@ -163,10 +163,22 @@ designated => identifier "com.wdogsystems.itchy" and anchor apple generic
 
 That is stable across rebuilds, so answering the prompt once is enough.
 
-`make sign-setup` picks an unexpired identity from the keychain — preferring
-Developer ID, then Apple Development — and writes
-`Config/Signing.local.xcconfig`, which is not committed. Without an identity,
-builds stay ad-hoc and everything still works except that the prompt returns.
+`make sign-setup` picks an identity from the keychain — preferring Developer ID,
+then Apple Development — and writes `Config/Signing.local.xcconfig`, which is not
+committed. Without an identity, builds stay ad-hoc and everything still works
+except that the prompt returns.
+
+To see what is available, or to choose a particular one:
+
+```bash
+./Scripts/sign-setup.sh --list
+./Scripts/sign-setup.sh 6H7J8U4DNR   # team, name fragment or certificate hash
+```
+
+The chosen identity is recorded by certificate hash rather than by name. One
+common name can cover many certificates — annual renewals accumulate, and this
+machine has seven under a single name — and `codesign` given an ambiguous name
+is free to pick any of them, including one that expired years ago.
 
 ## Shipping: certificates and notarisation
 
