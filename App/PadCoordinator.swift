@@ -61,6 +61,9 @@ final class PadCoordinator {
     archiveIfNeeded(trigger: settings.archivesDaily ? .daily : .launch)
     await reopenPinnedPads()
     showWelcomeIfNeeded()
+    if launchOptions.showsAboutOnLaunch {
+      showAbout()
+    }
     if launchOptions.opensPadOnLaunch {
       await openFirstPadForTesting()
     }

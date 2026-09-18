@@ -97,6 +97,26 @@ Verify the result on a machine that has never seen the build: it should open
 from Finder without a Gatekeeper override. That check is on the manual list
 because it cannot be made from the machine that produced the build.
 
+## Publishing the repository
+
+The repository is <https://github.com/thowland/itchy>. It does not exist on
+GitHub yet. When it is created:
+
+1. Push, and make the repository public.
+2. Enable private vulnerability reporting, which `SECURITY.md` depends on. GitHub
+   offers it only on public repositories, so it cannot be done earlier. Either
+   **Settings → Code security → Private vulnerability reporting → Enable**, or:
+
+   ```bash
+   gh api -X PUT repos/thowland/itchy/private-vulnerability-reporting
+   ```
+
+3. Confirm that <https://github.com/thowland/itchy/security/advisories/new>
+   opens the reporting form when signed in as someone other than the owner.
+4. Check that the CI workflow's `gate` job passes on GitHub's runner, and whether
+   the `ui` job finds Automation Mode already configured (see
+   [development](development.md), *Permission prompts*).
+
 ## Packaging without a certificate
 
 `make package` builds a disk image from the current build, containing the

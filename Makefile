@@ -14,7 +14,7 @@ OUT := build
 # between arm64 and x86_64 destinations, which reads as an error.
 DEST := platform=macOS,arch=$(shell uname -m)
 
-.PHONY: help gate project regenerate test test-ui test-all sign-setup bump version lint format arch-lint coverage verify-gate app run reveal package release notarise dmg ship-check icon clean open
+.PHONY: help gate project regenerate test test-ui test-all sign-setup bump version lint format arch-lint coverage verify-gate app run reveal package release notarise dmg ship-check icon screenshots clean open
 
 help: ## Show this help
 	@grep -E '^[a-z-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -113,6 +113,9 @@ dmg: ## Package a signed, stapled DMG
 
 ship-check: ## Report whether this machine can produce a shippable build
 	@./Scripts/release.sh check
+
+screenshots: project ## Regenerate docs/images from the running application (needs automation)
+	@./Scripts/screenshots.sh
 
 icon: ## Regenerate the app icon from the cat.fill symbol
 	@swift Scripts/make-appicon.swift && echo "icon: regenerated"

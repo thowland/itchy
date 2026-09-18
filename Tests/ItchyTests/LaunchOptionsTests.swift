@@ -26,6 +26,35 @@ struct LaunchOptionsTests {
     #expect(options.opensPadOnLaunch)
   }
 
+  @Test("The About flag shows About instead of opening a pad")
+  func aboutLaunch() {
+    let options = LaunchOptions.parse([
+      "x", LaunchOptions.uiTestFlag, LaunchOptions.showAboutFlag,
+    ])
+    #expect(options.showsAboutOnLaunch)
+    #expect(!options.opensPadOnLaunch)
+    #expect(options.usesTemporaryStorage)
+  }
+
+  @Test("A storage root from the environment is used under the UI-test flag")
+  func chosenRoot() {
+    let options = LaunchOptions.parse(
+      ["x", LaunchOptions.uiTestFlag],
+      environment: [LaunchOptions.storageRootVariable: "/tmp/itchy-chosen"])
+    #expect(options.storageRoot == "/tmp/itchy-chosen")
+    #expect(AppStorage.layout(options: options).root.path == "/tmp/itchy-chosen")
+  }
+
+  /// Nothing in the environment may point a real launch at another store, and
+  /// the About flag alone must not change an ordinary launch.
+  @Test("Without the UI-test flag, the root and the About flag are ignored")
+  func ignoredOutsideTests() {
+    let options = LaunchOptions.parse(
+      ["x", LaunchOptions.showAboutFlag],
+      environment: [LaunchOptions.storageRootVariable: "/tmp/itchy-chosen"])
+    #expect(options == LaunchOptions())
+  }
+
   @Test("The storage root moves with the flag")
   func storageRootFollows() {
     let testing = AppStorage.layout(options: LaunchOptions(usesTemporaryStorage: true))

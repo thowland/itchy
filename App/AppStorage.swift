@@ -25,7 +25,8 @@ enum AppStorage {
 
   static func layout(options: LaunchOptions) -> PadStorageLayout {
     guard !options.usesTemporaryStorage else {
-      return PadStorageLayout.at(path: NSTemporaryDirectory() + "ItchyUITests/" + uiTestRun)
+      return PadStorageLayout.at(
+        path: options.storageRoot ?? NSTemporaryDirectory() + "ItchyUITests/" + uiTestRun)
     }
     return (try? PadStorageLayout.standard())
       ?? PadStorageLayout.at(path: NSTemporaryDirectory() + "Itchy")

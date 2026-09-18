@@ -4,7 +4,9 @@
 
 Please do not open a public issue for a security problem. Report it privately
 through GitHub's **Report a vulnerability** button on the repository's
-**Security** tab, which opens a private advisory visible only to the maintainer.
+**Security** tab, or directly at
+<https://github.com/thowland/itchy/security/advisories/new>. That opens a private
+advisory visible only to the maintainer.
 
 Include what an attacker could do, the steps to reproduce it, and the Itchy and
 macOS versions affected. You will get an acknowledgement, and a fix or an

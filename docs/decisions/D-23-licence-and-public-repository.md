@@ -59,10 +59,12 @@ feature requests arrive.
   constraints and rules, and it is as useful to a human contributor as to an
   agent.
 
-## Still to decide before going public
+## The public repository
 
-- The repository's name and owner, which the README's clone command and
-  `SECURITY.md` currently refer to only generically.
-- Whether to enable GitHub's private vulnerability reporting, which
-  `SECURITY.md` assumes.
-- Screenshots that show the formatting controls; the current ones predate them.
+The repository is <https://github.com/thowland/itchy>. The README's clone
+command, `SECURITY.md` and the issue template's security link all name it.
+
+Private vulnerability reporting is to be enabled, and `SECURITY.md` depends on
+it. It cannot be switched on before the repository exists and is public, so it
+is a step in the publishing checklist in `docs/releasing.md` rather than
+something already done.

@@ -67,6 +67,29 @@ a run that hangs rather than a question you can answer.
 tests, line coverage of at least 80%. The architectural rules it enforces, and
 why each exists, are in [CLAUDE.md](../CLAUDE.md) and `Scripts/arch-lint.sh`.
 
+## Screenshots
+
+```bash
+make screenshots
+```
+
+regenerates `docs/images/pad-panel.png`, `welcome.png` and `pad-faulted.png`
+from the application itself, so they can be retaken whenever the interface
+changes rather than drifting. It runs `ScreenshotCapture` in the UI suite, which
+is skipped in an ordinary `make test-ui`, and needs Automation Mode as the UI
+suite does.
+
+It works in two phases against a throwaway store. The first types into a real
+pad, formats it, names it through Pad Settings and opens About. The script then
+removes the pad's content, and the second phase opens the pad onto its fault.
+The capture goes through XCUITest rather than `screencapture`, which would need
+Screen Recording permission for the terminal. The test runner is sandboxed and
+cannot write files, so each screenshot is attached to the result bundle and the
+script exports the attachments into `docs/images`.
+
+The icons (`app-icon.png`, `menubar-icon.png`) come from `make icon` and are not
+retaken.
+
 ## Permission prompts
 
 There are two different prompts, with different fixes.

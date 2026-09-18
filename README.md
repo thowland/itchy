@@ -49,7 +49,7 @@ There is no signed download yet. Build it from source:
 
 ```bash
 brew install swiftlint xcodegen
-git clone <repository> itchy && cd itchy
+git clone https://github.com/thowland/itchy.git && cd itchy
 make app
 ```
 
