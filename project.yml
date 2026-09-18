@@ -95,7 +95,7 @@ targets:
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         LSMinimumSystemVersion: $(MACOSX_DEPLOYMENT_TARGET)
-        NSHumanReadableCopyright: Copyright © 2026 Tim Howland. All rights reserved.
+        NSHumanReadableCopyright: Copyright © 2026 Tim Howland. Licensed under the GNU GPL, version 3.
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.wdogsystems.itchy

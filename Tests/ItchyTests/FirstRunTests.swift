@@ -27,6 +27,15 @@ struct FirstRunTests {
         settings: settings(seen: true), launchOptions: LaunchOptions()))
   }
 
+  /// Under the About flag no pad opens, but the first-run window must still stay
+  /// away, or it would take the place of the About screen being captured.
+  @Test("It is suppressed when a UI test asks for About")
+  func suppressedForAbout() {
+    let about = LaunchOptions.parse(["Itchy", LaunchOptions.uiTestFlag, LaunchOptions.showAboutFlag])
+    #expect(
+      !FirstRunPolicy.shouldShowWelcome(settings: settings(seen: false), launchOptions: about))
+  }
+
   /// A window the suite did not ask for sits in front of the panels it drives,
   /// and the failure looks like a broken application rather than a stray window.
   @Test("It is suppressed under the UI-test flag, even on a fresh store")

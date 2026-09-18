@@ -17,7 +17,9 @@ matters of implementation.
 
 | Document | Answers |
 |---|---|
-| `README.md` | How to build it, test it, and sign it |
+| `README.md` | What it is, how to install and build it, and where everything else is |
+| `docs/development.md` | Building, testing, permissions, signing for development, troubleshooting |
+| `docs/releasing.md` | Versioning, certificates, notarisation, packaging |
 | `docs/itchy-vision.md` | Why this exists, and what it must never become |
 | `docs/itchy-architecture.md` | The shape: layers, storage, build order |
 | `docs/itchy-requirements.md` | What must be true — numbered, with acceptance criteria |
@@ -196,7 +198,7 @@ stand between R1 and a shippable build, and neither can be done from a script:
 
 1. **No Developer ID Application certificate on this machine**, and no
    `notarytool` credential profile. `NFR-4.2` needs both. `make ship-check`
-   reports what is missing, and the README has the provisioning steps.
+   reports what is missing, and `docs/releasing.md` has the provisioning steps.
 2. **The global hotkey's live firing is unconfirmed.** Registration is verified
    without the Accessibility permission (D-17), but a synthesised keypress
    cannot be posted from a test process. One real ⌃⌥Space press settles it.

@@ -9,7 +9,7 @@
 #
 #   ./Scripts/sign-setup.sh                 pick automatically
 #   ./Scripts/sign-setup.sh --list          show what is available
-#   ./Scripts/sign-setup.sh 6H7J8U4DNR      pick by team, name fragment or hash
+#   ./Scripts/sign-setup.sh ABCDE12345      pick by team, name fragment or hash
 
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit 1
@@ -108,7 +108,7 @@ if [ -z "$CHOSEN_HASH" ]; then
   echo "No signing identity found."
   echo "Builds stay ad-hoc signed, which works — but macOS will ask for"
   echo "automation permission again after every rebuild, and UI tests will"
-  echo "hang waiting for an answer. See README, 'Repeated permission prompts'."
+  echo "hang waiting for an answer. See docs/development.md, 'Permission prompts'."
   exit 1
 fi
 

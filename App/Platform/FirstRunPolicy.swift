@@ -14,7 +14,7 @@ enum FirstRunPolicy {
   ) -> Bool {
     // A UI test drives panels, and a window it did not ask for sits in front of
     // them. The suite would fail on a perfectly working application.
-    guard !launchOptions.opensPadOnLaunch else { return false }
+    guard !launchOptions.usesTemporaryStorage else { return false }
     return !settings.hasCompletedFirstRun
   }
 }
