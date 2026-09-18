@@ -39,3 +39,4 @@ New decisions:
 | [D-21](D-21-pad-settings.md) | Each pad has its own settings sheet, reached from the pad; open panels see live metadata |
 | [D-22](D-22-versioning.md) | Semantic versions biased toward patches, set in an xcconfig; About shows version and build |
 | [D-23](D-23-licence-and-public-repository.md) | GPL-3.0; documentation split by reader for a public repository |
+| [D-24](D-24-transform-layer.md) | JSON reformatted at the token level; failures shown in the status bar; the applier replaces rather than inserts; routing enforced from Sprint 6 |

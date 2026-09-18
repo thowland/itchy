@@ -27,10 +27,13 @@ struct PadPanelContent: View {
         onReveal: { coordinator.revealInFinder(pad.id) })
       Divider()
       HStack(spacing: 0) {
-        PadStatusBar(segments: StatusBarModel.segments(for: current, fault: fault))
+        PadStatusBar(
+          segments: StatusBarModel.segments(
+            for: current, fault: fault, notice: coordinator.notices[pad.id]))
         FormattingControls(formatting: editor.formatting, mode: current.mode) { trait in
           editor.toggle(trait)
         }
+        TransformMenu(pad: current, coordinator: coordinator)
         PadActionsMenu(pad: current, coordinator: coordinator) {
           coordinator.prepareForPadSettings()
           isShowingSettings = true
@@ -106,5 +109,40 @@ enum PadModeLabel {
 
   static func other(_ mode: PadMode) -> String {
     opposite(mode).rawValue.capitalized
+  }
+}
+
+/// The deterministic transforms, on the pad (`FR-6.2`, `FR-6.3`).
+///
+/// Built from `TransformMenuModel`'s rows rather than from the registry
+/// directly, so that what is shown, what is enabled and what the refusal says
+/// are all decided somewhere they can be tested. The rows are surveyed when the
+/// menu is built, which is when the selection is what it is (`FR-6.4`).
+struct TransformMenu: View {
+  let pad: PadMetadata
+  let coordinator: PadCoordinator
+
+  var body: some View {
+    let groups = coordinator.transformRows(for: pad.id)
+    Menu {
+      ForEach(Array(groups.enumerated()), id: \.offset) { index, rows in
+        if index > 0 { Divider() }
+        ForEach(rows) { row in
+          Button(row.title) {
+            coordinator.applyTransform(id: row.id, to: pad.id)
+          }
+          .disabled(!row.isEnabled)
+          .help(row.reason ?? "")
+        }
+      }
+    } label: {
+      Image(systemName: "wand.and.sparkles")
+    }
+    .menuStyle(.borderlessButton)
+    .menuIndicator(.hidden)
+    .fixedSize()
+    .disabled(!TransformMenuModel.isEnabled(for: groups))
+    .accessibilityIdentifier("pad.transforms")
+    .accessibilityLabel("Transform \(pad.name)")
   }
 }

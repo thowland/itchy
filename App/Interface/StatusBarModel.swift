@@ -9,6 +9,7 @@ struct StatusSegment: Equatable, Identifiable, Sendable {
     case provenance
     case exposure
     case routing
+    case notice
     case fault
   }
 
@@ -28,7 +29,8 @@ enum StatusBarModel {
     for pad: PadMetadata,
     fault: PadStoreFault? = nil,
     showsExposure: Bool = false,
-    showsRouting: Bool = false
+    showsRouting: Bool = false,
+    notice: String? = nil
   ) -> [StatusSegment] {
     var segments = [
       StatusSegment(kind: .name, text: pad.name),
@@ -48,6 +50,11 @@ enum StatusBarModel {
     }
     if let fault {
       segments.append(StatusSegment(kind: .fault, text: fault.reason))
+    }
+    // Last, and after the fault, because a notice is the most recent thing to
+    // have happened and the eye reaches the end of the line for it.
+    if let notice {
+      segments.append(StatusSegment(kind: .notice, text: notice))
     }
     return segments
   }

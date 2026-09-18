@@ -94,7 +94,13 @@ struct PadStoreObservationTests {
     #expect(await store.pads.first?.externalWriteMarker == nil)
 
     await store.stage(PadContent.plainText("from an agent"), for: pad.id, origin: .mcp(client: "claude"))
-    await log.waitFor(1)
+    // Waiting for *an* event is not waiting for *this* one: the user write
+    // above announces itself too, and a count of one is satisfied by whichever
+    // arrives first. The suite failed roughly one run in twenty on that race.
+    await log.waitFor(matching: {
+      if case .contentChangedExternally = $0 { return true }
+      return false
+    })
 
     let marker = try #require(await store.pads.first?.externalWriteMarker)
     #expect(marker.origin == .mcp(client: "claude"))

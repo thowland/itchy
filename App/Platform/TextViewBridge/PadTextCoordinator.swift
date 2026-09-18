@@ -26,7 +26,9 @@ final class PadTextCoordinator: NSObject, NSTextViewDelegate {
   /// What the formatting controls show (D-20).
   let formatting = FormattingState()
   private let store: PadStore
-  private weak var textView: PadTextView?
+  /// Readable by the transform bridge in a neighbouring file, which needs the
+  /// selection and the text storage. Still only settable here.
+  private(set) weak var textView: PadTextView?
   private var serialisationTask: Task<Void, Never>?
 
   init(padID: PadID, store: PadStore) {
@@ -106,12 +108,31 @@ final class PadTextCoordinator: NSObject, NSTextViewDelegate {
   /// (D-9, specification §7.3 step 4). Registered with the window registry so
   /// that a service can reach it without knowing the view exists.
   func apply(_ replacement: NSAttributedString, actionName: String) {
-    guard let textView else { return }
-    let whole = NSRange(location: 0, length: textView.textStorage?.length ?? 0)
+    let whole = NSRange(location: 0, length: textView?.textStorage?.length ?? 0)
+    apply(replacement, over: whole, actionName: actionName)
+  }
+
+  /// The same grouped step over part of the pad, which is what a transform
+  /// applied to a selection needs (`FR-6.4`).
+  func apply(_ replacement: NSAttributedString, over range: NSRange, actionName: String) {
+    guard let textView, let storage = textView.textStorage else { return }
+    // `shouldChangeText` registers the undo and `didChangeText` closes it; this
+    // is the pair `insertText` calls internally. Going through them directly
+    // rather than through `insertText` matters because `insertText` *merges*
+    // attributes into what it replaces rather than replacing them — it keeps
+    // the point size, and it keeps an underline entirely — which means a
+    // flatten performed through it does not flatten (`FR-4.5`, `FR-6.5`).
+    guard textView.shouldChangeText(in: range, replacementString: replacement.string) else {
+      return
+    }
     textView.undoManager?.beginUndoGrouping()
+    storage.replaceCharacters(in: range, with: replacement)
+    textView.didChangeText()
+    // After the change, not before: the text view names its own registration
+    // "Typing", which would otherwise be what the Edit menu shows.
     textView.undoManager?.setActionName(actionName)
-    textView.insertText(replacement, replacementRange: whole)
     textView.undoManager?.endUndoGrouping()
+    textView.typingAttributes = [.font: textView.bodyFont]
     scheduleStaging()
   }
 

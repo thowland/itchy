@@ -809,7 +809,7 @@ The naming convention is load-bearing, because it is what makes a misplacement v
 | `PasteInterceptor` | `PastePlan.plan(descriptor:mode:)` | Chosen representation, discard rules for plain mode, downsample targets, the provenance entry | Read the pasteboard into a descriptor, execute the plan |
 | Image handling | `DownsamplePolicy.target(for:)` | Target dimensions, or nil when the image is already small enough | Perform the resample |
 | `PadTextCoordinator` | `ContentCodec` | `NSAttributedString` ⇄ `PadContent`, including the plain-text extraction | Call it on the serialisation debounce |
-| Mode switching | `Flatten.apply(to:)` | The flattened content, shared with the `flatten` transform | Push the result through the grouped applier |
+| Mode switching | `ContentCodec.flatten(_:font:)` | The flattened content. The `flatten` transform shares the meaning rather than this code: by the time a transform sees the text it is already plain, so it returns the characters and the applier restyles (D-24) | Push the result through the grouped applier |
 | `PadStatusBar` | `StatusBarModel.segments(for:)` | Which segments appear at this release and their wording | Render segments as controls |
 | External-write banner | `BannerModel.state(for:now:)` | Visible or not, wording, whether undo is offered | Render the banner |
 | MCP request handling | `ToolRouter.route(_:) -> StoreOperation` | Pad resolution by id or name, ambiguity errors, the not-found/not-exposed equivalence of §11.5 | Transport, framing, authentication |
@@ -819,6 +819,10 @@ The naming convention is load-bearing, because it is what makes a misplacement v
 | Pad settings sheet | `PadSettingsModel` | Name trimming and the empty-name rule, the duplicate-name notice (D-21) | Bind controls; apply the name on Return and close |
 | About | `FirstRunPolicy.dismissal(for:)`, `aboutRequest(showing:)`, `AppVersion.display` | Whether closing records the first run, whether About opens or raises, the version wording (D-22) | Show the window |
 | Editor font | `EditorFontPolicy.treatment(runFamily:mode:bodyFamilies:)` | Which runs follow the font setting, which keep their own, and which families count as body text (D-19) | `BodyFont` resolves the font and applies the treatment to the text storage |
+| Transform menu | `TransformMenuModel.rows(for:)` | Which transforms are shown, which are enabled, and the wording of each refusal (D-24) | Render the menu, dispatch the identifier |
+| Transform scope | `TransformScope.scope(forSelectionLength:at:)` | Selection or whole pad, and the range the output is written back over (`FR-6.4`) | Read the selection, replace the range |
+| Transform styling | `TransformStylePlan.style(forTransform:mode:)` | Whether the replacement inherits the local style or takes the body font alone (D-24) | Gather the attributes and build the replacement |
+| Transform routing | `RoutingGate.decide(requiresNetwork:policy:)` | Whether a transform may run under the pad's routing policy (§7.3 step 2, `FR-9.2`) | `TransformRunner` refuses, or calls `apply` |
 
 Each extracted unit is a value type or a namespace of pure functions, is `Sendable`, and is `Equatable` wherever it returns a value rather than performing an action — so that a test compares one whole expected value against one actual value, rather than poking at six fields and hoping it has checked the ones that matter.
 
