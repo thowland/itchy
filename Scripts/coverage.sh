@@ -45,11 +45,26 @@ for PKG in $PACKAGES; do
   }
   BIN=$( cd "$DIR" && swift build --show-bin-path 2>/dev/null )
   PROF="$BIN/codecov/default.profdata"
-  BUNDLE="$BIN/${PKG}PackageTests.xctest/Contents/MacOS/${PKG}PackageTests"
-  if [ -f "$PROF" ] && [ -f "$BUNDLE" ]; then
-    xcrun llvm-cov export -format=lcov -instr-profile "$PROF" "$BUNDLE" \
-      > "$LCOV_DIR/$PKG.lcov" 2>/dev/null
+  # The bundle is found rather than named. SwiftPM called it
+  # "<pkg>PackageTests.xctest"; the build system that arrived with Xcode 27
+  # calls it "<pkg>Tests.xctest" and puts it somewhere else again. Naming it
+  # meant that an upgrade silently dropped both packages from the denominator
+  # and the gate went on passing on the app target alone.
+  BUNDLE=""
+  for CANDIDATE in "$BIN"/*.xctest; do
+    [ -d "$CANDIDATE" ] || continue
+    NAME=$( basename "$CANDIDATE" .xctest )
+    if [ -f "$CANDIDATE/Contents/MacOS/$NAME" ]; then
+      BUNDLE="$CANDIDATE/Contents/MacOS/$NAME"
+      break
+    fi
+  done
+  if [ -z "$BUNDLE" ] || [ ! -f "$PROF" ]; then
+    echo "coverage: no instrumented test bundle for $PKG under $BIN" >&2
+    exit 1
   fi
+  xcrun llvm-cov export -format=lcov -instr-profile "$PROF" "$BUNDLE" \
+    > "$LCOV_DIR/$PKG.lcov" 2>/dev/null
 done
 
 # The app target is measured through xcodebuild and read with xccov.
