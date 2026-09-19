@@ -261,7 +261,9 @@ A month of use is also likely to reorder what follows, and the sketches below ar
 
 **Sprint 8 — MCP transport and surface.** Spike S-4 resolves the SDK question before the sprint opens (D-5). Loopback HTTP binding, Keychain-held bearer token, the five tools, the resource form, plain-text reads with the image placeholder. Claims `FR-8.1`–`FR-8.6`, `FR-8.10`, `NFR-3.3`.
 
-**Sprint 9 — MCP safety.** Per-pad exposure, the write path through the registry applier, external-write markers and the banner, the stdio shim. Claims `FR-8.7`–`FR-8.9`, `NFR-3.2`. Separated from Sprint 8 because the exposure and write-conflict policies are the two questions the architecture document says must be answered before the feature ships, and bundling them with transport work is how they get answered in a hurry.
+*In progress.* The decision layer — tool surface, pad resolution, exposure, token and authorisation — is built and tested; the listener, `endpoint.json`, the shadow-text placeholder and the settings are not. `mcp-remaining-work.md` has the remainder in dependency order, the acceptance criteria that cannot be automated, and the decisions still open. It is a working document and is deleted when the work lands.
+
+**Sprint 9 — MCP safety.** Per-pad exposure, the write path through the registry applier, external-write markers and the banner, the stdio shim. Claims `FR-8.7`–`FR-8.9`, `NFR-3.2`. Separated from Sprint 8 because the exposure and write-conflict policies are the two questions the architecture document says must be answered before the feature ships, and bundling them with transport work is how they get answered in a hurry. The shim is blocked on the same certificate R1 is waiting on, because two binaries sharing a Keychain item need a shared access group and so a shared signing team; see `mcp-remaining-work.md`.
 
 **Sprint 10 — Model routing.** Per-pad policy, enforcement in `TransformRunner`, the Ollama client, remote credentials, and model-backed transforms appearing in the existing menu. Claims `FR-9.1`–`FR-9.6`. The test with teeth is that a local-only pad makes no outbound connection when the local endpoint is unreachable.
 
