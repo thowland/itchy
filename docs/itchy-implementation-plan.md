@@ -269,7 +269,13 @@ A month of use is also likely to reorder what follows, and the sketches below ar
 
 *Complete.* Exposure has a per-pad toggle and shows on the pad, the registry-aware writer lands an agent write in the open panel as one named undo, the banner and the menubar marker say when something else wrote, and the stdio shim ships inside the bundle with `FR-8.2` demonstrated in the suite. The shim's token does not come from a shared Keychain access group as planned — D-29 has the measurements that ruled that out.
 
-**Sprint 10 — Model routing.** Per-pad policy, enforcement in `TransformRunner`, the Ollama client, remote credentials, and model-backed transforms appearing in the existing menu. Claims `FR-9.1`–`FR-9.6`. The test with teeth is that a local-only pad makes no outbound connection when the local endpoint is unreachable.
+**Sprint 10 — Model routing.** Per-pad policy, enforcement in `TransformRunner`, the Ollama client, remote credentials, and model-backed transforms appearing in the existing menu. Claims `FR-9.1`–`FR-9.6`. The test with teeth is that a local-only pad makes no outbound connection when the local endpoint is unreachable — and `Scripts/arch-lint.sh` now confines which files may open one, which is what makes that test mean something.
+
+*Already done, pulled forward by Sprint 6 (D-24):* `FR-9.1`'s per-pad policy defaulting to local-only, and `FR-9.2`'s enforcement point — `RoutingGate` inside `TransformRunner`, at the single `Transform.apply` call site that `arch-lint` holds to one. What remains is `FR-9.3` (the policy is carried but nothing in the interface can change it, and `StatusBarModel.showsRouting` is never true), `FR-9.4`, `FR-9.5`, `FR-9.6`, and the consent prompt that `RoutingDecision.needsConsent` currently stands in for by refusing.
+
+**To settle before this sprint opens: `FR-9.2` and `FR-8.5` contradict each other.** `FR-9.2` requires that "a transform invoked over MCP is subject to the same restriction as one invoked from the menu", and its acceptance criterion needs a remote-requiring transform to be *invocable over MCP*. `FR-8.5` limits the tool surface to five named tools and its acceptance criterion is "the tool listing contains these and nothing else", which a test asserts. Both cannot hold.
+
+The recommendation is to withdraw `FR-9.2`'s MCP clause rather than add a sixth tool. `FR-8.5`'s narrowness is a stated position rather than an oversight, the transforms worth routing are the model-backed ones, and an agent asking Itchy to ask a model is a strange loop — the agent is already a model. `FR-9.2`'s valuable half, that enforcement sits below the view in one place, is satisfied and unaffected. But it is a requirements change and belongs to a person, not to whoever opens the sprint.
 
 ---
 
