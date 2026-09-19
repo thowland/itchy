@@ -11,17 +11,23 @@ import Testing
 @MainActor
 @Suite("The agent server through the coordinator")
 struct AgentServerIntegrationTests {
-  private func makeCoordinator() -> (PadCoordinator, PadStorageLayout, URL) {
+  /// The token store is in memory, always. A test that reached for the real
+  /// Keychain would stop and ask the person running it for permission, which is
+  /// a hang here and an impossibility on CI.
+  private func makeCoordinator()
+    -> (PadCoordinator, PadStorageLayout, URL, any MCPTokenStore) {
     let root = URL(fileURLWithPath: NSTemporaryDirectory())
       .appendingPathComponent("itchy-agents-\(UUID().uuidString)")
     try? FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
     let layout = PadStorageLayout(root: root)
+    let tokens = InMemoryTokenStore()
     let coordinator = PadCoordinator(
-      store: PadStore(layout: layout), layout: layout, launchOptions: LaunchOptions())
+      store: PadStore(layout: layout), layout: layout, launchOptions: LaunchOptions(),
+      tokenStore: tokens)
     // An ephemeral port, so the suite neither collides with a running Itchy nor
     // with another test.
     coordinator.settings.mcpPort = 0
-    return (coordinator, layout, root)
+    return (coordinator, layout, root, tokens)
   }
 
   private func endpoint(_ layout: PadStorageLayout) -> MCPEndpoint? {
@@ -30,7 +36,7 @@ struct AgentServerIntegrationTests {
 
   @Test("A fresh store has nothing listening and no endpoint file")
   func offByDefault() async {
-    let (coordinator, layout, root) = makeCoordinator()
+    let (coordinator, layout, root, _) = makeCoordinator()
     defer { try? FileManager.default.removeItem(at: root) }
 
     coordinator.startServerIfEnabled()
@@ -42,7 +48,7 @@ struct AgentServerIntegrationTests {
 
   @Test("Enabling starts the listener and records the bound port")
   func enabling() async throws {
-    let (coordinator, layout, root) = makeCoordinator()
+    let (coordinator, layout, root, _) = makeCoordinator()
     defer {
       coordinator.setMCPEnabled(false)
       try? FileManager.default.removeItem(at: root)
@@ -63,7 +69,7 @@ struct AgentServerIntegrationTests {
   /// A stale port outlives the listener and the shim connects to nothing.
   @Test("Disabling stops the listener and removes the endpoint file")
   func disabling() async throws {
-    let (coordinator, layout, root) = makeCoordinator()
+    let (coordinator, layout, root, _) = makeCoordinator()
     defer { try? FileManager.default.removeItem(at: root) }
 
     coordinator.setMCPEnabled(true)
@@ -78,7 +84,7 @@ struct AgentServerIntegrationTests {
 
   @Test("A token exists once the server has been switched on, and survives a restart")
   func tokenIsGenerated() async throws {
-    let (coordinator, _, root) = makeCoordinator()
+    let (coordinator, _, root, tokens) = makeCoordinator()
     defer {
       coordinator.setMCPEnabled(false)
       try? FileManager.default.removeItem(at: root)
@@ -89,6 +95,7 @@ struct AgentServerIntegrationTests {
 
     let first = try #require(coordinator.mcpToken)
     #expect(first.value.isEmpty == false)
+    #expect(try tokens.load()?.value == first.value)
 
     coordinator.setMCPEnabled(false)
     await expect("the server to be off") { coordinator.serverState == .off }
@@ -102,7 +109,7 @@ struct AgentServerIntegrationTests {
   /// write cannot leave the old token working.
   @Test("Regenerating replaces the token everywhere at once")
   func regeneration() async throws {
-    let (coordinator, _, root) = makeCoordinator()
+    let (coordinator, _, root, tokens) = makeCoordinator()
     defer {
       coordinator.setMCPEnabled(false)
       try? FileManager.default.removeItem(at: root)
@@ -116,12 +123,12 @@ struct AgentServerIntegrationTests {
 
     let current = try #require(coordinator.mcpToken)
     #expect(current.value != previous.value)
-    #expect(try MCPTokenKeychain().load()?.value == current.value)
+    #expect(try tokens.load()?.value == current.value)
   }
 
   @Test("Quitting takes the endpoint file with it")
   func terminationClearsTheEndpoint() async throws {
-    let (coordinator, layout, root) = makeCoordinator()
+    let (coordinator, layout, root, _) = makeCoordinator()
     defer { try? FileManager.default.removeItem(at: root) }
 
     coordinator.setMCPEnabled(true)
@@ -138,7 +145,7 @@ struct AgentServerIntegrationTests {
   /// with the server off must not leave it there to be connected to.
   @Test("A stale endpoint file from a killed run is cleared at launch")
   func staleEndpointCleared() async throws {
-    let (coordinator, layout, root) = makeCoordinator()
+    let (coordinator, layout, root, _) = makeCoordinator()
     defer { try? FileManager.default.removeItem(at: root) }
     try EndpointStore(layout: layout).write(
       MCPEndpoint(port: 8_899, processIdentifier: 1, startedAt: Date()))

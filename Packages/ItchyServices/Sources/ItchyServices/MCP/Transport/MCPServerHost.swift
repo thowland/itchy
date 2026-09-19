@@ -93,6 +93,9 @@ public actor MCPServerHost {
     // Refused before the SDK sees anything (§11.2).
     let decision = MCPAuthorization.decide(
       header: request.header("Authorization"), expected: token)
+    DebugLog.shared.record(
+      .request(
+        method: request.method, path: request.path, decision: String(describing: decision)))
     guard decision == .allowed else {
       return refusal(status: decision.statusCode, message: AuthorizationText.of(decision))
     }
@@ -101,6 +104,9 @@ public actor MCPServerHost {
       sessionID: request.header(HTTPHeaderName.sessionID),
       isInitialize: MCPBodyInspector.isInitialize(request.body),
       known: Set(sessions.keys))
+
+    DebugLog.shared.record(
+      .sessionRouted(String(describing: route), sessions: sessions.count))
 
     switch route {
     case .existing(let id):
@@ -252,15 +258,22 @@ internal actor MCPSession {
 
   private static func call(_ call: Call, on service: MCPService) async -> CallTool.Result {
     do {
+      let arguments = MCPArgumentCodec.strings(from: call.arguments)
       let operation = try ToolRouter.route(
-        tool: call.name,
-        arguments: MCPArgumentCodec.strings(from: call.arguments),
-        visiblePads: await service.visiblePads())
-      return CallTool.Result(content: MCPResultCodec.content(for: try await service.execute(operation)))
+        tool: call.name, arguments: arguments, visiblePads: await service.visiblePads())
+      let text = MCPResultCodec.text(for: try await service.execute(operation))
+      DebugLog.shared.record(
+        .toolCall(
+          tool: call.name, pad: arguments["pad"], outcome: "ok", characters: text.count))
+      return CallTool.Result(content: [.text(text: text, annotations: nil, _meta: nil)])
     } catch {
+      let message = MCPSession.message(for: error)
+      DebugLog.shared.record(
+        .toolCall(
+          tool: call.name, pad: MCPArgumentCodec.strings(from: call.arguments)["pad"],
+          outcome: "refused: \(message)", characters: nil))
       return CallTool.Result(
-        content: [.text(text: MCPSession.message(for: error), annotations: nil, _meta: nil)],
-        isError: true)
+        content: [.text(text: message, annotations: nil, _meta: nil)], isError: true)
     }
   }
 
@@ -277,9 +290,12 @@ internal actor MCPSession {
   private static func read(_ uri: String, from service: MCPService) async throws -> Read {
     do {
       let text = try await service.readResource(uri: uri)
+      DebugLog.shared.record(.resourceRead(uri: uri, outcome: "ok", characters: text.count))
       return Read(contents: [.text(text, uri: uri, mimeType: "text/plain")])
     } catch {
-      throw MCPError.invalidParams(MCPSession.message(for: error))
+      let message = MCPSession.message(for: error)
+      DebugLog.shared.record(.resourceRead(uri: uri, outcome: message, characters: nil))
+      throw MCPError.invalidParams(message)
     }
   }
 

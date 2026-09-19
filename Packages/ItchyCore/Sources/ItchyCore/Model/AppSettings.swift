@@ -73,6 +73,14 @@ public struct AppSettings: Sendable, Codable, Equatable {
   /// and it is the bound one that reaches `endpoint.json`.
   public var mcpPort: Int
 
+  /// Whether the diagnostic log in `/tmp` is being written.
+  ///
+  /// Off by default and not remembered as a convenience: it is a thing somebody
+  /// switches on to reproduce a problem. It persists across launches anyway,
+  /// because the problems worth a log are usually the ones that happen during
+  /// startup.
+  public var debugLoggingEnabled: Bool
+
   public init(
     schemaVersion: Int = ItchyCore.schemaVersion,
     padLimit: Int = PadBounds.defaultCount,
@@ -89,7 +97,8 @@ public struct AppSettings: Sendable, Codable, Equatable {
     editorFontSize: Double = EditorFontBounds.defaultSize,
     formerEditorFontFamilies: [String] = [],
     mcpServerEnabled: Bool = false,
-    mcpPort: Int = MCPBounds.defaultPort
+    mcpPort: Int = MCPBounds.defaultPort,
+    debugLoggingEnabled: Bool = false
   ) {
     self.schemaVersion = schemaVersion
     self.padLimit = padLimit
@@ -107,6 +116,7 @@ public struct AppSettings: Sendable, Codable, Equatable {
     self.formerEditorFontFamilies = formerEditorFontFamilies
     self.mcpServerEnabled = mcpServerEnabled
     self.mcpPort = mcpPort
+    self.debugLoggingEnabled = debugLoggingEnabled
   }
 
   /// Returns settings with every value forced into its permitted range.
@@ -160,6 +170,9 @@ public struct AppSettings: Sendable, Codable, Equatable {
       try container.decodeIfPresent(Bool.self, forKey: .mcpServerEnabled)
       ?? fallback.mcpServerEnabled
     mcpPort = try container.decodeIfPresent(Int.self, forKey: .mcpPort) ?? fallback.mcpPort
+    debugLoggingEnabled =
+      try container.decodeIfPresent(Bool.self, forKey: .debugLoggingEnabled)
+      ?? fallback.debugLoggingEnabled
   }
 
   public func clamped() -> AppSettings {

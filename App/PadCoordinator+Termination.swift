@@ -26,6 +26,7 @@ extension PadCoordinator {
     let outcome = await TerminationFlush.run(limit: limit) { [weak self] in
       await self?.flushEverything()
     }
+    DebugLog.shared.record(.terminating(flush: String(describing: outcome)))
     switch ArchivePolicy.quitArchive(after: outcome) {
     case .take: archiveIfNeeded(trigger: .quit)
     case .skip: break

@@ -101,6 +101,30 @@ enum MCPSettingsModel {
     revealed ? "Hide" : "Show"
   }
 
+  /// What the diagnostic-log section says.
+  ///
+  /// Here rather than in a `LogSettingsModel` of its own because it is three
+  /// strings, and a file per section is how a settings window stops being
+  /// readable.
+  static let loggingLabel = "Write a diagnostic log"
+
+  /// Says what the log holds and, more importantly, what it does not. The file
+  /// sits in `/tmp`, where anyone with an account on this Mac can read it, and
+  /// somebody switching this on is entitled to know whether their pads are
+  /// about to be in it.
+  static func loggingCaption(path: String?) -> String {
+    guard let path else {
+      return "Off. When on, Itchy records what it does — backups, agent "
+        + "requests, transforms — to a file in /tmp. Pad contents and the agent "
+        + "token are never written to it."
+    }
+    return "Writing to \(path). It records what happened and to which pad by "
+      + "name, never the pad's text or the agent token. Delete the file when "
+      + "you are done."
+  }
+
+  static let revealLogLabel = "Show in Finder"
+
   /// What a pad's own settings say about exposing it (`NFR-3.2`).
   static let exposureLabel = "Let agents read and write this pad"
 

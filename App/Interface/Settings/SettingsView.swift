@@ -69,9 +69,39 @@ struct GeneralSettingsView: View {
           notice: SettingsModel.loweringNotice(
             padCount: coordinator.settings.padLimit, existing: coordinator.pads.count))
       }
+
+      DiagnosticLogSection()
     }
     .formStyle(.grouped)
     .padding()
+  }
+}
+
+/// The diagnostic log. Off by default, and the caption says what it will and
+/// will not contain before anyone switches it on.
+struct DiagnosticLogSection: View {
+  @Environment(PadCoordinator.self) private var coordinator
+
+  var body: some View {
+    Section {
+      Toggle(
+        MCPSettingsModel.loggingLabel,
+        isOn: Binding(
+          get: { coordinator.settings.debugLoggingEnabled },
+          set: { coordinator.setDebugLoggingEnabled($0) })
+      )
+      .accessibilityIdentifier("settings.debugLogging")
+
+      Text(MCPSettingsModel.loggingCaption(path: coordinator.debugLogPath))
+        .font(.caption)
+        .foregroundStyle(.secondary)
+        .accessibilityIdentifier("settings.debugLoggingCaption")
+
+      Button(MCPSettingsModel.revealLogLabel) {
+        coordinator.revealDebugLog()
+      }
+      .disabled(coordinator.debugLogPath == nil)
+    }
   }
 }
 

@@ -20,12 +20,18 @@ extension PadCoordinator {
         let output = try await runner.run(transform, on: input)
         editor.applyTransform(
           output, scope: input.scope, transformID: transform.id, actionName: transform.title)
+        DebugLog.shared.record(
+          .transformApplied(
+            transform.id, scope: String(describing: input.scope),
+            characters: input.plainText.count))
         clearNotice(for: padID)
       } catch let error as TransformError {
         // `FR-6.6`: the pad is untouched — the runner never applies — and the
         // reason is shown rather than swallowed.
+        DebugLog.shared.record(.transformDeclined(transform.id, reason: error.reason))
         showNotice(TransformNotice.message(for: transform, reason: error.reason), for: padID)
       } catch {
+        DebugLog.shared.record(.transformDeclined(transform.id, reason: "\(error)"))
         showNotice(TransformNotice.message(for: transform, reason: "\(error)"), for: padID)
       }
     }

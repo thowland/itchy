@@ -49,13 +49,33 @@ public enum ArchivePolicy {
     lastArchive: Date?,
     now: Date
   ) -> Bool {
-    guard ArchiveBounds.clamp(retention) > ArchiveBounds.disabled else { return false }
+    due(trigger: trigger, retention: retention, lastArchive: lastArchive, now: now) == nil
+  }
+
+  /// The same decision, saying *why* when the answer is no.
+  ///
+  /// `shouldArchive` above is the Boolean form, kept because most callers only
+  /// want the answer. This one exists because "there is no backup" has three
+  /// causes the person cares about telling apart — archiving is switched off,
+  /// the daily one is not due yet, or nothing has changed — and a log that
+  /// cannot distinguish them cannot answer the only question anyone asks of it
+  /// (D-11 on Booleans; D-25 on what the log is for).
+  ///
+  /// Returns nil when an archive *is* due, so that a caller reads
+  /// `guard let refusal = due(...) else { take it }`.
+  public static func due(
+    trigger: ArchiveTrigger,
+    retention: Int,
+    lastArchive: Date?,
+    now: Date
+  ) -> ArchiveAttempt? {
+    guard ArchiveBounds.clamp(retention) > ArchiveBounds.disabled else { return .disabled }
     switch trigger {
     case .launch, .quit:
-      return true
+      return nil
     case .daily:
-      guard let lastArchive else { return true }
-      return now.timeIntervalSince(lastArchive) >= dailyInterval
+      guard let lastArchive else { return nil }
+      return now.timeIntervalSince(lastArchive) >= dailyInterval ? nil : .notDue
     }
   }
 

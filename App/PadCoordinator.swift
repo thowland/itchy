@@ -31,7 +31,11 @@ final class PadCoordinator {
   @ObservationIgnored internal let store: PadStore
   @ObservationIgnored internal var mcpHost: MCPServerHost?
   @ObservationIgnored internal lazy var endpointStore = EndpointStore(layout: layout)
-  @ObservationIgnored internal let mcpKeychain = MCPTokenKeychain()
+  /// Injected, so that no test and no throwaway launch can reach the real
+  /// Keychain. Reading an item created by a differently-signed build prompts
+  /// the person for permission, and a suite that waits for an answer is a suite
+  /// that hangs — on this machine and, with nobody there at all, on CI.
+  @ObservationIgnored internal let mcpKeychain: any MCPTokenStore
   /// Which external write the person has already dismissed the banner for,
   /// keyed by pad and identified by when it happened, so that the next write
   /// raises it again (`FR-8.9`).
@@ -52,6 +56,7 @@ final class PadCoordinator {
   @ObservationIgnored internal let hotKey = GlobalHotKey()
   @ObservationIgnored internal let signposter = LaunchSignposter()
   @ObservationIgnored internal var welcome: WelcomeWindowController?
+  @ObservationIgnored internal var help: HelpWindowController?
   @ObservationIgnored internal lazy var settingsWindow = SettingsWindowController(coordinator: self)
   @ObservationIgnored internal let layout: PadStorageLayout
 
@@ -60,11 +65,13 @@ final class PadCoordinator {
   init(
     store: PadStore,
     layout: PadStorageLayout,
-    launchOptions: LaunchOptions = .current
+    launchOptions: LaunchOptions = .current,
+    tokenStore: (any MCPTokenStore)? = nil
   ) {
     self.store = store
     self.layout = layout
     self.launchOptions = launchOptions
+    self.mcpKeychain = tokenStore ?? TokenStoreResolver.store(for: launchOptions)
   }
 
   /// Reads the index and metadata, then starts observing. Content is not read
@@ -72,12 +79,15 @@ final class PadCoordinator {
   func start() async {
     let launch = signposter.beginLaunch()
     settings = settingsStore.load()
+    applyDebugLogging()
     registerHotKey()
     reconcileLoginItem()
     await store.load(padLimit: settings.padLimit)
     await refreshFaults()
     await refresh()
     signposter.endLaunch(launch)
+    DebugLog.shared.record(
+      .launched(version: AppVersion.current.marketing ?? "unknown", pads: pads.count))
     // After the store has loaded, and after the launch interval closes: an
     // agent connecting in the moment between binding and loading would be
     // told, truthfully but uselessly, that there are no pads — and binding a
@@ -86,7 +96,13 @@ final class PadCoordinator {
     // After the launch interval closes: a backup must not count against the
     // budget in NFR-1.1, and nothing depends on it having finished.
     archiveIfNeeded(trigger: .launch)
-    archiveIfNeeded(trigger: settings.archivesDaily ? .daily : .launch)
+    // Only when it is actually wanted. This used to fall back to `.launch`,
+    // which archived twice on every start; the second was always a no-op,
+    // because the fingerprint had not changed since the first one a moment
+    // earlier, but it said so twice in the log.
+    if settings.archivesDaily {
+      archiveIfNeeded(trigger: .daily)
+    }
     await reopenPinnedPads()
     showWelcomeIfNeeded()
     if launchOptions.showsAboutOnLaunch {
@@ -102,6 +118,7 @@ final class PadCoordinator {
         // Whether the panel was open is read *before* the refresh, because it
         // is what the banner needs in order to know whether there is an undo
         // to offer, and a panel that closes in between would answer wrongly.
+        self.recordFault(in: change)
         let externallyWritten = ExternalWriteRouting.pad(in: change)
         let wasOpen = externallyWritten.map { self.registry.isOpen($0) } ?? false
         await self.refreshFaults()
@@ -209,6 +226,7 @@ final class PadCoordinator {
       guard let self else { return }
       guard let created = try? await self.store.createPad(name: nil) else { return }
       try? await self.store.setMode(created.id, to: self.settings.defaultMode)
+      DebugLog.shared.record(.padCreated(created.id, name: created.name, by: .user))
       await self.refresh()
       await self.openPad(created.id, makingKey: true)
     }
@@ -239,6 +257,8 @@ final class PadCoordinator {
   func deletePad(_ padID: PadID) {
     Task { [weak self] in
       guard let self else { return }
+      DebugLog.shared.record(
+        .padDeleted(padID, name: self.pads.first { $0.id == padID }?.name ?? "—"))
       self.registry.close(padID)
       self.editors[padID] = nil
       try? await self.store.deletePad(padID)

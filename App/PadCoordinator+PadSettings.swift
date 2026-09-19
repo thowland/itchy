@@ -28,6 +28,9 @@ extension PadCoordinator {
     Task { [weak self] in
       guard let self else { return }
       try? await self.store.setExposedToMCP(padID, exposed)
+      DebugLog.shared.record(
+        .exposureChanged(
+          self.pads.first { $0.id == padID }?.name ?? padID.description, exposed: exposed))
       await self.refresh()
     }
   }

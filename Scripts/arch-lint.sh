@@ -6,6 +6,7 @@
 #   2. Only the store touches disk                CON-4
 #   3. One call site for Transform.apply          specification §12
 #   4. Coverage exclusions pass the complexity cap D-11, specification §15.3
+#   5. No test reaches the real Keychain             D-26
 #
 # The first three are greps. Their crudeness is acceptable: each is a rule with
 # an obvious textual signature, and the alternative is noticing the violation a
@@ -113,6 +114,31 @@ else
   else
     pass "complexity cap holds over ${#EXCLUDED_FILES[@]} capped file(s): ${EXCLUDED_FILES[*]}"
   fi
+fi
+
+# --- 5. No test reaches the real Keychain (D-26) -----------------------------
+# The Keychain is a shared system resource with its own access control. A test
+# that opens it makes macOS ask the person running the suite whether this binary
+# may read an item that a differently-signed build created — and a suite that
+# waits for an answer hangs. On this machine that is an interruption; on CI,
+# where there is nobody to ask, it is a build that never finishes.
+#
+# The seam is `MCPTokenStore`: the application resolves to `MCPTokenKeychain`
+# and everything else to `InMemoryTokenStore`. This is the check that keeps it
+# that way, because the failure it prevents does not look like a failure.
+#
+# No exceptions, deliberately. A rule with an escape hatch is a rule that erodes,
+# and a test asserting which type the resolver returns can say so by naming the
+# one it must not be.
+HITS=$(grep -rn --include='*.swift' -E '\bMCPTokenKeychain\b|kSecClassGenericPassword' \
+  Tests Packages/ItchyCore/Tests Packages/ItchyServices/Tests Harness/Sources 2>/dev/null \
+  | grep -v '/\.build/' \
+  | grep -vE ':[[:space:]]*//' || true)
+if [ -n "$HITS" ]; then
+  fail "a test or the harness reaches the real Keychain (D-26)"
+  echo "$HITS" | sed 's/^/       /'
+else
+  pass "no test reaches the real Keychain"
 fi
 
 exit $FAILED

@@ -62,6 +62,7 @@ extension PadCoordinator {
     let token = MCPToken.generate()
     try? mcpKeychain.save(token)
     mcpToken = token
+    DebugLog.shared.record(.tokenRegenerated())
     Task { [weak self] in
       guard let self, let host = self.mcpHost else { return }
       await host.replaceToken(with: token)
@@ -85,6 +86,7 @@ extension PadCoordinator {
   private func startServer() async {
     guard mcpHost == nil else { return }
     serverState = .starting
+    DebugLog.shared.record(.serverStarting(port: settings.mcpPort))
     let token = (try? mcpKeychain.loadOrCreate()) ?? MCPToken.generate()
     mcpToken = token
 
@@ -101,6 +103,7 @@ extension PadCoordinator {
       let port = try await host.start()
       mcpHost = host
       serverState = .listening(port: port)
+      DebugLog.shared.record(.serverListening(port: port, configured: settings.mcpPort))
       // The bound port, not the configured one: asking for 8899 and getting it
       // is the common case, not a guarantee.
       try? endpointStore.write(
@@ -109,7 +112,9 @@ extension PadCoordinator {
           processIdentifier: ProcessInfo.processInfo.processIdentifier,
           startedAt: Date()))
     } catch {
-      serverState = .failed(reason: ServerFailureText.of(error))
+      let reason = ServerFailureText.of(error)
+      serverState = .failed(reason: reason)
+      DebugLog.shared.record(.serverFailed(reason: reason))
       endpointStore.clear()
     }
   }
@@ -122,6 +127,8 @@ extension PadCoordinator {
     // still says otherwise.
     endpointStore.clear()
     serverState = .off
+    guard host != nil else { return }
+    DebugLog.shared.record(.serverStopped())
   }
 }
 
@@ -155,8 +162,15 @@ extension PadCoordinator {
   func applyAgentWrite(
     _ write: AgentWrite, text: String, to padID: PadID, origin: WriteOrigin
   ) async -> Bool {
-    guard registry.isOpen(padID), let editor = editors[padID] else { return false }
+    let name = pads.first { $0.id == padID }?.name ?? padID.description
+    guard registry.isOpen(padID), let editor = editors[padID] else {
+      DebugLog.shared.record(
+        .agentWrite(pad: name, destination: "store", characters: text.count))
+      return false
+    }
     let applied = await editor.applyAgentWrite(write, text: text, origin: origin)
+    DebugLog.shared.record(
+      .agentWrite(pad: name, destination: "open panel", characters: text.count))
     await refresh()
     return applied
   }

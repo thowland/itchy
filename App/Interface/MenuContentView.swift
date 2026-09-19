@@ -28,6 +28,10 @@ struct MenuContentView: View {
     Button("About Itchy") {
       coordinator.showAbout()
     }
+    Button(HelpText.menuTitle) {
+      coordinator.showHelp()
+    }
+    .keyboardShortcut("?")
     Button("Settings…") {
       coordinator.showSettings()
     }
