@@ -84,10 +84,37 @@ final class PadTextCoordinator: NSObject, NSTextViewDelegate {
 
   /// Serialises immediately. Used on close and on mode changes, where waiting
   /// for a debounce would mean losing the edit.
-  func stageNow() async {
+  func stageNow(origin: WriteOrigin = .user) async {
     guard let attributed = textView?.attributedString() else { return }
     guard let content = try? ContentCodec.encode(attributed) else { return }
-    await store.stage(content, for: padID, origin: .user)
+    await store.stage(content, for: padID, origin: origin)
+  }
+
+  /// An agent's write into the open panel (`FR-8.8`, §11.6).
+  ///
+  /// This is what makes the write one undo from reverted, and it is why the
+  /// interim refusal in `OpenPadPolicy` stops applying: the panel holds the
+  /// authoritative text, so the write goes *into* the panel rather than past it
+  /// into the store, where the panel's next save would overwrite it.
+  ///
+  /// Staged immediately, and with the agent's origin rather than the user's, so
+  /// that the external-write marker records who wrote and the debounced
+  /// user-origin staging that `apply` scheduled cannot land first and claim the
+  /// write as the person's own.
+  ///
+  /// Answers false when there is no text view to write into, which is the
+  /// caller's signal to use the store instead.
+  func applyAgentWrite(_ write: AgentWrite, text: String, origin: WriteOrigin) async -> Bool {
+    guard let textView, let storage = textView.textStorage else { return false }
+    let replacement = NSAttributedString(
+      string: text, attributes: [.font: textView.bodyFont])
+    apply(
+      replacement,
+      over: AgentWritePlan.range(for: write, length: storage.length),
+      actionName: AgentWritePlan.actionName(for: write, origin: origin))
+    serialisationTask?.cancel()
+    await stageNow(origin: origin)
+    return true
   }
 
   func flush() async {

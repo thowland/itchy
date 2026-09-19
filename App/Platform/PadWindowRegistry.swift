@@ -21,6 +21,10 @@ final class PadWindowRegistry {
 
   func isOpen(_ padID: PadID) -> Bool { controllers[padID] != nil }
 
+  /// Every pad with a panel on screen. What the menubar needs in order to mark
+  /// only the pads the person has not looked at (`FR-8.9`).
+  var openPads: Set<PadID> { Set(controllers.keys) }
+
   func controller(for padID: PadID) -> PadWindowController? { controllers[padID] }
 
   /// Brings an existing panel forward, or creates one.

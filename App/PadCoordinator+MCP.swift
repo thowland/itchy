@@ -91,7 +91,7 @@ extension PadCoordinator {
     let host = MCPServerHost(
       service: MCPService(
         store: store,
-        writer: StorePadWriter(store: store),
+        writer: RegistryPadWriter(coordinator: self, store: store),
         presence: PanelPresence(coordinator: self),
         client: "mcp"),
       token: token,
@@ -142,6 +142,23 @@ enum ServerFailureText {
     case .notRunning:
       return "the listener stopped before it started."
     }
+  }
+}
+
+extension PadCoordinator {
+  /// Routes an agent's write into the open panel, or says it could not
+  /// (`FR-8.8`).
+  ///
+  /// The registry decides, not the editor cache: an editor outlives its panel,
+  /// so asking whether one exists would send a write into a text view nobody
+  /// can see and no undo can reach.
+  func applyAgentWrite(
+    _ write: AgentWrite, text: String, to padID: PadID, origin: WriteOrigin
+  ) async -> Bool {
+    guard registry.isOpen(padID), let editor = editors[padID] else { return false }
+    let applied = await editor.applyAgentWrite(write, text: text, origin: origin)
+    await refresh()
+    return applied
   }
 }
 

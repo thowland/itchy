@@ -12,6 +12,9 @@ enum MenuRowLabel {
     if row.isFaulted {
       title += "  ⚠︎ unreadable"
     }
+    if row.hasUnseenExternalWrite {
+      title += "  ✳︎ written"
+    }
     if let marker = row.sizeMarker {
       title += "  \(marker)"
     }

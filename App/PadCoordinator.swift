@@ -32,6 +32,13 @@ final class PadCoordinator {
   @ObservationIgnored internal var mcpHost: MCPServerHost?
   @ObservationIgnored internal lazy var endpointStore = EndpointStore(layout: layout)
   @ObservationIgnored internal let mcpKeychain = MCPTokenKeychain()
+  /// Which external write the person has already dismissed the banner for,
+  /// keyed by pad and identified by when it happened, so that the next write
+  /// raises it again (`FR-8.9`).
+  internal var dismissedBanners: [PadID: Date?] = [:]
+  /// Which external write arrived while the pad's panel was open, and so has an
+  /// undo on the text view's stack to offer.
+  @ObservationIgnored internal var panelWasOpenFor: [PadID: Date?] = [:]
   @ObservationIgnored internal lazy var registry = PadWindowRegistry(store: store)
   /// Transient per-pad messages, which today means a transform that declined
   /// or failed (`FR-6.6`). Observed, so the status bar redraws when one lands.
@@ -87,9 +94,17 @@ final class PadCoordinator {
     PreviousAppTracker.shared.start()
     Task { [weak self] in
       guard let self else { return }
-      for await _ in await store.changes {
+      for await change in await store.changes {
+        // Whether the panel was open is read *before* the refresh, because it
+        // is what the banner needs in order to know whether there is an undo
+        // to offer, and a panel that closes in between would answer wrongly.
+        let externallyWritten = ExternalWriteRouting.pad(in: change)
+        let wasOpen = externallyWritten.map { self.registry.isOpen($0) } ?? false
         await self.refreshFaults()
         await self.refresh()
+        if let externallyWritten {
+          self.recordExternalWrite(externallyWritten, wasOpen: wasOpen)
+        }
       }
     }
   }
@@ -113,7 +128,8 @@ final class PadCoordinator {
     self.sizes = await store.sizes()
     self.lastOpenedPad = await store.lastOpenedPad
     self.pads = pads
-    self.rows = MenuModel.rows(pads: pads, faults: faults, sizes: sizes)
+    self.rows = MenuModel.rows(
+      pads: pads, faults: faults, sizes: sizes, openPads: registry.openPads)
   }
 
   /// `FR-2.7`: a pinned pad's panel is present after relaunch, at its stored
