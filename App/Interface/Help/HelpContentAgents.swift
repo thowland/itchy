@@ -17,15 +17,15 @@ extension HelpContent {
         heading: "What this is",
         blocks: [
           .text(
-            "A coding agent can read and write your pads over the Model Context Protocol. "
-              + "This is the thing Itchy exists for: a pad becomes a surface both you and "
-              + "an agent can work on, instead of text being carried between you by "
-              + "copy and paste."),
+            "A coding agent can read and write your pads over the Model Context Protocol, "
+              + "which is the thing Itchy exists for: a pad becomes a surface you and an "
+              + "agent both work on, instead of text being carried between you by copy and "
+              + "paste."),
           .text(
             "None of it happens until you switch it on, and then only for the pads you "
-              + "choose. There are three separate things that must all be true before an "
-              + "agent can read a word: the server is on, that pad is exposed, and the "
-              + "agent has the token."),
+              + "choose. Three separate things must all be true before an agent can read a "
+              + "word — the server is on, that pad is exposed, and the agent has the "
+              + "token — and none of the three is a default."),
         ]),
       HelpSection(
         heading: "Switching the server on",
@@ -37,10 +37,10 @@ extension HelpContent {
               + "menubar says so too while it is running.",
           ]),
           .text(
-            "It listens on 127.0.0.1 and nothing else. That address means this machine "
-              + "and no other — nothing on your network can reach it, and neither can "
-              + "anything on the internet. That is a property of how the socket is opened "
-              + "rather than a check that could be got wrong."),
+            "It listens on 127.0.0.1 and nothing else, which means this machine and no "
+              + "other: nothing on your network can reach it, and neither can anything on "
+              + "the internet. That comes from how the socket is opened rather than from a "
+              + "check somewhere that could be got wrong."),
           .note(
             "If it says the port is already in use, something else on your Mac has it. "
               + "Change the number; any port will do, and the server restarts on the new "
@@ -77,18 +77,19 @@ extension HelpContent {
         heading: "What an agent can do",
         blocks: [
           .text(
-            "Five things, and the narrowness is the point: list the exposed pads, read "
-              + "one, append to one, replace one, and create a new pad. There is no sixth "
-              + "tool and adding one would be a deliberate decision rather than a line "
-              + "somebody slipped in."),
+            "Five things: list the exposed pads, read one, append to one, replace one, and "
+              + "create a new pad. There is no sixth, and there is no way for an agent to "
+              + "run a transform or reach your models, because the surface is kept narrow "
+              + "on purpose and widening it is a decision somebody has to take rather than "
+              + "a line somebody adds."),
           .text(
             "A pad an agent creates is exposed to it, because otherwise it could not read "
               + "back what it had just written. It appears in your menu like any other pad, "
               + "marked exposed, and you can withdraw it or delete it."),
           .note(
             "An agent reads plain text, so a picture in a pad reaches it as a line saying "
-              + "[image 1240×820]. It is told something is there rather than quietly given "
-              + "a pad with a hole in it."),
+              + "[image 1240×820]. That way it knows something is there, where a pad with a "
+              + "silent gap in it would read as complete."),
         ]),
       HelpSection(
         heading: "Seeing what was written",
@@ -99,10 +100,10 @@ extension HelpContent {
           .text(
             "If the pad was open at the time, the banner's Undo reverts that write and "
               + "nothing else, and the Edit menu names it so you can see what you are about "
-              + "to undo. If the pad was closed, there is nothing to undo — a pad's undo "
-              + "history starts when you open it — so the banner says so rather than "
-              + "offering a button that would quietly revert something else. The menubar "
-              + "marks the pad until you have looked at it."),
+              + "to undo before you press it. If the pad was closed there is nothing to "
+              + "undo, because a pad's undo history starts when you open it, so the banner "
+              + "says as much instead of offering a button that would revert whatever you "
+              + "last did yourself. The menubar marks the pad until you have looked at it."),
         ]),
       HelpSection(
         heading: "Telling the agent about it",
@@ -125,14 +126,14 @@ extension HelpContent {
         heading: "What they are",
         blocks: [
           .text(
-            "Itchy takes a copy of all your pads when it starts, when it quits, and once "
-              + "a day if you leave it running. They exist because pads are held in a "
-              + "format this application is still changing, and a defect in that layer "
-              + "would otherwise be unrecoverable."),
+            "Itchy copies all your pads when it starts, when it quits, and once a day if "
+              + "you leave it running. They exist because pads are held in a format this "
+              + "application is still changing, and a defect in that layer would otherwise "
+              + "cost you the contents of every pad."),
           .text(
-            "A copy is only taken when something has actually changed. Without that, a "
-              + "day of starting and quitting would fill the limit with identical copies "
-              + "and push out the one snapshot that mattered."),
+            "A copy is taken only when something has changed since the last one, because "
+              + "without that check a day of starting and quitting would fill the retention "
+              + "limit with identical copies and push out the one snapshot worth having."),
         ]),
       HelpSection(
         heading: "Setting them up",
@@ -145,10 +146,9 @@ extension HelpContent {
               + "if you quit it often, in which case start and quit already cover you.",
           ]),
           .text(
-            "Zero is one of the choices, and it switches backups off entirely. That is "
-              + "deliberate: a backup holds a copy of every pad, including ones you have "
-              + "since deleted, so whether they exist at all is your decision and not "
-              + "Itchy's."),
+            "Zero is one of the choices and switches backups off entirely. A backup holds a "
+              + "copy of every pad, including ones you have since deleted, so whether any "
+              + "exist is your decision rather than Itchy's."),
         ]),
       HelpSection(
         heading: "Getting something back",
@@ -168,7 +168,7 @@ extension HelpContent {
           ]),
           .note(
             "Remove All Backups deletes every copy, including copies of pads you have "
-              + "already deleted. It is there for exactly that reason, and it cannot be "
+              + "already deleted, which is the reason it exists and the reason it cannot be "
               + "undone."),
         ]),
       HelpSection(
@@ -204,12 +204,24 @@ extension HelpContent {
               + "contents of all your pads back into the search index."),
         ]),
       HelpSection(
-        heading: "What Itchy sends",
+        heading: "What leaves your Mac",
         blocks: [
           .text(
-            "Nothing. Itchy makes no network connections of its own, has no telemetry and "
-              + "no accounts, and the agent server — when you switch it on — listens on "
-              + "this machine only and never dials out.")
+            "Out of the box, nothing. Itchy has no telemetry, no accounts and no "
+              + "update check, and it makes no network connection of its own until you "
+              + "configure something that needs one."),
+          .text(
+            "Two things can need one, and both are off until you set them up. The agent "
+              + "server listens on this machine only and never dials out, so switching it "
+              + "on opens nothing outward. Model-backed transforms reach whichever model "
+              + "you configured, which is a local one by default and sends nothing "
+              + "anywhere; a remote model is reached only from pads you have set to allow "
+              + "it, and Itchy will not use one as a substitute when the local model is "
+              + "unavailable."),
+          .note(
+            "If it matters to you which of those is true at a given moment, the pad's "
+              + "status line shows its routing policy and the menubar shows whether the "
+              + "agent server is listening."),
         ]),
       HelpSection(
         heading: "The diagnostic log",

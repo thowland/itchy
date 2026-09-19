@@ -186,12 +186,46 @@ To be safe, copy the current `pads.noindex` folder somewhere else first.
 
 ## Privacy
 
-- Your pads stay on your Mac. Itchy makes no network connections. The only link
-  it contains, on the welcome screen, opens in your browser.
+- Your pads stay on your Mac. Out of the box Itchy makes no network connection
+  of its own — no telemetry, no accounts, no update check — and the only link it
+  contains, on the welcome screen, opens in your browser.
+- Two things can change that, and both are off until you set them up. The agent
+  server listens on this machine only and never dials out. Model-backed
+  transforms reach whichever model you configured, which is a local one by
+  default and sends nothing anywhere; a remote model is reached only from pads
+  you have set to allow it, and Itchy will not substitute one when the local
+  model is unavailable.
 - Pads are kept out of Spotlight, so their contents do not appear in searches.
 - Pads are ordinary files in `~/Library/Application Support/Itchy/`, readable with
   any text editor.
 - Backups contain pads you have deleted, as described above.
+
+## Letting a model rewrite a pad
+
+Three transforms in the wand menu use a model: **Tidy Prose**, **Summarise** and
+**To Bullet Points**. They replace text with text, undo in one step like every
+other transform, and do not appear in the menu at all until you have configured
+a model in **Settings → Models**.
+
+Itchy looks for a model on your Mac first, under every setting and on every pad,
+because a model running locally sends nothing anywhere and so has no policy to
+satisfy. Install Ollama, run `ollama pull llama3.2`, and put the model's name in
+**Settings → Models** under *On this Mac*.
+
+If the local model cannot be reached, Itchy tells you so rather than sending
+your text to a remote service instead. That holds under every setting and on
+every pad, including a pad you have set to allow remote work.
+
+A remote model is optional. Itchy speaks the OpenAI-compatible chat format, so
+most hosted services will work: fill in the endpoint, the model name and the API
+key under *Remote*. The key is kept in your Keychain and is never written to
+Itchy's files or its diagnostic log.
+
+Each pad carries its own answer to whether model work on it may reach a remote
+service, set under the pad's **⋯** button: *local only*, which is what new pads
+get, *may use a remote service*, or *ask me each time*, which asks before
+anything leaves and names the pad, the destination and how much text is going.
+The pad shows which it is on its status line once a model is configured.
 
 ## Letting an agent use your pads
 

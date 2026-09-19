@@ -30,7 +30,13 @@ remove it.
 - **Backups you control.** A copy is kept when something has changed, as many as
   you choose, and zero is one of the choices.
 - **Your files, readable.** Pads are plain files on your Mac, kept out of
-  Spotlight, and Itchy makes no network connections.
+  Spotlight, and Itchy makes no network connection of its own until you
+  configure something that needs one.
+- **A model can rewrite a pad, if you set one up.** Tidy prose, summarise, or
+  turn it into bullet points, from the same menu as the instant transforms.
+  Itchy looks for a model on your Mac first and will not fall back to a remote
+  service when the local one is unavailable; each pad decides for itself whether
+  its text may go remote at all, and local only is the default.
 - **Pads an agent can read and write — if you say so.** Switch the agent server
   on in Settings, expose a pad, and a coding agent can read it, append to it and
   replace it over the Model Context Protocol. It listens on this machine only,

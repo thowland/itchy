@@ -20,9 +20,9 @@ extension HelpContent {
         heading: "What every client needs",
         blocks: [
           .text(
-            "Three things, all of them in Settings → Agents: the address, the transport, "
-              + "and the token. Claude Desktop needs only the last of the three — it "
-              + "launches the shim that ships inside Itchy, and that finds the rest."),
+            "Three things, all of them in Settings → Agents: the address, the transport and "
+              + "the token. Claude Desktop needs only the token, because it launches the "
+              + "shim that ships inside Itchy and the shim finds the rest for itself."),
           .steps([
             "The address is http://127.0.0.1:PORT\(MCPServerHost.path), where PORT is the "
               + "number Settings → Agents shows. It is usually "
@@ -33,17 +33,16 @@ extension HelpContent {
             "The token is the bearer token beside the switch. Press Copy.",
           ]),
           .note(
-            "The address starts with http, not https, and it is 127.0.0.1 rather than a "
-              + "name. Both are deliberate: the connection never leaves this machine, so "
-              + "there is nothing for TLS to protect against and no certificate that could "
-              + "be issued for a loopback address anyway."),
+            "The address starts with http rather than https, and it is 127.0.0.1 rather "
+              + "than a hostname. The connection never leaves this machine, so there is "
+              + "nothing in transit for TLS to protect, and no certificate authority will "
+              + "issue a certificate for a loopback address in any case."),
         ]),
       HelpSection(
         heading: "Claude Code",
         blocks: [
           .text(
-            "The simplest of the three. One command, and Claude Code speaks Streamable "
-              + "HTTP directly:"),
+            "One command, because Claude Code speaks Streamable HTTP directly:"),
           .steps([
             "claude mcp add --transport http itchy "
               + "http://127.0.0.1:\(MCPBounds.defaultPort)\(MCPServerHost.path) "
@@ -52,9 +51,9 @@ extension HelpContent {
             "Inside a session, /mcp shows the same thing and lists the five tools.",
           ]),
           .note(
-            "Use --scope user, as above, so Itchy is available in every project. Do not use "
-              + "--scope project: that writes the token into a .mcp.json file in the "
-              + "repository, which is a file most people commit."),
+            "Use --scope user, as above, so Itchy is available in every project. Avoid "
+              + "--scope project, which writes the token into a .mcp.json file in the "
+              + "repository, and that is a file most people commit."),
         ]),
       HelpSection(
         heading: "Codex",
@@ -78,22 +77,22 @@ extension HelpContent {
             "bearer_token_env_var = \"ITCHY_TOKEN\"",
           ]),
           .note(
-            "Codex names an environment variable rather than taking the token itself, which "
-              + "is the better arrangement: the token stays out of the configuration file. "
-              + "That file is shared with Codex in the ChatGPT desktop application and the "
-              + "IDE extension, so configuring it once covers all three."),
+            "Codex names an environment variable rather than storing the token, so the "
+              + "token stays out of the configuration file. That file is shared with Codex "
+              + "in the ChatGPT desktop application and the IDE extension, so configuring "
+              + "it once covers all three."),
         ]),
       HelpSection(
         heading: "Claude Desktop",
         blocks: [
           .text(
-            "Claude Desktop cannot be pointed at an address directly. Its custom connectors "
-              + "are opened by Anthropic's servers, which cannot reach an address that only "
-              + "exists on your Mac, and its configuration file launches a command rather "
-              + "than speaking HTTP."),
+            "Claude Desktop cannot be pointed at an address directly, for two reasons that "
+              + "compound: its custom connectors are opened by Anthropic's servers, which "
+              + "cannot reach an address that exists only on your Mac, and its configuration "
+              + "file launches a command rather than speaking HTTP."),
           .text(
-            "So Itchy ships a small program for it to launch, which does nothing but pass "
-              + "messages along. It is inside the application. Edit "
+            "Itchy therefore ships a small program for it to launch, which does nothing but "
+              + "pass messages along, and it lives inside the application. Edit "
               + "~/Library/Application Support/Claude/claude_desktop_config.json and add:"),
           .steps([
             "\"mcpServers\": { \"itchy\": { \"command\": "
@@ -104,16 +103,16 @@ extension HelpContent {
           ]),
           .note(
             "The shim finds the port itself, so there is no address to keep in step when it "
-              + "changes. If the server is off, or the token is wrong, it says so in Claude "
-              + "Desktop's own log rather than failing silently."),
+              + "changes. If the server is off, or the token is wrong, it says which in "
+              + "Claude Desktop's own log rather than failing silently."),
         ]),
       HelpSection(
         heading: "ChatGPT's own connectors",
         blocks: [
           .text(
-            "The connectors you add inside ChatGPT itself cannot reach Itchy, and this is "
-              + "not a setting you have missed. Use Codex instead, above — it is OpenAI's "
-              + "client that runs on your machine, and it works."),
+            "The connectors you add inside ChatGPT itself cannot reach Itchy, and there is "
+              + "no setting you have missed. Use Codex instead, above, which is OpenAI's "
+              + "client that runs on your machine and does work."),
           .text(
             "The difference is where the connection is made from. A ChatGPT connector is "
               + "opened by OpenAI's servers, so it needs an address reachable from the "
@@ -122,15 +121,15 @@ extension HelpContent {
               + "requirement rather than a default — it is what makes the pads unreachable "
               + "from anywhere but this Mac."),
           .text(
-            "You could put a tunnel in front of it and give ChatGPT the public address. "
-              + "Do not. That would mean the contents of your exposed pads leaving your "
-              + "machine, protected by one bearer token, to buy a convenience Codex gives "
-              + "you for nothing."),
+            "You could put a tunnel in front of it and give ChatGPT the public address, and "
+              + "I would not: it puts the contents of your exposed pads on the public "
+              + "internet behind a single bearer token, to buy a convenience Codex already "
+              + "gives you for nothing."),
           .note(
-            "The same reasoning applies to Claude's custom connectors, and for the same "
-              + "reason: anything opened from a server rather than from your Mac cannot see "
-              + "127.0.0.1. Clients that run locally — Claude Code, Codex — are the ones "
-              + "that work."),
+            "The same applies to Claude's custom connectors, for the same reason: anything "
+              + "opened from a server rather than from your Mac cannot see 127.0.0.1. The "
+              + "clients that work are the ones that run locally, which today means Claude "
+              + "Code, Codex and Claude Desktop through the shim."),
         ]),
       HelpSection(
         heading: "When it does not connect",
@@ -149,10 +148,10 @@ extension HelpContent {
               + "the answer is none.",
           ]),
           .note(
-            "Switching on the diagnostic log in Settings → General shows each request "
-              + "arriving, whether its token was accepted, and what every tool call did. It "
-              + "is the quickest way to tell “the client never reached Itchy” from “the "
-              + "client reached Itchy and was refused”."),
+            "Switching on the diagnostic log in Settings → General records each request "
+              + "arriving, whether its token was accepted and what every tool call did, "
+              + "which is the quickest way to tell “the client never reached Itchy” from "
+              + "“the client reached Itchy and was refused”."),
         ]),
     ])
 }

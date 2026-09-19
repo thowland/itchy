@@ -20,6 +20,60 @@ struct HelpBookTests {
     #expect(ids.contains("clients"))
     #expect(ids.contains("backups"))
     #expect(ids.contains("transforms"))
+    #expect(ids.contains("models"))
+  }
+
+  // MARK: - Models (Sprint 10)
+
+  /// The help was written before Sprint 10 and said Itchy made no network
+  /// connections at all. These hold the topic to what the code does now.
+  @Test("The models topic names the three transforms and the local default")
+  func modelsTopicIsAccurate() {
+    let text = allText(of: HelpContent.models)
+    #expect(text.contains("Tidy Prose"))
+    #expect(text.contains("Summarise"))
+    #expect(text.contains("To Bullet Points"))
+    #expect(text.contains(ModelSettings.defaultLocalEndpoint))
+  }
+
+  /// `FR-9.4` is the guarantee somebody reads this topic to check.
+  @Test("The models topic states that a local failure does not go remote")
+  func modelsTopicStatesTheGuarantee() {
+    let text = allText(of: HelpContent.models)
+    #expect(text.contains("does not send your text to a remote service instead"))
+    #expect(text.contains("under any setting"))
+  }
+
+  @Test("The models topic covers all three per-pad policies")
+  func modelsTopicCoversThePolicies() {
+    let text = allText(of: HelpContent.models)
+    for policy in RoutingPolicy.allCases {
+      #expect(
+        text.contains(PadSettingsModel.routingChoice(policy).components(separatedBy: " —")[0]),
+        "the topic does not mention \(policy)")
+    }
+  }
+
+  /// The claim that was true until Sprint 10 and is not any more.
+  @Test("The privacy topic no longer claims Itchy makes no network connections")
+  func privacyTopicIsNotStale() {
+    let text = allText(of: HelpContent.filesAndPrivacy)
+    #expect(!text.contains("Itchy makes no network connections of its own"))
+    #expect(text.contains("until you configure something that needs one"))
+  }
+
+  @Test("The pads topic lists what a pad's settings sheet actually holds")
+  func padsTopicMatchesTheSheet() {
+    let text = allText(of: HelpContent.pads)
+    #expect(text.contains("whether model work on it"))
+    #expect(text.contains("whether agents may read it"))
+    // And the status line, which gained a routing segment.
+    #expect(text.contains("its routing policy"))
+  }
+
+  @Test("The transforms topic points at the model-backed ones")
+  func transformsTopicMentionsModels() {
+    #expect(allText(of: HelpContent.transforms).contains("model-backed transforms"))
   }
 
   // MARK: - Connecting a client
@@ -60,7 +114,7 @@ struct HelpBookTests {
   func warnsAboutProjectScope() {
     let text = allText(of: HelpContent.clients)
     #expect(text.contains("--scope user"))
-    #expect(text.contains("Do not use --scope project"))
+    #expect(text.contains("Avoid --scope project"))
     #expect(text.contains(".mcp.json"))
   }
 
@@ -84,7 +138,7 @@ struct HelpBookTests {
     #expect(text.contains("cannot reach Itchy"))
     #expect(text.contains("Use Codex instead"))
     #expect(text.contains("tunnel"))
-    #expect(text.contains("Do not."))
+    #expect(text.contains("I would not"))
   }
 
   /// The distinction that decides every case: opened from a server, or opened
