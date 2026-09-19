@@ -50,13 +50,6 @@ be demonstrated. Half of it can: two HTTP clients are connected concurrently in 
 suite and do see the same pad, because the state is the store's rather than the
 session's. What is untested is the shim, not the concurrency.
 
-## Still blocked on a person
-
-A `notarytool` credential profile, for `NFR-4.2`. It is a few minutes at
-appleid.apple.com and one command; `make ship-check` prints the command with the
-team identifier already in it. Nothing in this document depends on it — it
-gates the release, not the server.
-
 ## What needs a second machine
 
 `FR-8.3`'s acceptance criterion is that a connection attempt from another
