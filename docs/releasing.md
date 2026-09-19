@@ -103,9 +103,22 @@ network outage.
 ```bash
 make ship-check   # confirm both of the above
 make release      # Developer ID signed, hardened runtime, verified
-make notarise     # submit, wait, staple
-make dmg          # package a signed disk image
+make notarise     # submit the application, wait, staple it
+make dmg          # package, notarise and staple the disk image
 ```
+
+Both steps notarise, and that is not redundant. The disk image is what carries
+the quarantine attribute when somebody downloads it, so the image is what
+Gatekeeper assesses when they open it — a merely-signed image holding a
+perfectly notarised application is refused before anyone reaches the
+application, and macOS says the file is damaged rather than that it is
+unnotarised. The application is stapled too, so that it still passes once it has
+been dragged out of the image and the image is gone.
+
+`make dmg` refuses to run before `make notarise`, because packaging an
+unstapled application would produce an image that passes on the way in and
+an application that fails on the way out. It finishes by asking Gatekeeper
+whether it would accept the result, and says so.
 
 The hardened runtime is required for notarisation and applies to Release builds
 only. It blocks XCTest bundle injection, so Debug builds do not use it.
@@ -159,4 +172,4 @@ That is enough to hand a build to someone who already trusts where it came from,
 and no more. Without notarisation, Gatekeeper refuses it on a machine that has
 never seen it, and tells the person opening it that the application is damaged
 rather than that it is unsigned. `make dmg` produces the version that opens
-anywhere.
+anywhere — notarised and stapled, both the image and the application inside.

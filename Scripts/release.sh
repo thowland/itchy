@@ -220,12 +220,25 @@ build() {
   pass "signed and verified at $EXPORT_DIR/$APP_NAME.app"
 }
 
+# Submits one file and waits. Shared by the application and the disk image,
+# because both need it and for the same reason.
+submit() {
+  xcrun notarytool submit "$1" --keychain-profile "$NOTARY_PROFILE" --wait
+}
+
+# Whether a ticket is attached to something, which is what lets Gatekeeper
+# approve it without asking Apple — on a machine that is offline, or after the
+# submission has aged out of the service's cache.
+stapled() {
+  xcrun stapler validate "$1" >/dev/null 2>&1
+}
+
 notarise() {
   local app="$EXPORT_DIR/$APP_NAME.app"
   [ -d "$app" ] || { fail "no release build; run 'make release' first"; exit 1; }
   local zip="$EXPORT_DIR/$APP_NAME.zip"
   ditto -c -k --keepParent "$app" "$zip" || exit 1
-  xcrun notarytool submit "$zip" --keychain-profile "$NOTARY_PROFILE" --wait || exit 1
+  submit "$zip" || exit 1
   xcrun stapler staple "$app" || exit 1
   pass "notarised and stapled"
 }
@@ -290,15 +303,45 @@ package() {
   echo "     contains: $APP_NAME.app, a link to Applications, README.md"
 }
 
+# The disk image people actually download, which has to clear Gatekeeper in its
+# own right.
+#
+# A stapled application inside a merely-signed image is not enough. The image is
+# what carries the quarantine attribute, and it is the image Gatekeeper assesses
+# when somebody opens their download — so an unnotarised one is refused before
+# anyone reaches the application inside, and the message macOS shows says the
+# file is damaged rather than that it is unnotarised. Both have to be notarised
+# and both have to be stapled.
 dmg() {
   local app="$EXPORT_DIR/$APP_NAME.app"
+  local image="$EXPORT_DIR/$APP_NAME.dmg"
   [ -d "$app" ] || { fail "no release build; run 'make release' first"; exit 1; }
+  if ! stapled "$app"; then
+    fail "the application has no notarisation ticket"
+    warn "  run 'make notarise' first. Notarising the image alone would leave"
+    warn "  the application unstapled once it is dragged out of it."
+    exit 1
+  fi
+
   local staging="$EXPORT_DIR/dmg"
   stage_dmg "$app" "$staging" || { fail "could not assemble the disk image"; exit 1; }
-  build_dmg "$staging" "$EXPORT_DIR/$APP_NAME.dmg" || exit 1
+  build_dmg "$staging" "$image" || exit 1
   rm -rf "$staging"
-  codesign --sign "$(identity)" "$EXPORT_DIR/$APP_NAME.dmg" || exit 1
-  pass "packaged $EXPORT_DIR/$APP_NAME.dmg"
+  # --timestamp for the same reason the application needs one: the notary
+  # service requires a secure timestamp on what it is asked to notarise.
+  codesign --sign "$(identity)" --timestamp "$image" || exit 1
+  submit "$image" || exit 1
+  xcrun stapler staple "$image" || exit 1
+
+  if spctl -a -t open --context context:primary-signature "$image" >/dev/null 2>&1; then
+    pass "packaged, notarised and stapled $image"
+    pass "Gatekeeper accepts it — it will open on a machine that has never seen it"
+  else
+    fail "the image was notarised but Gatekeeper still refuses it"
+    spctl -a -vvv -t open --context context:primary-signature "$image" 2>&1 \
+      | head -3 | sed 's/^/       /'
+    exit 1
+  fi
 }
 
 case "${1:-check}" in
