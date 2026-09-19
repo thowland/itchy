@@ -306,19 +306,19 @@ When content arrives by paste or drop, Itchy MUST record the frontmost applicati
 
 **FR-7.2 — Provenance stored outside the text** *(R2, MUST)*
 Provenance MUST be stored in the pad's metadata and MUST NOT be carried as text attributes.
-*Acceptance:* flattening a pad to plain text leaves its provenance list intact. This is the specific reason for the requirement: attributes are what flattening destroys, and provenance whose purpose is to reconstruct what content was for must outlive that operation.
+*Acceptance:* flattening a pad to plain text leaves its provenance list intact. This is the specific reason for the requirement: attributes are what flattening destroys, and provenance whose purpose is to reconstruct what content was for must outlive that operation. **Met September 2026**, and asserted — `ProvenanceTests.survivesFlattening` flattens a styled pad through `ContentCodec` and checks both that the provenance survived and that the flatten actually happened, since the first half proves nothing without the second.
 
 **FR-7.3 — Pad-level presentation** *(R2, MUST)*
 Provenance MUST be presented at pad level, as a short list of what has been pasted into the pad and from where. Per-character attribution is explicitly not required.
-*Acceptance:* the pad's provenance list is viewable from the panel and reflects the last several arrivals in order.
+*Acceptance:* the pad's provenance list is viewable from the panel and reflects the last several arrivals in order. **Met September 2026:** *Where this came from…* in the pad's actions menu, newest first, bounded to `ProvenanceBounds.limit` — "several" rather than all, because `meta.json` is rewritten in full on every save.
 
 **FR-7.4 — Ranges are approximate** *(R2, MUST)*
 An insertion range recorded with a provenance entry MUST be treated as approximate and MUST NOT be presented as authoritative. Range drift under editing is accepted rather than corrected.
-*Acceptance:* heavy editing after a paste does not produce a visibly wrong claim about which text came from where, because no such claim is made.
+*Acceptance:* heavy editing after a paste does not produce a visibly wrong claim about which text came from where, because no such claim is made. **Met September 2026** by construction: the range is recorded and never presented. A test asserts that no word in the list or its caption claims a range, position or offset, so honouring this stays deliberate rather than accidental.
 
 **FR-7.5 — Provenance is clearable** *(R2, MUST)*
 The user MUST be able to clear a pad's provenance list without altering its content.
-*Acceptance:* clearing empties the list and leaves content unchanged.
+*Acceptance:* clearing empties the list and leaves content unchanged. **Met September 2026:** the Clear button in the same sheet, and the sheet says the pad's contents are untouched — a button called Clear on a pad could reasonably be read as clearing the pad.
 
 ### FR-8 MCP server
 

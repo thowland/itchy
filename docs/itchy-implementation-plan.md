@@ -261,6 +261,8 @@ A month of use is also likely to reorder what follows, and the sketches below ar
 
 **Sprint 7 — Provenance.** Capture through the interceptor built in Sprint 3, storage in metadata rather than attributes, pad-level presentation, clearing. Claims `FR-7.1`–`FR-7.5`. The test that matters is that flattening a pad leaves its provenance list intact, since that is the entire reason the data does not live in text attributes.
 
+*Complete, September 2026.* Capture and storage had already landed with Sprint 3's paste work; what this sprint added was the half that made them worth having — the list itself, reachable from the pad's actions menu, and the clearing. Two things were found on the way: the list was unbounded, in a file rewritten in full on every save, and the test the paragraph above calls the one that matters did not exist.
+
 **Sprint 8 — MCP transport and surface.** Spike S-4 resolves the SDK question before the sprint opens (D-5). Loopback HTTP binding, Keychain-held bearer token, the five tools, the resource form, plain-text reads with the image placeholder. Claims `FR-8.1`–`FR-8.6`, `FR-8.10`, `NFR-3.3`.
 
 *Complete.* The loopback listener, `endpoint.json`, the shadow-text placeholder and the Agents settings section all landed, and a real MCP client drives the server over HTTP in the suite. The decisions taken along the way are in D-25.

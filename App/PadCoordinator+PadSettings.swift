@@ -35,6 +35,17 @@ extension PadCoordinator {
     }
   }
 
+  /// `FR-7.5`: clearing the list leaves the pad's content alone. The store
+  /// already separates them — provenance is metadata, never text attributes
+  /// (`FR-7.2`) — so this is a metadata write and touches no content.
+  func clearProvenance(_ padID: PadID) {
+    Task { [weak self] in
+      guard let self else { return }
+      await self.store.clearProvenance(of: padID)
+      await self.refresh()
+    }
+  }
+
   /// Makes Itchy active before a pad's settings sheet appears.
   ///
   /// A pad panel takes the keyboard without activating the application

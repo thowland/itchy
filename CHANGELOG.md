@@ -42,6 +42,11 @@ About is the commit count.
 - Reading a pad that contains an image now returns the text with `[image
   1240×820]` in its place, rather than a character that means nothing. The same
   placeholder appears in the pad's plain-text copy on disk.
+- **Where this came from**, in a pad's ⋯ menu: a list of what has been pasted
+  or dropped into the pad, which application it came from, the page or file it
+  came from where there was one, and when. It does not claim which text came
+  from which arrival — editing moves text, and a claim that drifts is worse than
+  none. Clearing the list leaves the pad's contents untouched.
 - Itchy now ships `itchy-mcp`, a small program that agents which expect to
   launch a command — Claude Desktop among them — can use to reach the pads
   ([D-29](docs/decisions/D-29-stdio-shim.md)). It finds the running server

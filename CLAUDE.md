@@ -232,7 +232,7 @@ next release needs it run again — but it is empty now.
 
 ## What is next
 
-Sprint 7 (provenance) and Sprint 10 (model routing). §9's interval is closed and the answer was the good one (D-28), so the
+Sprint 10 (model routing); Sprint 7 (provenance) is done. §9's interval is closed and the answer was the good one (D-28), so the
 plan proceeds roughly as sketched.
 
 The governing constraint has not moved, and this is exactly the point at which

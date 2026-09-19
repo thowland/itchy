@@ -14,6 +14,7 @@ struct PadPanelContent: View {
   let fault: PadStoreFault?
   let coordinator: PadCoordinator
   @State private var isShowingSettings = false
+  @State private var isShowingProvenance = false
 
   var body: some View {
     let current = coordinator.metadata(for: pad)
@@ -42,14 +43,23 @@ struct PadPanelContent: View {
           editor.toggle(trait)
         }
         TransformMenu(pad: current, coordinator: coordinator)
-        PadActionsMenu(pad: current, coordinator: coordinator) {
-          coordinator.prepareForPadSettings()
-          isShowingSettings = true
-        }
+        PadActionsMenu(
+          pad: current, coordinator: coordinator,
+          onShowSettings: {
+            coordinator.prepareForPadSettings()
+            isShowingSettings = true
+          },
+          onShowProvenance: {
+            coordinator.prepareForPadSettings()
+            isShowingProvenance = true
+          })
       }
     }
     .sheet(isPresented: $isShowingSettings) {
       PadSettingsView(pad: current, coordinator: coordinator)
+    }
+    .sheet(isPresented: $isShowingProvenance) {
+      ProvenanceView(pad: current, coordinator: coordinator)
     }
   }
 }
@@ -96,10 +106,12 @@ struct PadActionsMenu: View {
   let pad: PadMetadata
   let coordinator: PadCoordinator
   let onShowSettings: () -> Void
+  let onShowProvenance: () -> Void
 
   var body: some View {
     Menu {
       Button("Pad Settings…", action: onShowSettings)
+      Button("\(ProvenanceModel.title)…", action: onShowProvenance)
       Divider()
       Button("Copy All as Plain Text") {
         coordinator.copyAsPlainText(pad.id)

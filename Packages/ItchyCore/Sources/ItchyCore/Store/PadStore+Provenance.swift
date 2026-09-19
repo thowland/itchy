@@ -6,8 +6,9 @@ extension PadStore {
   // MARK: - Provenance
 
   public func appendProvenance(_ entry: ProvenanceEntry, to id: PadID) async {
-    guard metadata[id] != nil else { return }
-    metadata[id]?.provenance.append(entry)
+    guard var pad = metadata[id] else { return }
+    pad.provenance = ProvenanceBounds.trimmed(pad.provenance + [entry])
+    metadata[id] = pad
     dirty.insert(id)
     await scheduler.schedule(id) { [weak self] in
       try? await self?.flush(id)
