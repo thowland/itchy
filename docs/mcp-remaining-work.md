@@ -20,27 +20,42 @@ is not.
 
 ## The stdio shim (`FR-8.2`)
 
-**Blocked on a person, and it is the same person the release is already waiting
-on.**
+**No longer blocked.** This section said the shim was waiting on the same
+certificate the release was. That certificate now exists on this machine —
+`Developer ID Application: Timothy Howland (HPJD2255AP)` — so the shim is
+ordinary work that has not been done rather than work that cannot be.
 
 `Shim/itchy-mcp` proxies stdio to the loopback endpoint and holds no protocol
 logic. It reads the port from `endpoint.json` — which now exists and is written
 atomically — and the token from the Keychain.
 
-The Keychain is the blocker. Reading the same item from two binaries needs a
-shared access group, which needs both binaries signed by the same team, which
-needs the Developer ID Application certificate `NFR-4.2` is already waiting for.
-`MCPTokenKeychain` therefore stores the item under a plain service and account
-with no access-group attribute, and adding one is a change to where the item
-lives: the old item is not found under the new query, so it needs a migration or
-a regeneration. Regeneration is the right answer, because the token is not a
-secret anyone has memorised.
+The Keychain was the blocker. Reading the same item from two binaries needs a
+shared access group, which needs both binaries signed by the same team — and
+until the certificate arrived there was no team to share. There is now.
 
-Until then, `FR-8.2`'s acceptance criterion — one client over HTTP and another
-over the shim, concurrently, both seeing the same pad state — cannot be
-demonstrated. Half of it can: two HTTP clients are connected concurrently in the
+What remains is the work itself. `MCPTokenKeychain` stores the item under a
+plain service and account with no access-group attribute, and adding one is a
+change to where the item lives: the old item is not found under the new query,
+so it needs a migration or a regeneration. Regeneration is the right answer,
+because the token is not a secret anyone has memorised.
+
+Whether the `keychain-access-groups` entitlement needs anything beyond a shared
+team for a directly-distributed build is the first thing to find out when the
+shim is written. It should not, for Developer ID signing, but "should not" is
+what spikes are for.
+
+Until the shim exists, `FR-8.2`'s acceptance criterion — one client over HTTP
+and another over the shim, concurrently, both seeing the same pad state — cannot
+be demonstrated. Half of it can: two HTTP clients are connected concurrently in the
 suite and do see the same pad, because the state is the store's rather than the
 session's. What is untested is the shim, not the concurrency.
+
+## Still blocked on a person
+
+A `notarytool` credential profile, for `NFR-4.2`. It is a few minutes at
+appleid.apple.com and one command; `make ship-check` prints the command with the
+team identifier already in it. Nothing in this document depends on it — it
+gates the release, not the server.
 
 ## What needs a second machine
 

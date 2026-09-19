@@ -30,6 +30,62 @@ identity() {
     | sed -E 's/.*"(.*)"/\1/'
 }
 
+# The team identifier, taken from the Developer ID certificate's own name.
+#
+# Worth deriving rather than leaving to the reader. A machine with more than one
+# Apple account has several parenthesised identifiers in `find-identity` output
+# and only one of them is the team that owns the Developer ID — the instruction
+# "use the one in parentheses" is ambiguous exactly when it matters.
+team_id() {
+  identity | sed -nE 's/.*\(([A-Z0-9]+)\)$/\1/p'
+}
+
+# Bounded, without depending on GNU coreutils. `timeout` is not on a clean macOS
+# and must not be on the path this check needs. Same shape as Scripts/test.sh.
+run_bounded() {
+  local seconds="$1"; shift
+  "$@" &
+  local pid=$!
+  local waited=0
+  while kill -0 "$pid" 2>/dev/null; do
+    if [ "$waited" -ge "$seconds" ]; then
+      kill -9 "$pid" 2>/dev/null
+      return 124
+    fi
+    sleep 1
+    waited=$((waited + 1))
+  done
+  wait "$pid"
+}
+
+# Whether the notary credentials are usable, and if not, which kind of not.
+#
+# `notarytool history` answers locally and instantly when there is no profile,
+# and calls Apple when there is one. Those two failures need opposite advice:
+# one means "create a profile", the other means "your profile is there and
+# something else is wrong". Reporting the first for both is how somebody ends up
+# overwriting working credentials to fix a network outage.
+notary_status() {
+  local output status
+  output=$(run_bounded 45 xcrun notarytool history \
+    --keychain-profile "$NOTARY_PROFILE" 2>&1)
+  status=$?
+  if [ $status -eq 0 ]; then
+    echo "ok"
+    return 0
+  fi
+  if [ $status -eq 124 ]; then
+    echo "unreachable"
+    return 1
+  fi
+  if printf '%s' "$output" | grep -q "No Keychain password item found"; then
+    echo "absent"
+    return 1
+  fi
+  printf 'refused\n%s\n' "$output"
+  return 1
+}
+
 check() {
   echo "Release readiness"
   local ready=0
@@ -45,14 +101,33 @@ check() {
     ready=1
   fi
 
-  if xcrun notarytool history --keychain-profile "$NOTARY_PROFILE" >/dev/null 2>&1; then
-    pass "notarytool credential profile '$NOTARY_PROFILE'"
-  else
-    fail "no notarytool credential profile named '$NOTARY_PROFILE'"
-    warn "  xcrun notarytool store-credentials $NOTARY_PROFILE \\"
-    warn "    --apple-id <id> --team-id <team> --password <app-specific-password>"
-    ready=1
-  fi
+  local notary team
+  notary=$(notary_status)
+  case "$(printf '%s' "$notary" | head -1)" in
+    ok)
+      pass "notarytool credential profile '$NOTARY_PROFILE'"
+      ;;
+    absent)
+      fail "no notarytool credential profile named '$NOTARY_PROFILE'"
+      team=$(team_id)
+      warn "  xcrun notarytool store-credentials $NOTARY_PROFILE \\"
+      warn "    --apple-id <your-apple-id> --team-id ${team:-<team>}"
+      warn "  Leave --password off: notarytool prompts for the app-specific"
+      warn "  password, so it does not land in your shell history."
+      ready=1
+      ;;
+    unreachable)
+      fail "the notary service did not answer within 45s"
+      warn "  the profile may be fine — this check needs the network."
+      ready=1
+      ;;
+    *)
+      fail "the profile '$NOTARY_PROFILE' exists but was refused"
+      printf '%s\n' "$notary" | tail -n +2 | head -3 | sed 's/^/       /'
+      warn "  an app-specific password can be revoked at appleid.apple.com."
+      ready=1
+      ;;
+  esac
 
   if [ -f "App/Itchy.entitlements" ]; then
     pass "entitlements present (no sandbox, hardened runtime)"

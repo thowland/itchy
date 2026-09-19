@@ -12,8 +12,7 @@ remove it.
 > **Status: early, and not yet signed for distribution.** Version 0.1.x is in
 > daily use by its author. There is no notarised release yet, so for now Itchy
 > is built from source. The agent integration works over HTTP; the stdio shim,
-> for agents that cannot speak HTTP, is waiting on the same signing certificate
-> the release is.
+> for agents that cannot speak HTTP, is not written yet.
 
 ## What it does
 

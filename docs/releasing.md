@@ -67,19 +67,36 @@ password.
 
 1. At **appleid.apple.com → Sign-In and Security → App-Specific Passwords**,
    generate one and copy it.
-2. Find the team identifier at **developer.apple.com → Membership details**, or
-   in the parentheses of the `security find-identity` output above.
+2. Find the team identifier. `make ship-check` prints the right one in the
+   command it suggests, which is the reliable way: it takes it from the
+   Developer ID certificate itself. Read it by hand only if you must, and read
+   it from the parentheses on the **Developer ID Application** line of
+   `security find-identity -v -p codesigning` — a machine with more than one
+   Apple account shows several parenthesised identifiers there and only that one
+   is the team that owns the certificate.
 3. Store the credentials in the keychain, once:
 
 ```bash
 xcrun notarytool store-credentials notarytool \
   --apple-id "you@example.com" \
-  --team-id "ABCDE12345" \
-  --password "abcd-efgh-ijkl-mnop"
+  --team-id "ABCDE12345"
 ```
+
+Leave `--password` off. notarytool then asks for the app-specific password at a
+secure prompt, so it does not end up in `~/.zsh_history`. Passing it as an
+argument works and is what most examples online show, but a credential in shell
+history is a credential you have to remember to remove.
+
+`store-credentials` validates against Apple before saving, so a wrong password
+or team identifier fails here rather than at the first notarisation.
 
 The profile name `notarytool` is what the release script expects; override it
 with `ITCHY_NOTARY_PROFILE`.
+
+`make ship-check` tells the two failures apart: a profile that is missing, and a
+profile that exists but was refused — because the advice differs, and
+"create a profile" is the wrong thing to do about an expired password or a
+network outage.
 
 ### 3. Releasing
 

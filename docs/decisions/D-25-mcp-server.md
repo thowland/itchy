@@ -179,6 +179,12 @@ becomes the honest answer. Nothing plans to.
 
 ## Still blocked on a person
 
+*Superseded in part, later in September 2026: the Developer ID Application
+certificate has since been issued — `Timothy Howland (HPJD2255AP)` — so the
+shim is no longer blocked, only unwritten. What is still missing for a release
+is the `notarytool` credential profile. The rest of this section stands as the
+description of the work.*
+
 The stdio shim (`FR-8.2`). Reading the same Keychain item from two binaries
 needs a shared access group, which needs both binaries signed by the same team,
 which needs the Developer ID certificate R1 is already waiting on.

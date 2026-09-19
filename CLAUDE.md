@@ -203,11 +203,16 @@ indexing of every pad, with nothing failing (D-16).
 All four framework spikes are resolved (D-15, D-16, D-17). Three things still
 need a person, and none can be done from a script:
 
-1. **No Developer ID Application certificate on this machine**, and no
-   `notarytool` credential profile. `NFR-4.2` needs both. `make ship-check`
-   reports what is missing, and `docs/releasing.md` has the provisioning steps.
-   This also blocks the stdio shim (`FR-8.2`): two binaries reading one Keychain
-   item need a shared access group, and that needs a shared signing team.
+1. **No `notarytool` credential profile.** The Developer ID Application
+   certificate now exists — `Timothy Howland (HPJD2255AP)` — so only the notary
+   credentials are missing, and `NFR-4.2` needs both. `make ship-check` prints
+   the exact `store-credentials` command with the right team identifier already
+   filled in; `docs/releasing.md` has the rest.
+
+   The certificate arriving also unblocks the stdio shim (`FR-8.2`): two
+   binaries reading one Keychain item need a shared access group, which needs a
+   shared signing team, and there now is one. That is ordinary work rather than
+   something waiting on a person.
 2. **The global hotkey's live firing is unconfirmed.** Registration is verified
    without the Accessibility permission (D-17), but a synthesised keypress
    cannot be posted from a test process. One real ⌃⌥Space press settles it.

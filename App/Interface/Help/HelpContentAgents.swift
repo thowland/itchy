@@ -110,11 +110,9 @@ extension HelpContent {
           .text(
             "Some agents expect to launch a command and talk to it over its input and "
               + "output rather than over a network port. Itchy will ship a small shim for "
-              + "that, and it is not finished: it needs both programs signed by the same "
-              + "developer certificate in order to share the token, and that certificate is "
-              + "the same one the first release is waiting for."),
+              + "that, which does nothing but pass messages along. It is not written yet."),
           .text(
-            "Until then, use an agent that can be pointed at an HTTP endpoint."),
+            "Until it is, use an agent that can be pointed at an HTTP endpoint."),
         ]),
     ])
 
