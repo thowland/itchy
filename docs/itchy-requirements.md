@@ -421,8 +421,10 @@ A fault affecting one pad MUST NOT prevent the application from launching or the
 ### NFR-3 Security and privacy
 
 **NFR-3.1 — Local by default** *(R1, MUST)*
-In R1 and R2 Itchy MUST make no outbound network connection whatsoever.
-*Acceptance:* observed over a working session, the process opens no sockets.
+In R1 and R2 Itchy MUST make no outbound network connection whatsoever. From R3 the application itself MUST still make none: it listens on loopback and does not dial. Only the stdio shim may open an outbound connection, and only to the loopback endpoint; from R4 the model client may open one, and only to the configured model endpoint.
+*Acceptance:* observed over a working session, the process opens no outbound sockets. Enforced continuously by `Scripts/arch-lint.sh`, which confines the APIs that can open one to a named list.
+
+*Amended September 2026. The original was scoped to R1 and R2 and said nothing about R3, which is when the requirement started to matter: the MCP server links `Network.framework` legitimately, and the release build links it into the application. The test that guarded this measured the Debug binary's load commands, where the packages link as separate frameworks and the dependency never appears — so it had been passing vacuously since `ItchyServices` became a package. A source-level rule replaces it, because "which files may dial out" is checkable and "does this binary link a networking stack" stopped being informative.*
 
 **NFR-3.2 — Nothing exposed without opt-in** *(R3, MUST)*
 No pad's content leaves the machine or becomes readable to another process as a result of a default setting. Every exposure is per-pad, opt-in, and visible on the pad.

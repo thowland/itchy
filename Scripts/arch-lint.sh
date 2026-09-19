@@ -7,6 +7,7 @@
 #   3. One call site for Transform.apply          specification §12
 #   4. Coverage exclusions pass the complexity cap D-11, specification §15.3
 #   5. No test reaches the real Keychain             D-26
+#   6. Outbound connections are confined              NFR-3.1, FR-9.4
 #
 # The first three are greps. Their crudeness is acceptable: each is a rule with
 # an obvious textual signature, and the alternative is noticing the violation a
@@ -139,6 +140,35 @@ if [ -n "$HITS" ]; then
   echo "$HITS" | sed 's/^/       /'
 else
   pass "no test reaches the real Keychain"
+fi
+
+# --- 6. Outbound connections are confined (NFR-3.1, FR-9.4) ------------------
+# NFR-3.1 said "no outbound network connection whatsoever", scoped to R1 and R2.
+# R3 ended that: the shim dials the loopback endpoint, and R4's model client will
+# dial a local model. What must stay true is narrower and more useful — that
+# *which* code may open an outbound connection is a short list somebody
+# maintains, rather than something any file can start doing.
+#
+# This is also the guarantee FR-9.4 turns on: "with the local endpoint stopped, a
+# local-only transform fails with a clear message and no outbound connection is
+# made." That is only checkable if the set of places able to make one is known.
+#
+# The application is not on the list and should not be. It listens; it does not
+# dial. `LoopbackConnection` wraps a connection the listener *accepted* — it
+# never constructs one, which is why it passes.
+OUTBOUND_ALLOWED='Shim/Sources/ItchyMCPShimCore/Proxy.swift'
+HITS=$(grep -rn --include='*.swift' -E '\bURLSession\b|NWConnection\(|NWBrowser\(' \
+  App Packages/ItchyCore/Sources Packages/ItchyServices/Sources Shim/Sources Harness/Sources \
+  2>/dev/null \
+  | grep -v '/\.build/' \
+  | grep -vE ':[[:space:]]*//' \
+  | grep -v "$OUTBOUND_ALLOWED" || true)
+if [ -n "$HITS" ]; then
+  fail "an outbound connection outside the allowed list (NFR-3.1)"
+  echo "       allowed: $OUTBOUND_ALLOWED" 
+  echo "$HITS" | sed 's/^/       /'
+else
+  pass "outbound connections confined to $OUTBOUND_ALLOWED"
 fi
 
 exit $FAILED

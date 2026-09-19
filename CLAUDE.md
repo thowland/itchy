@@ -70,6 +70,10 @@ it is the kind of rule that erodes silently.
    running the suite for permission, and a run that waits for an answer hangs —
    unanswerably, on CI. `MCPTokenStore` is the seam; tests get
    `InMemoryTokenStore`. The rule has no exception mechanism on purpose.
+6. **Outbound connections are confined to a named list** (`NFR-3.1`,
+   `FR-9.4`). The application listens and does not dial; only the shim may open
+   a connection, and only to loopback. R4's model client joins the list
+   deliberately, as a reviewable change.
 
 ## Testability doctrine (D-11)
 
