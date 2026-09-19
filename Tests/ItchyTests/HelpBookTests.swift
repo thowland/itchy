@@ -1,5 +1,6 @@
 import AppKit
 import ItchyCore
+import ItchyServices
 import Testing
 
 @testable import Itchy
@@ -11,13 +12,68 @@ import Testing
 struct HelpBookTests {
   // MARK: - Structure
 
-  @Test("The four subjects that were asked for all have a topic")
+  @Test("The subjects that were asked for all have a topic")
   func coversTheSubjects() {
     let ids = Set(HelpBook.topics.map(\.id))
     #expect(ids.contains("getting-started"))
     #expect(ids.contains("agents"))
+    #expect(ids.contains("clients"))
     #expect(ids.contains("backups"))
     #expect(ids.contains("transforms"))
+  }
+
+  // MARK: - Connecting a client
+
+  /// The address is the one thing that must be right, and it is assembled from
+  /// three values that live in three different places. Interpolated rather than
+  /// typed, so a changed port or path changes the instructions.
+  @Test("The connection instructions name the address the server actually serves")
+  func clientAddressMatchesTheServer() {
+    let text = allText(of: HelpContent.clients)
+    #expect(text.contains("127.0.0.1:\(MCPBounds.defaultPort)\(MCPServerHost.path)"))
+    #expect(text.contains(MCPServerHost.path))
+  }
+
+  @Test("Each of the three clients is covered, and the tool list is not")
+  func clientsCovered() {
+    let headings = HelpContent.clients.sections.map(\.heading)
+    #expect(headings.contains("Claude Code"))
+    #expect(headings.contains("Claude Desktop"))
+    #expect(headings.contains("ChatGPT"))
+  }
+
+  /// Claude Code's project scope writes the token into a file most people
+  /// commit. Saying so is the whole value of that section.
+  @Test("The Claude Code section warns about the scope that commits the token")
+  func warnsAboutProjectScope() {
+    let text = allText(of: HelpContent.clients)
+    #expect(text.contains("--scope user"))
+    #expect(text.contains("Do not use --scope project"))
+    #expect(text.contains(".mcp.json"))
+  }
+
+  /// Not a typo, and the one detail that silently breaks the Desktop setup.
+  @Test("The Claude Desktop section keeps the no-space header quirk")
+  func desktopHeaderQuirk() {
+    let text = allText(of: HelpContent.clients)
+    #expect(text.contains("Authorization:${AUTH}"))
+    #expect(text.contains("--allow-http"))
+    #expect(text.contains("no space after"))
+  }
+
+  /// The answer people will not expect, so it has to be unambiguous and it has
+  /// to say why rather than just no.
+  @Test("The ChatGPT section says it cannot connect, and refuses the tunnel")
+  func chatGPTCannotConnect() {
+    let text = allText(of: HelpContent.clients)
+    #expect(text.contains("ChatGPT cannot connect to Itchy"))
+    #expect(text.contains("tunnel"))
+    #expect(text.contains("Do not."))
+  }
+
+  @Test("The agents topic hands off to the client topic rather than dead-ending")
+  func agentsLinksToClients() {
+    #expect(allText(of: HelpContent.agents).contains(HelpContent.clients.title))
   }
 
   @Test("Every topic has a unique identifier, a title, a blurb and a symbol")

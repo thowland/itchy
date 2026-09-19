@@ -78,6 +78,7 @@ enum HelpBook {
     HelpContent.pads,
     HelpContent.transforms,
     HelpContent.agents,
+    HelpContent.clients,
     HelpContent.backups,
     HelpContent.filesAndPrivacy,
   ]

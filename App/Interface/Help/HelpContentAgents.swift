@@ -105,14 +105,13 @@ extension HelpContent {
               + "marks the pad until you have looked at it."),
         ]),
       HelpSection(
-        heading: "Agents that cannot speak HTTP",
+        heading: "Telling the agent about it",
         blocks: [
           .text(
-            "Some agents expect to launch a command and talk to it over its input and "
-              + "output rather than over a network port. Itchy will ship a small shim for "
-              + "that, which does nothing but pass messages along. It is not written yet."),
-          .text(
-            "Until it is, use an agent that can be pointed at an HTTP endpoint."),
+            "Everything above is Itchy's side of the connection. The agent's side — the "
+              + "command to type for Claude Code, the file to edit for Claude Desktop, and "
+              + "why ChatGPT cannot be connected at all — is in “Connecting Claude or "
+              + "ChatGPT”, the next topic.")
         ]),
     ])
 

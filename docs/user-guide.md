@@ -236,6 +236,37 @@ until you look at it.
 line reading `[image 1240×820]`. It is told something is there rather than being
 quietly given a pad with a hole in it.
 
+### Telling the agent about it
+
+All of the above is Itchy's side. The agent needs the address
+`http://127.0.0.1:8899/mcp` — with whatever port **Settings → Agents** actually
+shows — over Streamable HTTP, and the token as a bearer header.
+
+**Claude Code** speaks that directly:
+
+```bash
+claude mcp add --transport http itchy http://127.0.0.1:8899/mcp \
+  --header "Authorization: Bearer PASTE-TOKEN-HERE" --scope user
+```
+
+`claude mcp list` should then show Itchy as connected. Use `--scope user` so it
+works in every project; avoid `--scope project`, which writes the token into a
+`.mcp.json` that most people commit.
+
+**Claude Desktop** needs a local bridge. Its custom connectors are opened by
+Anthropic's servers, which cannot reach an address that exists only on your Mac,
+and its configuration file launches a command rather than speaking HTTP. Until
+Itchy ships its own shim, `mcp-remote` fills the gap — see **Itchy Help →
+Connecting Claude or ChatGPT** for the exact entry, including the two details
+that silently break it.
+
+**ChatGPT cannot connect**, and it is not a setting you have missed. Its
+connectors are opened from OpenAI's servers, which need a publicly reachable
+HTTPS address and use OAuth rather than a pasted token. Itchy listens on
+127.0.0.1 and nothing else, on purpose. Putting a tunnel in front of it would
+send your pads off this machine behind a single token; use a client that runs
+locally instead.
+
 ## Help
 
 **Itchy Help**, from the menubar or from the **Help** button on the About
