@@ -73,12 +73,16 @@ final class PadCoordinator {
     let launch = signposter.beginLaunch()
     settings = settingsStore.load()
     registerHotKey()
-    startServerIfEnabled()
     reconcileLoginItem()
     await store.load(padLimit: settings.padLimit)
     await refreshFaults()
     await refresh()
     signposter.endLaunch(launch)
+    // After the store has loaded, and after the launch interval closes: an
+    // agent connecting in the moment between binding and loading would be
+    // told, truthfully but uselessly, that there are no pads — and binding a
+    // socket must not count against the budget in NFR-1.1.
+    startServerIfEnabled()
     // After the launch interval closes: a backup must not count against the
     // budget in NFR-1.1, and nothing depends on it having finished.
     archiveIfNeeded(trigger: .launch)
