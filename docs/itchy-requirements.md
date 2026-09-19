@@ -447,7 +447,7 @@ macOS 15 or later, per CON-5.
 
 **NFR-4.2 — Signed and notarised** *(R1, MUST)*
 Shipped builds MUST be signed with a Developer ID, MUST use the hardened runtime, and MUST be notarised.
-*Acceptance:* a downloaded build launches on a machine that has never seen it, without a Gatekeeper override.
+*Acceptance:* a downloaded build launches on a machine that has never seen it, without a Gatekeeper override. **Demonstrated 19 September 2026** for 0.1.1: signed with `Developer ID Application: Timothy Howland (HPJD2255AP)`, hardened runtime, notarised and stapled — both the application and the disk image — and opened on a clean Mac with no override.
 
 **NFR-4.3 — Core is testable in isolation** *(R1, MUST)*
 The pad model, the store, and the transform protocol MUST have no dependency on AppKit or SwiftUI and MUST be exercisable from tests and from a command-line harness.

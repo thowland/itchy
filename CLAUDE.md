@@ -5,10 +5,15 @@ non-activating panels, styled text with images, indefinite retention, and — th
 differentiating position — pads exposed as a surface software agents can read
 from and write to over MCP.
 
-**Status: R1 feature-complete, not yet shippable.** Sprints 0–5 are done, and so
-are Sprint 6 (transforms), Sprint 8 (the MCP server) and all of Sprint 9 but the
-stdio shim. What remains before the first release is signing (see *Blocked on a
-person* below), then a month of daily use.
+**Status: R1 shippable, and demonstrated.** Sprints 0–5 are done, and so are
+Sprint 6 (transforms), Sprint 8 (the MCP server) and all of Sprint 9 but the
+stdio shim. On 19 September 2026 a signed, notarised 0.1.1 disk image opened on
+a Mac that had never seen it, with no Gatekeeper override, and ran correctly
+through its smoke tests on macOS 15 — which closes `NFR-4.2` and was the last
+thing standing between R1 and a release.
+
+What comes next is the month of daily use the plan's §9 calls for, not more
+features.
 
 ## Documents, in precedence order
 
@@ -202,10 +207,12 @@ indexing of every pad, with nothing failing (D-16).
 
 All four framework spikes are resolved (D-15, D-16, D-17).
 
-**The provisioning is done.** `make ship-check` reports ready: a Developer ID
-Application certificate — `Timothy Howland (HPJD2255AP)` — and a `notarytool`
-credential profile both exist on this machine. `NFR-4.2` is satisfiable from a
-script now, which it was not for the whole of R1.
+**The provisioning is done, and the result is verified.** `make ship-check`
+reports ready: a Developer ID Application certificate — `Timothy Howland
+(HPJD2255AP)` — and a `notarytool` credential profile both exist on this
+machine. `make release && make notarise && make dmg` produces a disk image that
+has been opened on a clean Mac with no Gatekeeper override, so `NFR-4.2` is
+demonstrated rather than merely satisfiable.
 
 Two consequences beyond the release itself. The stdio shim (`FR-8.2`) is
 unblocked: two binaries reading one Keychain item need a shared access group,
@@ -218,12 +225,14 @@ can be done from a script:
 
 1. **The global hotkey's live firing is unconfirmed.** Registration is verified
    without the Accessibility permission (D-17), but a synthesised keypress
-   cannot be posted from a test process. One real ⌃⌥Space press settles it.
+   cannot be posted from a test process. One real ⌃⌥Space press settles it —
+   and now that a build runs on macOS 15, pressing it there settles the D-27
+   question at the same time.
 2. **`FR-8.3`'s acceptance criterion needs a second machine.** The suite proves
    the mechanism — the listener answers on loopback and on no other local
    address — but "a connection from another machine fails" cannot be run from
-   the machine under test. It is on the manual checklist in `§14.6`, alongside
-   the Gatekeeper check that is there for the same reason.
+   the machine under test. It is on the manual checklist in `§14.6`. There is
+   now a second Mac to run it from.
 
 ## What is next
 

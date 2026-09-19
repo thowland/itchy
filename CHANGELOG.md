@@ -10,7 +10,10 @@ About is the commit count.
 
 - Itchy is now signed with a Developer ID and notarised by Apple, so it opens
   on a machine that has never seen it without a Gatekeeper override. Both the
-  application and the disk image carry their own notarisation ticket.
+  application and the disk image carry their own notarisation ticket. Confirmed
+  on a clean Mac.
+- Itchy now runs on macOS 15 (Sequoia) and later, rather than macOS 26 and later
+  ([D-27](docs/decisions/D-27-deployment-floor.md)).
 
 - Transforms, on the pad: flatten styling, upper, lower and title case,
   pretty-print and minify JSON, encode and decode base64, encode and decode URL

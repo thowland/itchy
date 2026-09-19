@@ -70,6 +70,12 @@ The honest position is that macOS 15 is supported as far as the compiler is
 concerned and unverified as far as behaviour is concerned, until somebody runs
 it there. `§14.6`'s manual checklist gains a line saying so.
 
+*Verified 19 September 2026.* A notarised 0.1.1 image was opened on a Mac
+running macOS 15 and the application ran correctly through its smoke tests. The
+floor is now observed rather than assumed. One item on that line is still open:
+whether ⌃⌥Space fires there, which is the same manual check the hotkey has
+carried since D-17 and is not specific to the floor.
+
 ## What would reverse it
 
 Wanting an API that arrived after 15, and wanting it enough to write the first
