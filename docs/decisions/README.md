@@ -45,3 +45,4 @@ New decisions:
 | [D-27](D-27-deployment-floor.md) | The deployment floor moves from macOS 26 to macOS 15; nothing required 26, and the premise for it expired when the first build left this machine |
 | [D-28](D-28-post-mvp-interval.md) | The post-MVP interval is closed after a week rather than a month; the pads absorbed the traffic, so Sprints 7 and 10 proceed |
 | [D-29](D-29-stdio-shim.md) | The stdio shim takes its token from `ITCHY_TOKEN`; a shared Keychain access group needs a provisioning profile, measured rather than assumed |
+| [D-30](D-30-transforms-are-not-an-agent-surface.md) | `FR-9.2`'s MCP clause withdrawn: transforms stay off the agent surface, and `FR-8.5`'s five tools stand |

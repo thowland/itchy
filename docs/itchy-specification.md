@@ -733,7 +733,7 @@ The server does not listen until enabled (`FR-8.10`). Enabling and disabling tak
 
 ## 12. Model routing
 
-One enforcement point, below the view layer, per `FR-9.2`:
+One enforcement point, below the view layer, per `FR-9.2`. It is one because `Scripts/arch-lint.sh` holds `Transform.apply` to a single call site — not because two call sites could be made to agree. Transforms are not reachable over MCP and are not going to be (D-30), so "every path" is the menu and whatever later joins it:
 
 ```swift
 func run(_ transform: Transform, on pad: PadID, input: TransformInput) async throws -> TransformOutput {
@@ -855,6 +855,7 @@ The naming convention is load-bearing, because it is what makes a misplacement v
 | Transform scope | `TransformScope.scope(forSelectionLength:at:)` | Selection or whole pad, and the range the output is written back over (`FR-6.4`) | Read the selection, replace the range |
 | Transform styling | `TransformStylePlan.style(forTransform:mode:)` | Whether the replacement inherits the local style or takes the body font alone (D-24) | Gather the attributes and build the replacement |
 | Transform routing | `RoutingGate.decide(requiresNetwork:policy:)` | Whether a transform may run under the pad's routing policy (§7.3 step 2, `FR-9.2`) | `TransformRunner` refuses, or calls `apply` |
+| Agent tool surface | `MCPToolSurface.all` | Which operations exist for an agent at all — five, and a sixth is a decision rather than a line (`FR-8.5`, D-30) | The SDK advertises them |
 
 Each extracted unit is a value type or a namespace of pure functions, is `Sendable`, and is `Equatable` wherever it returns a value rather than performing an action — so that a test compares one whole expected value against one actual value, rather than poking at six fields and hoping it has checked the ones that matter.
 

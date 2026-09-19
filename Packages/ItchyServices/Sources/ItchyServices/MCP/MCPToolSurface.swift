@@ -6,6 +6,9 @@ import ItchyCore
 /// The narrowness is the point, so the set is written down once, here, and the
 /// count is asserted in a test. A sixth tool is a decision someone has to take
 /// deliberately rather than a line someone adds.
+///
+/// That has happened once and the answer was no: D-30 declined a transform
+/// tool, and withdrew the clause of `FR-9.2` that would have required one.
 public enum MCPToolSurface {
   public static let listPads = "list_pads"
   public static let readPad = "read_pad"

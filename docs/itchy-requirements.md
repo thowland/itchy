@@ -369,8 +369,10 @@ Each pad MUST carry a routing policy of local-only, remote-permitted, or ask-eac
 *Acceptance:* a newly created pad reports local-only without configuration.
 
 **FR-9.2 — Enforcement in the service layer** *(R4, MUST)*
-The policy MUST be enforced below the view layer, such that a transform invoked over MCP is subject to the same restriction as one invoked from the menu.
-*Acceptance:* a remote-requiring transform invoked over MCP against a local-only pad is refused with the policy given as the reason.
+The policy MUST be enforced below the view layer, at a single point, so that every path that can run a transform is subject to it rather than each path being made to agree.
+*Acceptance:* a remote-requiring transform run against a local-only pad is refused with the policy given as the reason, and the enforcement point is the only call site of `Transform.apply`. **Met September 2026.** Both halves: `TransformRunnerTests.refusalNamesThePolicy` checks the refusal names the policy rather than merely failing, and `Scripts/arch-lint.sh`'s third check holds `Transform.apply` to one call site on every run. This landed with Sprint 6 (D-24), ahead of the sprint that claims it.
+
+*Amended September 2026 (D-30). The clause withdrawn read "such that a transform invoked over MCP is subject to the same restriction as one invoked from the menu", with an acceptance criterion requiring a transform to be invoked over MCP. That contradicts `FR-8.5`, which limits the exposed operations to five and whose acceptance criterion is "the tool listing contains these and nothing else" — the criterion needed a sixth tool and `FR-8.5` forbids one. D-30 declines the sixth tool and gives the reasoning; the half of this requirement that was doing the work, a single enforcement point below the view, is unchanged and already satisfied.*
 
 **FR-9.3 — Policy visible on the pad** *(R4, MUST)*
 The pad's current policy MUST be displayed in its panel.

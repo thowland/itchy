@@ -91,6 +91,25 @@ struct TransformRunnerTests {
     }
   }
 
+  /// `FR-9.2`'s acceptance criterion, second half: refused *with the policy
+  /// given as the reason*. A refusal that does not say why is a transform the
+  /// person believes is broken.
+  @Test("A refused transform says the policy was the reason")
+  func refusalNamesThePolicy() async {
+    let stub = StubTransform(requiresNetwork: true)
+    let runner = TransformRunner(policy: .localOnly)
+    await #expect(throws: TransformError.self) { try await runner.run(stub, on: input) }
+    do {
+      _ = try await runner.run(stub, on: input)
+      Issue.record("a local-only pad should refuse a transform that needs the network")
+    } catch let error as TransformError {
+      #expect(error.reason.contains("local-only"))
+      #expect(error.reason.contains("needs the network"))
+    } catch {
+      Issue.record("expected a TransformError, got \(error)")
+    }
+  }
+
   @Test("A transform that needs no network is unaffected by the policy")
   func localTransformIgnoresPolicy() async throws {
     for policy in RoutingPolicy.allCases {
