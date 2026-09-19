@@ -56,6 +56,33 @@ extension HelpContent {
               + "repository, which is a file most people commit."),
         ]),
       HelpSection(
+        heading: "Codex",
+        blocks: [
+          .text(
+            "Codex runs on your Mac and speaks Streamable HTTP, so it reaches Itchy "
+              + "directly — no bridge. Either run:"),
+          .steps([
+            "codex mcp add itchy --url "
+              + "http://127.0.0.1:\(MCPBounds.defaultPort)\(MCPServerHost.path) "
+              + "--bearer-token-env-var ITCHY_TOKEN",
+            "Then put the token in that variable, for example by adding "
+              + "export ITCHY_TOKEN=\"PASTE-TOKEN-HERE\" to your shell profile.",
+            "codex mcp list shows what is configured.",
+          ]),
+          .text(
+            "Or write it into ~/.codex/config.toml yourself, which is the same thing:"),
+          .steps([
+            "[mcp_servers.itchy]",
+            "url = \"http://127.0.0.1:\(MCPBounds.defaultPort)\(MCPServerHost.path)\"",
+            "bearer_token_env_var = \"ITCHY_TOKEN\"",
+          ]),
+          .note(
+            "Codex names an environment variable rather than taking the token itself, which "
+              + "is the better arrangement: the token stays out of the configuration file. "
+              + "That file is shared with Codex in the ChatGPT desktop application and the "
+              + "IDE extension, so configuring it once covers all three."),
+        ]),
+      HelpSection(
         heading: "Claude Desktop",
         blocks: [
           .text(
@@ -88,25 +115,29 @@ extension HelpContent {
               + "everywhere except a loopback address."),
         ]),
       HelpSection(
-        heading: "ChatGPT",
+        heading: "ChatGPT's own connectors",
         blocks: [
           .text(
-            "ChatGPT cannot connect to Itchy, and this is not a setting you have missed."),
+            "The connectors you add inside ChatGPT itself cannot reach Itchy, and this is "
+              + "not a setting you have missed. Use Codex instead, above — it is OpenAI's "
+              + "client that runs on your machine, and it works."),
           .text(
-            "Its custom connectors work the way Claude's do: you give ChatGPT a URL and "
-              + "OpenAI's servers connect to it. They need an address reachable from the "
-              + "public internet over HTTPS, and they authenticate with OAuth rather than a "
-              + "token you paste. Itchy listens on 127.0.0.1 and nothing else, which is a "
+            "The difference is where the connection is made from. A ChatGPT connector is "
+              + "opened by OpenAI's servers, so it needs an address reachable from the "
+              + "public internet over HTTPS and authenticates with OAuth rather than a token "
+              + "you paste. Itchy listens on 127.0.0.1 and nothing else, which is a "
               + "requirement rather than a default — it is what makes the pads unreachable "
               + "from anywhere but this Mac."),
           .text(
             "You could put a tunnel in front of it and give ChatGPT the public address. "
               + "Do not. That would mean the contents of your exposed pads leaving your "
-              + "machine, protected by one bearer token, in exchange for a convenience you "
-              + "can have for free by using a client that runs locally."),
+              + "machine, protected by one bearer token, to buy a convenience Codex gives "
+              + "you for nothing."),
           .note(
-            "If ChatGPT gains a locally-running connector, this becomes possible and this "
-              + "page will say so. Until then, Claude Code is the shortest route."),
+            "The same reasoning applies to Claude's custom connectors, and for the same "
+              + "reason: anything opened from a server rather than from your Mac cannot see "
+              + "127.0.0.1. Clients that run locally — Claude Code, Codex — are the ones "
+              + "that work."),
         ]),
       HelpSection(
         heading: "When it does not connect",

@@ -34,12 +34,24 @@ struct HelpBookTests {
     #expect(text.contains(MCPServerHost.path))
   }
 
-  @Test("Each of the three clients is covered, and the tool list is not")
+  @Test("Every client is covered, including the one that runs locally for OpenAI")
   func clientsCovered() {
     let headings = HelpContent.clients.sections.map(\.heading)
     #expect(headings.contains("Claude Code"))
+    #expect(headings.contains("Codex"))
     #expect(headings.contains("Claude Desktop"))
-    #expect(headings.contains("ChatGPT"))
+    #expect(headings.contains("ChatGPT's own connectors"))
+  }
+
+  /// Codex runs on the machine and speaks Streamable HTTP, so it reaches a
+  /// loopback address directly. It names an environment variable rather than
+  /// taking the token, which keeps the token out of the config file.
+  @Test("The Codex section gives the loopback URL and the token env var")
+  func codexConfiguration() {
+    let text = allText(of: HelpContent.clients)
+    #expect(text.contains("bearer_token_env_var"))
+    #expect(text.contains("~/.codex/config.toml"))
+    #expect(text.contains("codex mcp add itchy --url"))
   }
 
   /// Claude Code's project scope writes the token into a file most people
@@ -61,14 +73,25 @@ struct HelpBookTests {
     #expect(text.contains("no space after"))
   }
 
-  /// The answer people will not expect, so it has to be unambiguous and it has
-  /// to say why rather than just no.
-  @Test("The ChatGPT section says it cannot connect, and refuses the tunnel")
-  func chatGPTCannotConnect() {
+  /// "ChatGPT cannot connect" was too broad: its own connectors cannot, and
+  /// Codex can. The section has to send people to the thing that works rather
+  /// than leave them with a flat no, and still refuse the tunnel.
+  @Test("The connector section points at Codex and refuses the tunnel")
+  func connectorsCannotReachLoopback() {
     let text = allText(of: HelpContent.clients)
-    #expect(text.contains("ChatGPT cannot connect to Itchy"))
+    #expect(text.contains("cannot reach Itchy"))
+    #expect(text.contains("Use Codex instead"))
     #expect(text.contains("tunnel"))
     #expect(text.contains("Do not."))
+  }
+
+  /// The distinction that decides every case: opened from a server, or opened
+  /// from this Mac. It is worth stating once rather than per client.
+  @Test("The reason a connector cannot see loopback is stated, not just the fact")
+  func explainsWhereTheConnectionIsMadeFrom() {
+    let text = allText(of: HelpContent.clients)
+    #expect(text.contains("opened by OpenAI's servers"))
+    #expect(text.contains("127.0.0.1"))
   }
 
   @Test("The agents topic hands off to the client topic rather than dead-ending")

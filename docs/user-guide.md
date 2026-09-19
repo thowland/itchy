@@ -253,6 +253,18 @@ claude mcp add --transport http itchy http://127.0.0.1:8899/mcp \
 works in every project; avoid `--scope project`, which writes the token into a
 `.mcp.json` that most people commit.
 
+**Codex** also reaches it directly, because it runs on your Mac:
+
+```bash
+codex mcp add itchy --url http://127.0.0.1:8899/mcp \
+  --bearer-token-env-var ITCHY_TOKEN
+```
+
+then `export ITCHY_TOKEN="PASTE-TOKEN-HERE"`. Codex names an environment
+variable rather than storing the token, so it stays out of
+`~/.codex/config.toml`. That file is shared with Codex in the ChatGPT desktop
+application and the IDE extension.
+
 **Claude Desktop** needs a local bridge. Its custom connectors are opened by
 Anthropic's servers, which cannot reach an address that exists only on your Mac,
 and its configuration file launches a command rather than speaking HTTP. Until
@@ -260,12 +272,14 @@ Itchy ships its own shim, `mcp-remote` fills the gap — see **Itchy Help →
 Connecting Claude or ChatGPT** for the exact entry, including the two details
 that silently break it.
 
-**ChatGPT cannot connect**, and it is not a setting you have missed. Its
-connectors are opened from OpenAI's servers, which need a publicly reachable
-HTTPS address and use OAuth rather than a pasted token. Itchy listens on
+**ChatGPT's own connectors cannot reach it** — use Codex, above. The difference
+is where the connection is opened from: a ChatGPT connector is opened by
+OpenAI's servers, so it needs a publicly reachable HTTPS address and uses OAuth
+rather than a pasted token, while Codex runs on your Mac. Itchy listens on
 127.0.0.1 and nothing else, on purpose. Putting a tunnel in front of it would
-send your pads off this machine behind a single token; use a client that runs
-locally instead.
+send your pads off this machine behind a single token, to buy something Codex
+gives you for nothing. The same applies to Claude's custom connectors, for the
+same reason.
 
 ## Help
 
