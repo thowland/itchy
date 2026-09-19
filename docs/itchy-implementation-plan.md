@@ -251,6 +251,8 @@ Two outcomes are worth planning for. If the pads have absorbed that traffic, the
 
 A month of use is also likely to reorder what follows, and the sketches below are deliberately shallow so that reordering costs nothing.
 
+**Resolved September 2026 (D-28).** The pads absorbed the traffic — the first of the two outcomes above — so the sprints below proceed roughly as sketched. The interval ran for a week of daily use of the first notarised build rather than the month written here, and D-28 records why that was judged sufficient and where it is weaker than the plan intended: Sprint 6 shipped during the interval rather than after it, so §9 gated Sprints 7 and 10 but not the transform work it was written to gate.
+
 ---
 
 ## 10. Sprints after the MVP, sketched

@@ -14,8 +14,9 @@ a second machine to the agent server is refused — so `NFR-4.2`, `FR-1.4` and
 `FR-8.3` are all demonstrated, and `§14.6`'s manual checklist is empty for the
 first time.
 
-What comes next is the month of daily use the plan's §9 calls for, not more
-features.
+The plan's §9 interval is closed (D-28): a week of daily use, and working text
+stopped being routed through messages-to-self. That was the measure, and it is
+the first of §9's two branches, so Sprints 7 and 10 proceed.
 
 ## Documents, in precedence order
 
@@ -231,11 +232,13 @@ written.
 
 ## What is next
 
-Sprint 7 (provenance) and Sprint 10 (model routing). The plan's §9 puts a month
-of daily use between R1 and the second release, deliberately: the measure of
-this project is whether working text actually stops being routed through
-messages-to-self, and that cannot be read while features are still arriving.
+Sprint 7 (provenance) and Sprint 10 (model routing), and the stdio shim
+(`FR-8.2`) that has been waiting rather than blocked since the certificate
+arrived. §9's interval is closed and the answer was the good one (D-28), so the
+plan proceeds roughly as sketched.
 
-Now that the MCP server runs, that month is also the first real test of the
-thing the project exists for. `docs/mcp-remaining-work.md` is down to the shim
-and the two acceptance criteria that cannot be run from this machine.
+The governing constraint has not moved, and this is exactly the point at which
+it starts to matter more rather than less. A scratchpad that has just been
+declared a success is a scratchpad somebody wants to add to. Before anything
+below is built, it is still `CON-3`: does this serve transient content, or
+permanent content?
