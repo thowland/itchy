@@ -255,6 +255,32 @@ Remove the dependent's cache: `rm -rf Packages/ItchyServices/.build Harness/.bui
 **`make app` says it built, but the app is nowhere.** It is at
 `build/Itchy.app`; `make reveal` shows it in Finder.
 
+**Every build prints pages of plug-in and simulator errors.** They are not
+ours. On a machine whose CoreSimulator framework is older than the installed
+Xcode, `xcodebuild` fails to load its device and simulator plug-ins and writes
+sixty lines about it to stderr before going on to build correctly. The give-away
+is the line
+
+```
+CoreSimulator is out of date. Current version (…) is older than build version (…).
+```
+
+Nothing in Itchy touches a simulator — it is a macOS application — so none of it
+concerns the build. Every script here pipes `xcodebuild` through
+`Scripts/xcnoise.sh`, which removes those blocks and nothing else; a compiler
+error immediately after one still reaches you. If you invoke `xcodebuild`
+yourself and want the same, pipe it: `xcodebuild … 2>&1 | ./Scripts/xcnoise.sh`.
+
+To fix it at the source rather than filter it, let Xcode install its components
+again:
+
+```bash
+sudo xcodebuild -runFirstLaunch
+```
+
+Opening Xcode.app once does the same thing. It needs an administrator password,
+which is why no script here does it for you.
+
 **The installed app does not appear in Spotlight.** Every build and test run
 registers another copy with the same bundle identifier, and a copy that is
 later deleted leaves its registration behind. List what LaunchServices holds:

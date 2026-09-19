@@ -12,6 +12,11 @@ DD := .build/DerivedData
 OUT := build
 # Named explicitly. Without it xcodebuild prints a warning about choosing
 # between arm64 and x86_64 destinations, which reads as an error.
+#
+# Output goes through Scripts/xcnoise.sh for the same reason: on a machine whose
+# CoreSimulator is older than its Xcode, every invocation writes sixty lines of
+# plug-in failure that have nothing to do with this project and contain the word
+# "error". See the script for what it will and will not remove.
 DEST := platform=macOS,arch=$(shell uname -m)
 
 .PHONY: help gate project regenerate test test-ui test-all sign-setup bump version lint format arch-lint coverage verify-gate app run reveal package release notarise dmg ship-check icon screenshots clean open
@@ -85,8 +90,8 @@ verify-gate: ## Prove the gates fail when they should
 	@./Scripts/verify-gates.sh
 
 app: project ## Build the application bundle into ./build
-	@xcodebuild -project Itchy.xcodeproj -scheme Itchy -configuration Release \
-	  -destination "$(DEST)" -derivedDataPath $(DD) build -quiet
+	@set -o pipefail; xcodebuild -project Itchy.xcodeproj -scheme Itchy -configuration Release \
+	  -destination "$(DEST)" -derivedDataPath $(DD) build -quiet 2>&1 | ./Scripts/xcnoise.sh
 	@mkdir -p $(OUT)
 	@rm -rf $(OUT)/Itchy.app
 	@cp -R $(DD)/Build/Products/Release/Itchy.app $(OUT)/Itchy.app

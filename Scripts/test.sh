@@ -146,7 +146,10 @@ if ! run_with_timeout "$BUILD_TIMEOUT" \
     -destination "$DESTINATION" -derivedDataPath "$DD" -quiet \
     >/tmp/itchy-build.log 2>&1; then
   fail "app target did not build"
-  grep -E "error:" /tmp/itchy-build.log | head -6 | sed 's/^/       /'
+  # Through the noise filter first: Xcode's device-plugin chatter contains
+  # "error:" and would otherwise be the six lines reported instead of ours.
+  ./Scripts/xcnoise.sh </tmp/itchy-build.log \
+    | grep -E "error:" | head -6 | sed 's/^/       /'
   exit 1
 fi
 pass "app target builds"
@@ -174,7 +177,8 @@ else
   else
     fail "app target"
   fi
-  grep -E "✘.*recorded|Test Case.*failed|error:" /tmp/itchy-app.log \
+  ./Scripts/xcnoise.sh </tmp/itchy-app.log \
+    | grep -E "✘.*recorded|Test Case.*failed|error:" \
     | grep -v linkd | head -6 | sed 's/^/       /'
   FAILED=1
 fi
