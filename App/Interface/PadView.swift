@@ -22,15 +22,3 @@ struct PadStatusBar: View {
     .padding(.vertical, 5)
   }
 }
-
-/// How a status segment is drawn. A seam, because deciding that a fault reads in
-/// red is a decision and view files do not make decisions (D-11).
-enum StatusSegmentStyle {
-  static func style(for segment: StatusSegment) -> AnyShapeStyle {
-    segment.kind == .fault ? AnyShapeStyle(.red) : AnyShapeStyle(.secondary)
-  }
-
-  static func separatorOpacity(_ segment: StatusSegment, in segments: [StatusSegment]) -> Double {
-    segment.id == segments.last?.id ? 0 : 1
-  }
-}

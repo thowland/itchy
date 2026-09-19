@@ -6,9 +6,25 @@ About is the commit count.
 
 ## Unreleased
 
+**Added**
+
+- Transforms, on the pad: flatten styling, upper, lower and title case,
+  pretty-print and minify JSON, encode and decode base64, encode and decode URL
+  components, trim whitespace, and sort lines
+  ([D-24](docs/decisions/D-24-transform-layer.md)). A transform acts on the
+  selection where there is one, applies as a single named undo step, and is not
+  offered for input it cannot handle.
 - Licensed under the GNU GPL, version 3.
 - A user guide, and the README split into user, development and release
   documentation.
+
+**Fixed**
+
+- Flattening a styled pad through the interface did not remove underlines, and
+  kept the old point size, because the applier merged attributes instead of
+  replacing them.
+- An intermittent failure in the store's observation tests, which waited for any
+  event where it meant to wait for a particular one.
 
 ## 0.1.1
 

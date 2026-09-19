@@ -272,10 +272,11 @@ struct EditorFontIntegrationTests {
   /// `FR-4.5` with the setting in play: flattening sets text in the chosen
   /// family, not the built-in one.
   ///
-  /// Family only. `insertText(_:replacementRange:)` keeps the point size of the
-  /// text it replaces, with the built-in font as much as with this one, so the
-  /// size after a flatten is the text view's behaviour rather than this code's.
-  @Test("Flattening uses the editor font's family")
+  /// Family and size both. This asserted the family alone while the applier
+  /// went through `insertText(_:replacementRange:)`, which merges attributes
+  /// into what it replaces and so kept the old point size; it now replaces the
+  /// run outright, and flattening 30-point bold gives the editor font entire.
+  @Test("Flattening uses the editor font")
   func flatten() {
     let (_, store, root) = makeCoordinator()
     defer { try? FileManager.default.removeItem(at: root) }
@@ -291,5 +292,6 @@ struct EditorFontIntegrationTests {
 
     let font = textView.textStorage?.attribute(.font, at: 0, effectiveRange: nil) as? NSFont
     #expect(font?.familyName == "Menlo")
+    #expect(font?.pointSize == 20)
   }
 }

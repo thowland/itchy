@@ -21,6 +21,10 @@ final class PadCoordinator {
 
   @ObservationIgnored private let store: PadStore
   @ObservationIgnored internal lazy var registry = PadWindowRegistry(store: store)
+  /// Transient per-pad messages, which today means a transform that declined
+  /// or failed (`FR-6.6`). Observed, so the status bar redraws when one lands.
+  internal var notices: [PadID: String] = [:]
+  @ObservationIgnored internal var noticeTasks: [PadID: Task<Void, Never>] = [:]
   @ObservationIgnored private var sizes: [PadID: Int] = [:]
   /// Internal rather than private so the editor-font extension can restyle
   /// open pads; see the note on `settings`.

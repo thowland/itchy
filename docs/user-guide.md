@@ -86,6 +86,29 @@ The **⋯** button at the bottom right of every pad has:
 - **Empty Pad**, which clears it. While the pad is open, Undo restores what was
   there.
 
+## Transforms
+
+The wand button beside **⋯** applies an operation to a pad's text. If some text
+is selected it acts on the selection; otherwise it acts on the whole pad. Either
+way it counts as a single step, so one Undo puts back exactly what was there.
+
+- **Flatten Styling**, on a styled pad — keeps the words, drops the formatting.
+- **Upper Case**, **Lower Case**, **Title Case**. Title case raises the first
+  letter of each word and leaves the rest alone, so `JSON` stays `JSON`.
+- **Pretty-print JSON** and **Minify JSON**. Your keys stay in the order you
+  wrote them and your numbers keep the form you wrote them in.
+- **Encode Base64** and **Decode Base64**.
+- **Encode URL Component** and **Decode URL Component** — for a value that goes
+  inside a URL, so characters like `&` and `=` are encoded.
+- **Trim Whitespace** — trailing spaces on each line, and blank space at the
+  very start and end.
+- **Sort Lines**, ascending.
+
+An entry is greyed out when it does not apply to what is in front of it: **Decode
+Base64** stays grey until the text really is base64 that decodes to text. Hover
+over a grey entry to see why. If something goes wrong, the pad is left exactly as
+it was and the reason appears in the pad's status line for a few seconds.
+
 ## Pad settings
 
 Choose **Pad Settings…** from a pad's **⋯** menu to change that pad alone:
