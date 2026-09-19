@@ -11,11 +11,17 @@ import SwiftUI
 final class WelcomeWindowController: NSObject, NSWindowDelegate {
   private var window: NSWindow?
   private let onDismiss: () -> Void
+  private let onHelp: () -> Void
   let presentation: WelcomePresentation
 
-  init(presentation: WelcomePresentation = .firstRun, onDismiss: @escaping () -> Void) {
+  init(
+    presentation: WelcomePresentation = .firstRun,
+    onDismiss: @escaping () -> Void,
+    onHelp: @escaping () -> Void = {}
+  ) {
     self.presentation = presentation
     self.onDismiss = onDismiss
+    self.onHelp = onHelp
   }
 
   var isVisible: Bool { window?.isVisible ?? false }
@@ -55,7 +61,9 @@ final class WelcomeWindowController: NSObject, NSWindowDelegate {
     created.delegate = self
     created.contentView = NSHostingView(
       rootView: WelcomeView(
-        presentation: presentation, onDismiss: { [weak self] in self?.dismiss() }))
+        presentation: presentation,
+        onDismiss: { [weak self] in self?.dismiss() },
+        onHelp: onHelp))
     return created
   }
 }

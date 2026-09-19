@@ -15,9 +15,10 @@ extension PadCoordinator {
   }
 
   internal func presentWelcome(_ presentation: WelcomePresentation) {
-    let controller = WelcomeWindowController(presentation: presentation) { [weak self] in
-      self?.welcomeDismissed(presentation)
-    }
+    let controller = WelcomeWindowController(
+      presentation: presentation,
+      onDismiss: { [weak self] in self?.welcomeDismissed(presentation) },
+      onHelp: { [weak self] in self?.showHelp() })
     welcome = controller
     controller.show()
   }

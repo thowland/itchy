@@ -16,6 +16,11 @@ struct MenuRow: Equatable, Identifiable, Sendable {
   let sizeMarker: String?
   /// `1`…`9` for the first nine pads; nil beyond that.
   let keyEquivalent: String?
+  /// Something outside the application wrote to this pad and the person has not
+  /// opened it since (`FR-8.9`, §11.7). The compensating control for D-9's
+  /// consequence that a write to a closed pad has no undo: the menu is where
+  /// they will next look at the pad, so the menu is where it must say so.
+  let hasUnseenExternalWrite: Bool
 }
 
 /// Projects store state into menubar rows.
@@ -31,7 +36,8 @@ enum MenuModel {
     pads: [PadMetadata],
     faults: [PadID: PadStoreFault] = [:],
     sizes: [PadID: Int] = [:],
-    threshold: Int = PadStore.sizeMarkerThreshold
+    threshold: Int = PadStore.sizeMarkerThreshold,
+    openPads: Set<PadID> = []
   ) -> [MenuRow] {
     pads.enumerated().map { index, pad in
       let bytes = sizes[pad.id] ?? 0
@@ -43,7 +49,10 @@ enum MenuModel {
         isPinned: pad.isPinned,
         isFaulted: faults[pad.id]?.prohibitsEditing ?? false,
         sizeMarker: bytes > threshold ? sizeLabel(bytes) : nil,
-        keyEquivalent: index < keyEquivalentLimit ? String(index + 1) : nil)
+        keyEquivalent: index < keyEquivalentLimit ? String(index + 1) : nil,
+        // An open pad shows the banner instead; the menu marker is for the pad
+        // the person has not looked at.
+        hasUnseenExternalWrite: pad.externalWriteMarker != nil && !openPads.contains(pad.id))
     }
   }
 
@@ -61,4 +70,20 @@ enum MenuModel {
 
   /// What the menu shows when there are no pads at all.
   static let emptyTitle = "No pads yet"
+
+  /// What the menubar says about the agent server, or nothing when it is off
+  /// (`FR-8.10`, §11.8).
+  ///
+  /// A row rather than a branch in the view, for the same reason as every other
+  /// row here: the menu renders what this decides. Off produces no row at all —
+  /// the requirement is that the state is visible when there is a state, not
+  /// that a line of the menu is permanently spent saying "no".
+  static func serverRow(_ state: MCPServerState) -> String? {
+    switch state {
+    case .off: nil
+    case .starting: "Agents: starting…"
+    case .listening(let port): "Agents: listening on \(port)"
+    case .failed: "Agents: could not start"
+    }
+  }
 }

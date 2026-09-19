@@ -14,6 +14,34 @@ About is the commit count.
   ([D-24](docs/decisions/D-24-transform-layer.md)). A transform acts on the
   selection where there is one, applies as a single named undo step, and is not
   offered for input it cannot handle.
+- An agent server, off until you switch it on, in Settings under Agents
+  ([D-25](docs/decisions/D-25-mcp-server.md)). It listens on 127.0.0.1 only, so
+  nothing outside this machine can reach it, and every request needs the bearer
+  token shown beside the switch. Regenerating that token stops the previous one
+  working straight away.
+- Pads are exposed to agents one at a time, in the pad's own settings, and none
+  is by default. An exposed pad says "exposed" on itself, and the menubar says
+  when the server is listening.
+- Five tools and nothing else: list, read, append, write and create. A pad an
+  agent creates is exposed to it; a pad you made is not until you say so.
+- An agent's write to a pad you have open lands in the window and is one undo
+  from reverted — and the Edit menu names it, so you can see what the undo will
+  revert before you press it. A write to a pad that was closed cannot be undone,
+  and the pad says so rather than offering a button that would undo something
+  else.
+- A banner on any pad written by something other than you, and a mark in the
+  menubar for a pad written while it was closed.
+- Reading a pad that contains an image now returns the text with `[image
+  1240×820]` in its place, rather than a character that means nothing. The same
+  placeholder appears in the pad's plain-text copy on disk.
+- Help, from the menubar or from About: how to set up agents and backups, what
+  the transforms do, how pads work, and where your files are
+  ([D-26](docs/decisions/D-26-diagnostic-log-and-help.md)).
+- An optional diagnostic log, in **Settings → General**, off by default. When
+  on, Itchy records what it did — backups taken and skipped and why, agent
+  requests and where each write went, transforms applied and declined — to
+  /tmp/itchy.log. It records how much was written, never what: pad contents and
+  the agent token cannot appear in it.
 - Licensed under the GNU GPL, version 3.
 - A user guide, and the README split into user, development and release
   documentation.
@@ -25,6 +53,13 @@ About is the commit count.
   replacing them.
 - An intermittent failure in the store's observation tests, which waited for any
   event where it meant to wait for a particular one.
+- `list_pads` reported the size of the pad's directory under a heading that said
+  "characters", which for a five-character pad was several hundred.
+- A first launch, with no pads yet, recorded a failed backup. There was simply
+  nothing to back up, which is not the same thing.
+- Itchy took a backup twice on every launch when the daily backup was switched
+  off. The second never did anything, because nothing had changed since the
+  first a moment earlier.
 
 ## 0.1.1
 

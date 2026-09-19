@@ -105,11 +105,13 @@ struct MenuRowLabelTests {
     faulted: Bool = false,
     pinned: Bool = false,
     marker: String? = nil,
-    key: String? = "1"
+    key: String? = "1",
+    written: Bool = false
   ) -> MenuRow {
     MenuRow(
       id: PadID(), slot: 1, name: name, mode: .styled, isPinned: pinned,
-      isFaulted: faulted, sizeMarker: marker, keyEquivalent: key)
+      isFaulted: faulted, sizeMarker: marker, keyEquivalent: key,
+      hasUnseenExternalWrite: written)
   }
 
   @Test("An ordinary row is just its name")
@@ -142,5 +144,13 @@ struct MenuRowLabelTests {
   @Test("Rows beyond the ninth fall back rather than colliding on a key")
   func noShortcut() {
     #expect(MenuRowLabel.shortcut(for: row(key: nil)) == .space)
+  }
+
+  /// `FR-8.9`, §11.7: a write to a closed pad has no undo, so the menu — where
+  /// the person will next look at the pad — is where it has to say so.
+  @Test("A pad written while it was closed is marked in the menu")
+  func writtenTitle() {
+    #expect(MenuRowLabel.text(for: row(written: true)).contains("written"))
+    #expect(MenuRowLabel.text(for: row()).contains("written") == false)
   }
 }

@@ -19,9 +19,14 @@ extension PadCoordinator {
   /// that is still being written could capture a pad half-saved. The next
   /// launch archives it instead.
   func prepareForTermination(limit: Duration = terminationFlushLimit) async {
+    // Before the flush: the endpoint file must not outlive the process that
+    // wrote it, and a shim starting as Itchy quits must not find a port that
+    // has stopped answering.
+    await shutDownServer()
     let outcome = await TerminationFlush.run(limit: limit) { [weak self] in
       await self?.flushEverything()
     }
+    DebugLog.shared.record(.terminating(flush: String(describing: outcome)))
     switch ArchivePolicy.quitArchive(after: outcome) {
     case .take: archiveIfNeeded(trigger: .quit)
     case .skip: break

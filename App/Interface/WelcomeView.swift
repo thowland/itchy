@@ -8,6 +8,10 @@ import SwiftUI
 struct WelcomeView: View {
   let presentation: WelcomePresentation
   let onDismiss: () -> Void
+  /// A closure rather than a reach into the environment: this window is hosted
+  /// by its own controller and is not inside the coordinator's environment, and
+  /// discovering that at runtime is a crash rather than a blank button.
+  let onHelp: () -> Void
 
   var body: some View {
     VStack(spacing: 0) {
@@ -34,10 +38,16 @@ struct WelcomeView: View {
       Spacer(minLength: 24)
 
       VStack(spacing: 14) {
-        Button(WelcomeText.dismiss(for: presentation), action: onDismiss)
-          .buttonStyle(.borderedProminent)
-          .controlSize(.large)
-          .keyboardShortcut(.defaultAction)
+        HStack(spacing: 10) {
+          Button(HelpText.aboutButton, action: onHelp)
+            .controlSize(.large)
+            .accessibilityIdentifier("welcome.help")
+
+          Button(WelcomeText.dismiss(for: presentation), action: onDismiss)
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+            .keyboardShortcut(.defaultAction)
+        }
 
         HStack(spacing: 4) {
           Text(WelcomeText.authorLine)

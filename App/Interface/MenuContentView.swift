@@ -18,6 +18,7 @@ struct MenuContentView: View {
     }
     EmptyStateText(isEmpty: coordinator.rows.isEmpty)
     Divider()
+    ServerStateText(text: MenuModel.serverRow(coordinator.serverState))
     Button("New Pad") {
       coordinator.createPad()
     }
@@ -27,6 +28,10 @@ struct MenuContentView: View {
     Button("About Itchy") {
       coordinator.showAbout()
     }
+    Button(HelpText.menuTitle) {
+      coordinator.showHelp()
+    }
+    .keyboardShortcut("?")
     Button("Settings…") {
       coordinator.showSettings()
     }
@@ -57,6 +62,18 @@ struct PadsWindowLink: View {
     Button("Pads…") {
       openWindow(id: WindowIdentifier.pads)
     }
+  }
+}
+
+/// Shown only while the agent server has something to say (§11.8). A disabled
+/// item, because it is a statement rather than an action.
+struct ServerStateText: View {
+  let text: String?
+
+  var body: some View {
+    Text(text ?? "")
+      .opacity(text == nil ? 0 : 1)
+      .frame(height: text == nil ? 0 : nil)
   }
 }
 

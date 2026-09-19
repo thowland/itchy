@@ -21,6 +21,20 @@ extension PadCoordinator {
     }
   }
 
+  /// `NFR-3.2`: exposure is per pad, opt in, and never a default for a pad the
+  /// person made. This is the only way one becomes exposed other than an agent
+  /// creating it, and the pad says so on itself while it is.
+  func setExposedToMCP(_ padID: PadID, _ exposed: Bool) {
+    Task { [weak self] in
+      guard let self else { return }
+      try? await self.store.setExposedToMCP(padID, exposed)
+      DebugLog.shared.record(
+        .exposureChanged(
+          self.pads.first { $0.id == padID }?.name ?? padID.description, exposed: exposed))
+      await self.refresh()
+    }
+  }
+
   /// Makes Itchy active before a pad's settings sheet appears.
   ///
   /// A pad panel takes the keyboard without activating the application

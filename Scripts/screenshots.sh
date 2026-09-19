@@ -62,7 +62,8 @@ run_phase() {
       -derivedDataPath "$DD" -resultBundlePath "$bundle" \
       -only-testing:"ItchyUITests/ScreenshotCapture/$test" >"$LOG" 2>&1; then
     echo "screenshots: $test failed"
-    grep -E "error:|failed" "$LOG" | grep -v linkd | head -6 | sed 's/^/  /'
+    "$(dirname "$0")/xcnoise.sh" <"$LOG" \
+      | grep -E "error:|failed" | grep -v linkd | head -6 | sed 's/^/  /'
     exit 1
   fi
   if grep -q "Skipped" "$LOG" && ! grep -q "Test Case .*passed" "$LOG"; then

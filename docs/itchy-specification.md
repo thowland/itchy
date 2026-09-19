@@ -641,7 +641,13 @@ Agent (stdio client) ──▶ itchy-mcp shim ───────┘
 
 The shim does nothing but proxy, per `FR-8.2`. It reads the port and token from the same well-known location the app writes them to — the port from a small `endpoint.json` in the support directory, the token from the Keychain via a shared access group — and it holds no state and implements no protocol logic. If it grows a single protocol-aware line, that is a defect.
 
-Binding is to `127.0.0.1` explicitly, never `0.0.0.0` (`FR-8.3`). The default port is 8899, configurable, with the actual bound port recorded in `endpoint.json` so the shim needs no configuration. 8899 sits well below the 49152–65535 range macOS allocates ephemerally, so it cannot collide with a port the system has handed to something else, and it is neither a registered service nor a common development default.
+Binding is to `127.0.0.1` explicitly, never `0.0.0.0` (`FR-8.3`). The default port is 8899, configurable, with the actual bound port recorded in `endpoint.json` so the shim needs no configuration. 8899 sits well below the 49152–65535 range macOS allocates ephemerally, so it cannot collide with a port the system has handed to something else, and it is neither a registered service nor a common development default. The binding is structural rather than checked: the listener pins its local endpoint, so the socket is not reachable on any other address the machine has, and there is no handler that has to remember to refuse one.
+
+D-17 divided the labour and D-25 implemented it: `StatefulHTTPServerTransport` owns protocol conformance, session state and version negotiation; the socket, and therefore the HTTP reader, is ours. That reader accepts a deliberate subset — request line, headers, and a `Content-Length` body — and refuses a chunked request body with `411` rather than half-reading it. An MCP client has no reason to send one, and accepting a subset on purpose is better than accepting a superset by accident.
+
+The SDK's stateful transport holds exactly one session, so the host keeps one `Server` and one transport per session and `MCPSessionRouter` decides which a request belongs to. That is what makes `FR-8.2` satisfiable: the shim and a direct client can be connected at once and see the same pads, because the state is the store's rather than the session's.
+
+`endpoint.json` is written by the store, not by the services layer, because `CON-4` puts every disk access there. It is written when the listener has bound and removed when it stops and again at termination — a stale port outlives the listener and the shim connects to nothing — and it goes through the same atomic write as everything else, because a half-written endpoint file read by a shim starting concurrently is the sort of fault that appears once a month and is never reproduced.
 
 ### 11.2 Authentication
 
@@ -701,7 +707,9 @@ A pad created through `create_pad` is exposed at creation, which is the one case
 
 ### 11.6 Write path
 
-An agent write resolves to the registry applier if the panel is open and to the store if not (§5.4, §8.3). In the open case it is grouped on the text view's undo manager and is one undo from reverted (`FR-8.8`). Writes are serialised per pad by the store actor, so two concurrent agent writes cannot interleave, and no locking scheme is introduced (`FR-8.8` explicitly places that out of scope).
+An agent write resolves to the registry applier if the panel is open and to the store if not (§5.4, §8.3). In the open case it is grouped on the text view's undo manager and is one undo from reverted (`FR-8.8`), and the undo step is named after the tool and the client — "Write from claude", not "Undo". Writes are serialised per pad by the store actor, so two concurrent agent writes cannot interleave, and no locking scheme is introduced (`FR-8.8` explicitly places that out of scope).
+
+A writer that cannot reach an open panel must not write past one. The panel holds the authoritative text, and its next save — on the serialisation debounce, so within about 120 ms of the next keystroke, and unconditionally when the pad closes — would write the panel's version over the agent's while the agent was told it succeeded. `OpenPadPolicy` refuses instead (D-25). The refusal does not apply to the registry-aware writer, which reaches the panel; it does apply to any other, `itchyctl`'s included. Losing a write silently is the one failure mode these storage rules are otherwise written to prevent.
 
 ### 11.7 External-write visibility
 
@@ -789,6 +797,8 @@ other Itchy window comes forward and the user's arrangement is otherwise
 untouched (`FR-3.1`; see D-14 for why this is manual). Accessibility passes
 (`NFR-5.2`, `NFR-5.3`), Gatekeeper launch on a clean machine (`NFR-4.2`), Spotlight exclusion verified by searching for pad-unique content and then grepping the same content out of the directory (`NFR-3.4`), and idle CPU observed over five minutes (`NFR-1.3`).
 
+With the agent server enabled, a connection attempt to its port from a second machine on the same network, which must fail (`FR-8.3`). This is here for the same reason the Gatekeeper check is: it cannot be run from the machine under test. What the suite covers is the mechanism — the port answers on loopback and on no other local address this machine has.
+
 ## 15. Testability seams
 
 ### 15.1 The doctrine
@@ -815,6 +825,16 @@ The naming convention is load-bearing, because it is what makes a misplacement v
 | `PadStatusBar` | `StatusBarModel.segments(for:)` | Which segments appear at this release and their wording | Render segments as controls |
 | External-write banner | `BannerModel.state(for:now:)` | Visible or not, wording, whether undo is offered | Render the banner |
 | MCP request handling | `ToolRouter.route(_:) -> StoreOperation` | Pad resolution by id or name, ambiguity errors, the not-found/not-exposed equivalence of §11.5 | Transport, framing, authentication |
+| The loopback socket | `HTTPRequestParser.parse(_:)`, `HTTPResponseWriter` | What a buffer of bytes is — a whole request, part of one, or a refusal with a status — and how an answer is framed (D-25) | `LoopbackListener` reads, writes and closes |
+| Session dispatch | `MCPSessionRouter.route(sessionID:isInitialize:known:)` | Which MCP session a request belongs to, and which of `404` and `400` an unroutable one gets (D-25) | `MCPServerHost` holds the sessions |
+| SDK boundary | `MCPArgumentCodec`, `MCPResultCodec`, `MCPToolCodec` | SDK `Value` arguments to the strings the router takes, results to what an agent reads, the tool schemas derived from `MCPToolSurface` | Register handlers, hand over the result |
+| Agent writes | `OpenPadPolicy.admit(isOpen:writerReachesOpenPads:)`, `AgentWritePlan` | Whether a write proceeds or is refused as unsafe; the range it covers and what the undo step is called (D-25) | `MCPService` and the applier perform it |
+| Plain-text extraction | `AttachmentPlaceholder` | The placeholder's form and whether it needs a line of its own (`FR-8.6`, §11.4) | `ContentCodec` walks the attributed string |
+| The diagnostic log | `LogEvent` (closed vocabulary), `LogLine.format(_:at:)`, `LogRotation.decide(...)` | What may be said at all, how a line reads, when the file starts over (D-26) | `DebugLog` holds the handle and appends |
+| Archiving | `ArchivePolicy.due(...) -> ArchiveAttempt?` | Why there is no backup — off, not due, unchanged — rather than only whether there is one (D-26) | The coordinator copies and prunes |
+| Help | `HelpBook.lines(for:)`, `HelpWeight` | Which topics exist, what a topic renders to, and how each line is set (D-26) | `HelpView` draws the lines in order |
+| Token storage | `TokenStoreResolver.store(for:)` | Whether a launch gets the Keychain or an in-memory store, so no test can open the real one (D-26) | `MCPTokenKeychain` performs |
+| Agent settings, menubar state | `MCPSettingsModel`, `MenuModel.serverRow(_:)` | Port range and clamping, what each server state says, whether it reads as a warning, when the bound port is named, what the menubar shows (`FR-8.4`, `FR-8.10`, §11.8) | Bind controls; render the row |
 | Settings | `SettingsModel` | Validation and clamping, including the pad-count ceiling | Bind controls |
 | Formatting controls | `FormattingPlan` | Which traits read as on, whether a toggle applies or removes, which chords are shortcuts, availability by mode (D-20) | `TextFormatter` reads the selection and applies the change through the text view's undo |
 | `updateNSView` | `ModeConfigurationPlan.decide(configured:requested:)` | Whether an update reconfigures the text view, so typing attributes survive unrelated refreshes (D-20) | `PadTextView.configureIfNeeded` |

@@ -18,6 +18,10 @@ struct PadPanelContent: View {
   var body: some View {
     let current = coordinator.metadata(for: pad)
     VStack(spacing: 0) {
+      ExternalWriteBanner(
+        state: coordinator.bannerState(for: current),
+        onUndo: { coordinator.undoExternalWrite(pad.id) },
+        onDismiss: { coordinator.dismissBanner(pad.id) })
       PadBody(
         presentation: FaultPresentation.presentation(for: fault),
         pad: current,
@@ -29,7 +33,11 @@ struct PadPanelContent: View {
       HStack(spacing: 0) {
         PadStatusBar(
           segments: StatusBarModel.segments(
-            for: current, fault: fault, notice: coordinator.notices[pad.id]))
+            for: current, fault: fault,
+            showsExposure: StatusBarModel.showsExposure(
+              serverEnabled: coordinator.settings.mcpServerEnabled,
+              isExposed: current.isExposedToMCP),
+            notice: coordinator.notices[pad.id]))
         FormattingControls(formatting: editor.formatting, mode: current.mode) { trait in
           editor.toggle(trait)
         }
@@ -43,6 +51,22 @@ struct PadPanelContent: View {
     .sheet(isPresented: $isShowingSettings) {
       PadSettingsView(pad: current, coordinator: coordinator)
     }
+  }
+}
+
+/// Says that something outside Itchy wrote to this pad (`FR-8.9`, §10).
+///
+/// Whether it appears, what it says and whether undo is offered are all
+/// `BannerModel`'s; this shows them.
+struct ExternalWriteBanner: View {
+  let state: BannerState
+  let onUndo: () -> Void
+  let onDismiss: () -> Void
+
+  var body: some View {
+    BannerBody(state: state, onUndo: onUndo, onDismiss: onDismiss)
+      .opacity(state.isShown ? 1 : 0)
+      .frame(height: state.isShown ? nil : 0)
   }
 }
 

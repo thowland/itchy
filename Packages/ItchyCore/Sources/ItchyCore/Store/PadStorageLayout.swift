@@ -6,6 +6,7 @@ import Foundation
 /// ~/Library/Application Support/Itchy/
 /// ├── index.json                 slot order
 /// ├── settings.json              non-secret preferences
+/// ├── endpoint.json              the running server's port, while it runs
 /// └── pads.noindex/<uuid>/       excluded from Spotlight (D-16, NFR-3.4)
 ///     ├── content.rtfd/          authoritative styled content
 ///     ├── content.txt            shadow, derived, never read back
@@ -29,6 +30,9 @@ public struct PadStorageLayout: Sendable {
   public static let metadataFileName = "meta.json"
   public static let indexFileName = "index.json"
   public static let settingsFileName = "settings.json"
+  /// Where the shim finds the running server's port (§11.1). Removed on stop,
+  /// so that a stale port does not outlive the listener.
+  public static let endpointFileName = "endpoint.json"
   /// `NFR-3.4`, D-16. The suffix is load-bearing: renaming this directory
   /// without it silently restores Spotlight indexing of every pad.
   public static let padsDirectoryName = "pads.noindex"
@@ -75,6 +79,10 @@ public struct PadStorageLayout: Sendable {
 
   public var settingsFile: URL {
     root.appendingPathComponent(Self.settingsFileName)
+  }
+
+  public var endpointFile: URL {
+    root.appendingPathComponent(Self.endpointFileName)
   }
 
   public var archivesDirectory: URL {

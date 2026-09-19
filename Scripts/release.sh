@@ -76,12 +76,13 @@ build() {
   xcodegen generate --quiet || exit 1
   rm -rf "$EXPORT_DIR"
   mkdir -p "$EXPORT_DIR"
+  set -o pipefail
   xcodebuild -project "$APP_NAME.xcodeproj" -scheme "$APP_NAME" \
     -configuration Release -destination "platform=macOS,arch=$(uname -m)" \
     -derivedDataPath "$DD" \
     CODE_SIGN_IDENTITY="$id" CODE_SIGN_STYLE=Manual \
     OTHER_CODE_SIGN_FLAGS="--timestamp --options=runtime" \
-    build || exit 1
+    build 2>&1 | "$(dirname "$0")/xcnoise.sh" || exit 1
   cp -R "$DD/Build/Products/Release/$APP_NAME.app" "$EXPORT_DIR/" || exit 1
   codesign --verify --deep --strict --verbose=2 "$EXPORT_DIR/$APP_NAME.app" || exit 1
   pass "signed and verified at $EXPORT_DIR/$APP_NAME.app"
