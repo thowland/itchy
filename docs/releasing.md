@@ -120,6 +120,12 @@ unstapled application would produce an image that passes on the way in and
 an application that fails on the way out. It finishes by asking Gatekeeper
 whether it would accept the result, and says so.
 
+The finished image is left at `build/Itchy.dmg`, which is where `make package`
+writes its unsigned one too. That is deliberate: there should be one
+`Itchy.dmg` and it should be the most recently built one, rather than a
+shippable image hidden under `.build/` next to an unshippable one of the same
+name and nearly the same size.
+
 The hardened runtime is required for notarisation and applies to Release builds
 only. It blocks XCTest bundle injection, so Debug builds do not use it.
 

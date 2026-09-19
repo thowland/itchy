@@ -333,15 +333,25 @@ dmg() {
   submit "$image" || exit 1
   xcrun stapler staple "$image" || exit 1
 
-  if spctl -a -t open --context context:primary-signature "$image" >/dev/null 2>&1; then
-    pass "packaged, notarised and stapled $image"
-    pass "Gatekeeper accepts it — it will open on a machine that has never seen it"
-  else
+  if ! spctl -a -t open --context context:primary-signature "$image" >/dev/null 2>&1; then
     fail "the image was notarised but Gatekeeper still refuses it"
     spctl -a -vvv -t open --context context:primary-signature "$image" 2>&1 \
       | head -3 | sed 's/^/       /'
     exit 1
   fi
+
+  # Into the visible directory, for the reason `make app` gives about the
+  # bundle: Finder hides anything under a dot-directory. It matters more here.
+  # `make package` writes its unsigned image to the same name, so leaving the
+  # shippable one hidden means the obvious file — same name, same size, within a
+  # few megabytes — is the one that cannot be shipped. Overwriting it is the
+  # point: there should be one Itchy.dmg and it should be the good one.
+  mkdir -p "$OUT_DIR"
+  cp "$image" "$OUT_DIR/$APP_NAME.dmg" || exit 1
+
+  pass "packaged, notarised and stapled"
+  pass "Gatekeeper accepts it — it will open on a machine that has never seen it"
+  echo "     $OUT_DIR/$APP_NAME.dmg"
 }
 
 case "${1:-check}" in
