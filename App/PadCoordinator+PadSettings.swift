@@ -35,6 +35,16 @@ extension PadCoordinator {
     }
   }
 
+  /// `FR-9.1`: the policy is the person's, per pad, and local-only until they
+  /// say otherwise.
+  func setRoutingPolicy(_ padID: PadID, _ policy: RoutingPolicy) {
+    Task { [weak self] in
+      guard let self else { return }
+      try? await self.store.setRoutingPolicy(padID, policy)
+      await self.refresh()
+    }
+  }
+
   /// `FR-7.5`: clearing the list leaves the pad's content alone. The store
   /// already separates them — provenance is metadata, never text attributes
   /// (`FR-7.2`) — so this is a metadata write and touches no content.

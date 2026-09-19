@@ -36,6 +36,9 @@ final class PadCoordinator {
   /// the person for permission, and a suite that waits for an answer is a suite
   /// that hangs — on this machine and, with nobody there at all, on CI.
   @ObservationIgnored internal let mcpKeychain: any MCPTokenStore
+  /// `FR-9.5`. Injected for the same reason the MCP token store is: no test may
+  /// open the real Keychain (D-26).
+  @ObservationIgnored internal let modelCredentials: any MCPTokenStore
   /// Which external write the person has already dismissed the banner for,
   /// keyed by pad and identified by when it happened, so that the next write
   /// raises it again (`FR-8.9`).
@@ -66,12 +69,15 @@ final class PadCoordinator {
     store: PadStore,
     layout: PadStorageLayout,
     launchOptions: LaunchOptions = .current,
-    tokenStore: (any MCPTokenStore)? = nil
+    tokenStore: (any MCPTokenStore)? = nil,
+    modelCredentials: (any MCPTokenStore)? = nil
   ) {
     self.store = store
     self.layout = layout
     self.launchOptions = launchOptions
     self.mcpKeychain = tokenStore ?? TokenStoreResolver.store(for: launchOptions)
+    self.modelCredentials =
+      modelCredentials ?? TokenStoreResolver.modelStore(for: launchOptions)
   }
 
   /// Reads the index and metadata, then starts observing. Content is not read
@@ -173,7 +179,10 @@ final class PadCoordinator {
   /// A pad whose content cannot be read opens onto its fault rather than onto an
   /// empty editor, which specification §6.7 prohibits because an empty editor
   /// would destroy the content on the next save.
-  private func openPad(_ padID: PadID, makingKey: Bool) async {
+  /// Internal rather than private: the lifecycle extension opens a pad it has
+  /// just created, and Swift's access control does not reach across files for
+  /// a private member.
+  internal func openPad(_ padID: PadID, makingKey: Bool) async {
     guard let pad = pads.first(where: { $0.id == padID }) else { return }
     let fault = await store.fault(for: padID)
     let content = try? await store.content(of: padID)
@@ -216,88 +225,6 @@ final class PadCoordinator {
   private func flattenIfDowngrading(_ padID: PadID, from current: PadMode?, to mode: PadMode) {
     guard current == .styled, mode == .plain else { return }
     editors[padID]?.flatten()
-  }
-
-  /// `FR-2.3`: creation requires no input and the pad is immediately ready to
-  /// accept typing — so it opens, focused, rather than only appearing in a list
-  /// the user then has to go and click.
-  func createPad() {
-    Task { [weak self] in
-      guard let self else { return }
-      guard let created = try? await self.store.createPad(name: nil) else { return }
-      try? await self.store.setMode(created.id, to: self.settings.defaultMode)
-      DebugLog.shared.record(.padCreated(created.id, name: created.name, by: .user))
-      await self.refresh()
-      await self.openPad(created.id, makingKey: true)
-    }
-  }
-
-  func rename(_ padID: PadID, to name: String) {
-    Task { [weak self] in
-      guard let self else { return }
-      try? await self.store.rename(padID, to: name)
-      await self.refresh()
-      // `FR-2.4`: the panel title is set when the panel is created, and an open
-      // pad kept its old name there until it was closed and reopened.
-      self.registry.controller(for: padID)?.panel.title = name
-    }
-  }
-
-  func setPinned(_ padID: PadID, _ pinned: Bool) {
-    Task { [weak self] in
-      guard let self else { return }
-      try? await self.store.setPinned(padID, pinned)
-      await self.refresh()
-    }
-  }
-
-  /// `FR-2.6`: deletion is the one destructive action, and the only place a
-  /// confirmation is shown. The dialogue is in `PadsWindowView`; this is what it
-  /// calls once the user has said yes.
-  func deletePad(_ padID: PadID) {
-    Task { [weak self] in
-      guard let self else { return }
-      DebugLog.shared.record(
-        .padDeleted(padID, name: self.pads.first { $0.id == padID }?.name ?? "—"))
-      self.registry.close(padID)
-      self.editors[padID] = nil
-      try? await self.store.deletePad(padID)
-      await self.refresh()
-    }
-  }
-
-  /// `FR-2.6`: emptying is a single action and, while the panel is open, one
-  /// undo restores the content exactly.
-  func emptyPad(_ padID: PadID) {
-    Task { [weak self] in
-      guard let self else { return }
-      guard let editor = self.editors[padID] else {
-        try? await self.store.empty(padID)
-        await self.refresh()
-        return
-      }
-      editor.apply(NSAttributedString(), actionName: "Empty Pad")
-    }
-  }
-
-  /// `FR-4.9`: copying a pad's entire contents as plain text is a single action.
-  func copyAsPlainText(_ padID: PadID) {
-    Task { [weak self] in
-      guard let self else { return }
-      guard let content = try? await self.store.content(of: padID) else { return }
-      NSPasteboard.general.clearContents()
-      NSPasteboard.general.setString(content.plainText, forType: .string)
-    }
-  }
-
-  func reorder(from source: IndexSet, to destination: Int) {
-    var order = pads.map(\.id)
-    order.move(fromOffsets: source, toOffset: destination)
-    Task { [weak self] in
-      guard let self else { return }
-      try? await self.store.reorder(to: order)
-      await self.refresh()
-    }
   }
 
   func setPadLimit(_ requested: Int) {

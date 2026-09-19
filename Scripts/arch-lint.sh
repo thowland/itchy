@@ -156,19 +156,26 @@ fi
 # The application is not on the list and should not be. It listens; it does not
 # dial. `LoopbackConnection` wraps a connection the listener *accepted* — it
 # never constructs one, which is why it passes.
-OUTBOUND_ALLOWED='Shim/Sources/ItchyMCPShimCore/Proxy.swift'
+# Three files, each added deliberately and each with a reason:
+#   Proxy.swift          the stdio shim, which reaches the loopback endpoint
+#   OllamaClient.swift   the local model (FR-9.4)
+#   ModelCredentials.swift  the remote model, gated by the pad's policy (FR-9.5)
+#
+# The application target is not on this list and must not be. It listens; it
+# does not dial.
+OUTBOUND_ALLOWED='Shim/Sources/ItchyMCPShimCore/Proxy\.swift|Models/OllamaClient\.swift|Models/ModelCredentials\.swift'
 HITS=$(grep -rn --include='*.swift' -E '\bURLSession\b|NWConnection\(|NWBrowser\(' \
   App Packages/ItchyCore/Sources Packages/ItchyServices/Sources Shim/Sources Harness/Sources \
   2>/dev/null \
   | grep -v '/\.build/' \
   | grep -vE ':[[:space:]]*//' \
-  | grep -v "$OUTBOUND_ALLOWED" || true)
+  | grep -vE "$OUTBOUND_ALLOWED" || true)
 if [ -n "$HITS" ]; then
   fail "an outbound connection outside the allowed list (NFR-3.1)"
-  echo "       allowed: $OUTBOUND_ALLOWED" 
+  echo "       allowed: $OUTBOUND_ALLOWED"
   echo "$HITS" | sed 's/^/       /'
 else
-  pass "outbound connections confined to $OUTBOUND_ALLOWED"
+  pass "outbound connections confined to 3 named files"
 fi
 
 exit $FAILED

@@ -187,6 +187,25 @@ public struct LogEvent: Sendable, Equatable {
     LogEvent(.transform, "declined", [Field("transform", id), Field("reason", reason)])
   }
 
+  // MARK: - Models (§12)
+
+  /// Which models are set up. Names, never endpoints with credentials in them
+  /// and never a key — the closed vocabulary is what makes that structural
+  /// rather than a promise (`FR-9.5`).
+  public static func modelConfigured(local: String?, remote: String?) -> LogEvent {
+    LogEvent(
+      .transform, "models configured",
+      [Field("local", local ?? "—"), Field("remote", remote ?? "—")])
+  }
+
+  /// Where a model transform's text went, which is the question `FR-9.4` is
+  /// about. `chars` is a length; the text is never a field.
+  public static func modelRun(_ id: String, destination: String, characters: Int) -> LogEvent {
+    LogEvent(
+      .transform, "model run",
+      [Field("transform", id), Field("to", destination), Field("chars", String(characters))])
+  }
+
   private static func yesNo(_ flag: Bool) -> String { flag ? "yes" : "no" }
 }
 

@@ -366,7 +366,7 @@ The server MUST be disabled until enabled in settings, and its state MUST be vis
 
 **FR-9.1 — Per-pad routing policy** *(R4, MUST)*
 Each pad MUST carry a routing policy of local-only, remote-permitted, or ask-each-time, defaulting to local-only.
-*Acceptance:* a newly created pad reports local-only without configuration.
+*Acceptance:* a newly created pad reports local-only without configuration. **Met September 2026.**
 
 **FR-9.2 — Enforcement in the service layer** *(R4, MUST)*
 The policy MUST be enforced below the view layer, at a single point, so that every path that can run a transform is subject to it rather than each path being made to agree.
@@ -376,19 +376,19 @@ The policy MUST be enforced below the view layer, at a single point, so that eve
 
 **FR-9.3 — Policy visible on the pad** *(R4, MUST)*
 The pad's current policy MUST be displayed in its panel.
-*Acceptance:* the policy is legible without opening settings, and changes immediately when altered.
+*Acceptance:* the policy is legible without opening settings, and changes immediately when altered. **Met September 2026:** a segment on the pad's status line, shown once a model is configured or the policy has been moved off its default, and a picker in the pad's own settings.
 
 **FR-9.4 — Local inference target** *(R4, MUST)*
 Local inference MUST target a locally running model endpoint, and failure to reach it MUST NOT fall back to a remote service under any policy.
-*Acceptance:* with the local endpoint stopped, a local-only transform fails with a clear message and no outbound connection is made.
+*Acceptance:* with the local endpoint stopped, a local-only transform fails with a clear message and no outbound connection is made. **Met September 2026** (D-31). Both halves are asserted: `LocalModelTests` runs a transform against a stopped endpoint and checks the message names it, and `ModelRoutingTests.noFallbackToRemote` iterates every policy against every configuration to show `ModelRouter.afterLocalFailure` never answers `.remote`. Which files may open an outbound connection at all is held to a named list by `Scripts/arch-lint.sh`, which is what makes "no outbound connection" checkable rather than observed.
 
 **FR-9.5 — Remote credentials** *(R4, MUST)*
 Remote credentials MUST be held in the Keychain and MUST NOT be written to the support directory or to any log.
-*Acceptance:* the support directory and logs contain no credential material after a remote transform.
+*Acceptance:* the support directory and logs contain no credential material after a remote transform. **Met September 2026:** `ModelSettingsTests.keyGoesNowhereElse` stores a key, performs everything that writes to disk, and then reads every byte of the support directory. The log could not carry one in any case — `LogEvent`'s vocabulary is closed (D-26) and has no factory that takes a credential.
 
 **FR-9.6 — Model-backed transforms are transforms** *(R4, MUST)*
 Model-backed operations MUST implement the transform protocol and MUST appear in the same menu as deterministic ones, with deterministic operations presented first.
-*Acceptance:* no separate model panel, chat surface, or conversation view exists. The model is one more transform, which is the position; a chat panel would make it the centre of the product.
+*Acceptance:* no separate model panel, chat surface, or conversation view exists. The model is one more transform, which is the position; a chat panel would make it the centre of the product. **Met September 2026:** three model-backed transforms in the same menu as the deterministic ones and after all of them, each replacing text with text. There is no model surface of any kind, and D-31 records why the three chosen transform rather than answer.
 
 ## 6. Non-functional requirements
 

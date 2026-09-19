@@ -10,11 +10,17 @@ import ItchyServices
 /// a failure stays on screen is `TransformNotice`'s.
 extension PadCoordinator {
   func applyTransform(id: String, to padID: PadID) {
-    guard let transform = TransformRegistry.transform(id: id),
+    guard let transform = TransformRegistry.transform(id: id) ?? modelTransform(id: id),
       let editor = editors[padID],
       let input = editor.transformInput()
     else { return }
-    let runner = TransformRunner(policy: metadata(forID: padID)?.routingPolicy ?? .default)
+    let pad = metadata(forID: padID)
+    let runner = TransformRunner(
+      policy: pad?.routingPolicy ?? .default,
+      consent: AlertConsent(),
+      subject: ConsentSubject(
+        padName: pad?.name ?? "this pad",
+        endpoint: settings.models.remoteEndpoint))
     Task { @MainActor in
       do {
         let output = try await runner.run(transform, on: input)
@@ -38,10 +44,16 @@ extension PadCoordinator {
   }
 
   /// The rows for a pad's Transform menu, surveyed against what is selected
-  /// right now (`FR-6.3`, `FR-6.4`).
+  /// right now (`FR-6.3`, `FR-6.4`). Model-backed ones come last (`FR-9.6`).
   func transformRows(for padID: PadID) -> [[TransformMenuModel.Row]] {
     guard let input = editors[padID]?.transformInput() else { return [] }
-    return TransformMenuModel.rows(for: input)
+    return TransformMenuModel.rows(for: input, models: modelTransforms)
+  }
+
+  /// Model transforms are built from settings rather than held in the registry,
+  /// so they are looked up separately.
+  func modelTransform(id: String) -> (any Transform)? {
+    modelTransforms.first { $0.id == id }
   }
 
   func showNotice(_ text: String, for padID: PadID) {

@@ -18,8 +18,10 @@ enum TransformMenuModel {
     let reason: String?
   }
 
-  static func rows(for input: TransformInput) -> [[Row]] {
-    TransformRegistry.groups.map { group in
+  static func rows(
+    for input: TransformInput, models: [any Transform] = []
+  ) -> [[Row]] {
+    TransformRegistry.groups(includingModels: models).map { group in
       group.map { transform in
         row(for: transform, applicability: transform.applicability(to: input))
       }

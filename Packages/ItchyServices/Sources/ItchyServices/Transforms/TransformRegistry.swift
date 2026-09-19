@@ -9,7 +9,8 @@ import ItchyCore
 /// because "which of these belong together" is a decision, and view files do not
 /// make decisions (D-11).
 public enum TransformRegistry {
-  public static let groups: [[any Transform]] = [
+  /// The deterministic set: same input, same output, no model, no network.
+  public static let deterministicGroups: [[any Transform]] = [
     [FlattenTransform()],
     [CaseTransform(.upper), CaseTransform(.lower), CaseTransform(.title)],
     [JSONPrettyTransform(), JSONMinifyTransform()],
@@ -19,6 +20,23 @@ public enum TransformRegistry {
     ],
     [WhitespaceTrimTransform(), SortLinesTransform()],
   ]
+
+  public static let groups: [[any Transform]] = deterministicGroups
+
+  /// The same set with the model-backed transforms after it (`FR-9.6`).
+  ///
+  /// After, not mixed in, and that ordering is the requirement rather than a
+  /// preference: "deterministic operations presented first". The deterministic
+  /// ones are instant and certain, and a menu that puts a model call above
+  /// `Trim Whitespace` teaches the person that this is a model application
+  /// with some utilities attached, which is the reading the vision document
+  /// exists to prevent.
+  public static func groups(
+    includingModels models: [any Transform]
+  ) -> [[any Transform]] {
+    guard !models.isEmpty else { return deterministicGroups }
+    return deterministicGroups + [models]
+  }
 
   public static let all: [any Transform] = groups.flatMap { $0 }
 

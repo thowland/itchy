@@ -55,6 +55,23 @@ struct PadSettingsView: View {
         }
 
         Section {
+          Picker(
+            PadSettingsModel.routingLabel,
+            selection: Binding(
+              get: { coordinator.metadata(for: pad).routingPolicy },
+              set: { coordinator.setRoutingPolicy(pad.id, $0) })
+          ) {
+            ForEach(RoutingPolicy.allCases, id: \.self) { policy in
+              Text(PadSettingsModel.routingChoice(policy)).tag(policy)
+            }
+          }
+          .pickerStyle(.inline)
+          .accessibilityIdentifier("pad.settings.routing")
+          PadSettingsNotice(
+            notice: PadSettingsModel.routingNote(coordinator.metadata(for: pad).routingPolicy))
+        }
+
+        Section {
           Toggle(
             MCPSettingsModel.exposureLabel,
             isOn: Binding(

@@ -81,6 +81,11 @@ public struct AppSettings: Sendable, Codable, Equatable {
   /// startup.
   public var debugLoggingEnabled: Bool
 
+  /// Where model-backed transforms send text (`FR-9.4`, §12). Nothing is
+  /// configured until the person chooses a model, and nothing model-backed
+  /// appears in the menu until then.
+  public var models: ModelSettings
+
   public init(
     schemaVersion: Int = ItchyCore.schemaVersion,
     padLimit: Int = PadBounds.defaultCount,
@@ -98,7 +103,8 @@ public struct AppSettings: Sendable, Codable, Equatable {
     formerEditorFontFamilies: [String] = [],
     mcpServerEnabled: Bool = false,
     mcpPort: Int = MCPBounds.defaultPort,
-    debugLoggingEnabled: Bool = false
+    debugLoggingEnabled: Bool = false,
+    models: ModelSettings = ModelSettings()
   ) {
     self.schemaVersion = schemaVersion
     self.padLimit = padLimit
@@ -117,6 +123,7 @@ public struct AppSettings: Sendable, Codable, Equatable {
     self.mcpServerEnabled = mcpServerEnabled
     self.mcpPort = mcpPort
     self.debugLoggingEnabled = debugLoggingEnabled
+    self.models = models
   }
 
   /// Returns settings with every value forced into its permitted range.
@@ -173,6 +180,7 @@ public struct AppSettings: Sendable, Codable, Equatable {
     debugLoggingEnabled =
       try container.decodeIfPresent(Bool.self, forKey: .debugLoggingEnabled)
       ?? fallback.debugLoggingEnabled
+    models = try container.decodeIfPresent(ModelSettings.self, forKey: .models) ?? fallback.models
   }
 
   public func clamped() -> AppSettings {

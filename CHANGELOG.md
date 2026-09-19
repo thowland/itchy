@@ -42,6 +42,20 @@ About is the commit count.
 - Reading a pad that contains an image now returns the text with `[image
   1240×820]` in its place, rather than a character that means nothing. The same
   placeholder appears in the pad's plain-text copy on disk.
+- **Model-backed transforms**, in the same wand menu as the rest and after all
+  of them: Tidy Prose, Summarise, and To Bullet Points
+  ([D-31](docs/decisions/D-31-model-routing.md)). Set a model up in
+  **Settings → Models**; until you do, they are not in the menu.
+- Itchy looks for a model on your Mac first, always — a local model sends
+  nothing anywhere, so no pad has to permit it. If the local one cannot be
+  reached, Itchy tells you so rather than sending your text to a remote service
+  instead. That is true under every setting.
+- **Each pad decides** whether its text may reach a remote model: local only,
+  allowed, or ask each time. Local only is the default, the pad says which it
+  is, and "ask each time" asks — naming the pad, the destination and how much
+  text is about to leave.
+- A remote model's API key is kept in your Keychain, never in Itchy's files or
+  its log.
 - **Where this came from**, in a pad's ⋯ menu: a list of what has been pasted
   or dropped into the pad, which application it came from, the page or file it
   came from where there was one, and when. It does not claim which text came

@@ -37,6 +37,30 @@ enum PadSettingsModel {
 
   static let pinnedLabel = "Reopen this pad when Itchy starts"
 
+  /// What a pad's routing control says (`FR-9.1`, `FR-9.3`).
+  static let routingLabel = "Model work on this pad"
+
+  static func routingChoice(_ policy: RoutingPolicy) -> String {
+    switch policy {
+    case .localOnly: "Local only — never leaves this Mac"
+    case .remotePermitted: "May use a remote service"
+    case .askEachTime: "Ask me each time"
+    }
+  }
+
+  /// Said under the control, because "local only" is the default and the
+  /// consequence of changing it is the one thing worth being sure about.
+  static func routingNote(_ policy: RoutingPolicy) -> String? {
+    switch policy {
+    case .localOnly:
+      return nil
+    case .remotePermitted:
+      return "Transforms that need a remote model may send this pad's text to it."
+    case .askEachTime:
+      return "Itchy will ask before any of this pad's text leaves the machine."
+    }
+  }
+
   static func title(for pad: PadMetadata) -> String {
     "Settings for “\(pad.name)”"
   }

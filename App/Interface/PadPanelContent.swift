@@ -38,6 +38,9 @@ struct PadPanelContent: View {
             showsExposure: StatusBarModel.showsExposure(
               serverEnabled: coordinator.settings.mcpServerEnabled,
               isExposed: current.isExposedToMCP),
+            showsRouting: StatusBarModel.showsRouting(
+              modelConfigured: coordinator.isModelConfigured,
+              policy: current.routingPolicy),
             notice: coordinator.notices[pad.id]))
         FormattingControls(formatting: editor.formatting, mode: current.mode) { trait in
           editor.toggle(trait)

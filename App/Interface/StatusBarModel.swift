@@ -71,6 +71,20 @@ enum StatusBarModel {
     serverEnabled || isExposed
   }
 
+  /// Whether the routing segment is worth the space (`FR-9.3`).
+  ///
+  /// Always, once a model is configured: from that point the policy decides
+  /// whether this pad's text may leave the machine, which is not something to
+  /// find out by opening a sheet. And always when the person has moved the
+  /// policy off its default, because a pad that is no longer local-only should
+  /// say so whether or not a model happens to be set up today.
+  ///
+  /// Before either, the word would be on every pad answering a question nobody
+  /// has asked — the same judgement as the exposure segment above.
+  static func showsRouting(modelConfigured: Bool, policy: RoutingPolicy) -> Bool {
+    modelConfigured || policy != .default
+  }
+
   static func routingLabel(_ policy: RoutingPolicy) -> String {
     switch policy {
     case .localOnly: "local only"

@@ -15,4 +15,11 @@ enum TokenStoreResolver {
     guard !options.usesTemporaryStorage else { return InMemoryTokenStore() }
     return MCPTokenKeychain()
   }
+
+  /// The remote model's API key (`FR-9.5`), resolved the same way and for the
+  /// same reason.
+  static func modelStore(for options: LaunchOptions) -> any MCPTokenStore {
+    guard !options.usesTemporaryStorage else { return InMemoryTokenStore() }
+    return ModelCredentialKeychain()
+  }
 }

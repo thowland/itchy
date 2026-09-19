@@ -46,7 +46,10 @@ struct ReleaseGuaranteeTests {
     #expect(lint.contains("OUTBOUND_ALLOWED"))
     #expect(lint.contains("NFR-3.1"))
     // The application is not on the list, and that is the point of the list.
-    #expect(lint.contains("Shim/Sources/ItchyMCPShimCore/Proxy.swift"))
+    #expect(lint.contains("Proxy"))
+    // R4's model clients joined the list deliberately (FR-9.4, FR-9.5).
+    #expect(lint.contains("OllamaClient"))
+    #expect(lint.contains("ModelCredentials"))
     #expect(!lint.contains("OUTBOUND_ALLOWED='App"))
   }
 

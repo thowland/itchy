@@ -200,7 +200,6 @@ Packages/
   ItchyCore/    model, store, atomic writes, migrations, the debug log.
                 No UI framework
   ItchyServices/transforms, MCP server and its loopback transport, model client
-                (the model client is still to come)
 Harness/        itchyctl — drives the store without the interface
 Shim/           itchy-mcp — stdio to the loopback endpoint, no protocol logic
 Scripts/        arch-lint, coverage, test, release, make-appicon
@@ -232,11 +231,22 @@ next release needs it run again — but it is empty now.
 
 ## What is next
 
-Sprint 10 (model routing); Sprint 7 (provenance) is done. §9's interval is closed and the answer was the good one (D-28), so the
-plan proceeds roughly as sketched.
+**Every sprint in the plan is done**, Sprints 0–10, and every functional and
+non-functional requirement has its acceptance criterion recorded as met. §14.6's
+manual checklist passed for 0.1.1 and is empty. There is nothing left that the
+plan asked for.
 
-The governing constraint has not moved, and this is exactly the point at which
-it starts to matter more rather than less. A scratchpad that has just been
-declared a success is a scratchpad somebody wants to add to. Before anything
-below is built, it is still `CON-3`: does this serve transient content, or
-permanent content?
+That makes this the most dangerous point in the project rather than the safest.
+The vision document's warning was never about missing features; it was about the
+ones that arrive afterwards, one reasonable request at a time. `CON-3` is the
+question to ask of every one of them, and it is not rhetorical: does this serve
+transient content, or permanent content? If permanent, decline it.
+
+What would be worth doing, if anything:
+
+- Use it, and let §9's answer be re-asked in three months rather than assumed.
+  D-28 closed the interval after a week; a week is evidence and not a habit.
+- A live model completion has never been run — Ollama is up on this machine with
+  no models pulled (D-31). Pulling one and running Tidy Prose over a real pad is
+  the last unverified path in the product.
+- `FR-8.3`'s and `NFR-4.2`'s manual checks come round again at the next release.
