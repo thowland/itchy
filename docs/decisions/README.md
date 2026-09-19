@@ -42,3 +42,4 @@ New decisions:
 | [D-24](D-24-transform-layer.md) | JSON reformatted at the token level; failures shown in the status bar; the applier replaces rather than inserts; routing enforced from Sprint 6 |
 | [D-25](D-25-mcp-server.md) | The MCP server: 8899 by default, a deliberate HTTP subset, one session per client, `endpoint.json` written by the store, refusal over silent loss |
 | [D-26](D-26-diagnostic-log-and-help.md) | A diagnostic log with a closed vocabulary that cannot quote a pad; help as compiled values; the Keychain behind a seam so no test can open it |
+| [D-27](D-27-deployment-floor.md) | The deployment floor moves from macOS 26 to macOS 15; nothing required 26, and the premise for it expired when the first build left this machine |

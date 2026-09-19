@@ -67,7 +67,9 @@ These are not requirements in the sense of things to be built. They are limits o
 
 **CON-4.** The store is the only component permitted to touch disk. Views observe the store; transforms operate on values handed to them by the store; the MCP server reads and writes through the same interface a view uses. This constraint exists to make a second writer safe to add, and it MUST hold from the first commit rather than being arranged for later.
 
-**CON-5.** The deployment floor is macOS 26. No back-compatibility work is to be undertaken.
+**CON-5.** The deployment floor is macOS 15. No back-compatibility work is to be undertaken below it.
+
+*Amended September 2026 (D-27). The floor was macOS 26 for R1, on the reasoning that the application was for its author alone and supporting Sequoia bought nothing. It bought something the moment the first signed build was carried to a second machine and refused to open. Nothing in the code required 26 — it builds at 15 with no availability guards and no changes — so the floor was lowered to the oldest release the author actually runs. The constraint's second half is unchanged and is the important half: no back-compatibility work. 15 is where the floor sits, not the start of a compatibility matrix.*
 
 **CON-6.** The application is not sandboxed and is distributed via Developer ID and notarisation. App Store distribution is out of scope, and no requirement may be written that presupposes it.
 
@@ -441,7 +443,7 @@ Itchy MUST NOT collect or transmit analytics, crash reports, or usage data.
 ### NFR-4 Platform, distribution and maintainability
 
 **NFR-4.1 — Deployment target** *(R1, MUST)*
-macOS 26 or later, per CON-5.
+macOS 15 or later, per CON-5.
 
 **NFR-4.2 — Signed and notarised** *(R1, MUST)*
 Shipped builds MUST be signed with a Developer ID, MUST use the hardened runtime, and MUST be notarised.

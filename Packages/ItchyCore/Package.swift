@@ -7,7 +7,7 @@ import PackageDescription
 // enforces it structurally.
 let package = Package(
   name: "ItchyCore",
-  platforms: [.macOS(.v26)],
+  platforms: [.macOS(.v15)],
   products: [
     .library(name: "ItchyCore", targets: ["ItchyCore"])
   ],

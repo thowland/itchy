@@ -6,7 +6,7 @@ import PackageDescription
 // it. If this fixture ever passes the gate, the gate is broken.
 let package = Package(
   name: "UnderCovered",
-  platforms: [.macOS(.v26)],
+  platforms: [.macOS(.v15)],
   products: [.library(name: "UnderCovered", targets: ["UnderCovered"])],
   targets: [
     .target(name: "UnderCovered"),

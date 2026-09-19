@@ -5,7 +5,7 @@ import PackageDescription
 // model client. Everything here talks to the store and never to a view.
 let package = Package(
   name: "ItchyServices",
-  platforms: [.macOS(.v26)],
+  platforms: [.macOS(.v15)],
   products: [
     .library(name: "ItchyServices", targets: ["ItchyServices"])
   ],

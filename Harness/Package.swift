@@ -4,7 +4,7 @@ import PackageDescription
 // Development-only harness. Not shipped (specification §1).
 let package = Package(
   name: "itchyctl",
-  platforms: [.macOS(.v26)],
+  platforms: [.macOS(.v15)],
   dependencies: [
     .package(path: "../Packages/ItchyCore")
   ],

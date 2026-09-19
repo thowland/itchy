@@ -79,7 +79,7 @@ struct ReleaseGuaranteeTests {
     #expect(bundle.object(forInfoDictionaryKey: "LSUIElement") as? Bool == true)
     let minimum = try #require(
       bundle.object(forInfoDictionaryKey: "LSMinimumSystemVersion") as? String)
-    #expect(minimum.hasPrefix("26"), "CON-5: the deployment floor is macOS 26")
+    #expect(minimum.hasPrefix("15"), "CON-5: the deployment floor is macOS 15")
   }
 
   /// `NFR-5.1`: every function is reachable from the keyboard. The menubar's

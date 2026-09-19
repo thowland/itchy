@@ -797,6 +797,8 @@ other Itchy window comes forward and the user's arrangement is otherwise
 untouched (`FR-3.1`; see D-14 for why this is manual). Accessibility passes
 (`NFR-5.2`, `NFR-5.3`), Gatekeeper launch on a clean machine (`NFR-4.2`), Spotlight exclusion verified by searching for pad-unique content and then grepping the same content out of the directory (`NFR-3.4`), and idle CPU observed over five minutes (`NFR-1.3`).
 
+On a Mac running the oldest supported release rather than the newest: that the application launches, that a pad panel appears without activating Itchy (D-14), and that ⌃⌥Space fires. The deployment floor moved to macOS 15 in D-27 and the framework spikes were all resolved against macOS 26, so those behaviours are compiled-for but not observed below it.
+
 With the agent server enabled, a connection attempt to its port from a second machine on the same network, which must fail (`FR-8.3`). This is here for the same reason the Gatekeeper check is: it cannot be run from the machine under test. What the suite covers is the mechanism — the port answers on loopback and on no other local address this machine has.
 
 ## 15. Testability seams
