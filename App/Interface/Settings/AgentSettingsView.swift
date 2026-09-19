@@ -69,6 +69,13 @@ struct AgentSettingsView: View {
           .font(.caption)
           .foregroundStyle(.secondary)
       }
+
+      Section {
+        Button(HelpText.agentsSetupButton) {
+          coordinator.showHelp(topic: HelpText.agentsTopic)
+        }
+        .accessibilityIdentifier("settings.mcpHelp")
+      }
     }
     .formStyle(.grouped)
     .padding()

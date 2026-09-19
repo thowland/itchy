@@ -64,4 +64,14 @@ enum HelpText {
   static let menuTitle = "Itchy Help"
   /// On the About screen, beside the dismiss button.
   static let aboutButton = "Help"
+
+  /// In the Agents settings section, which is where somebody is standing when
+  /// they need it. No ellipsis: it opens a window rather than asking for
+  /// anything first.
+  static let agentsSetupButton = "How to set this up"
+
+  /// The topic that button opens. A named constant rather than a string at the
+  /// call site, so that a renamed topic breaks a test rather than quietly
+  /// opening the wrong page.
+  static let agentsTopic = HelpContent.agents.id
 }

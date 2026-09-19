@@ -123,6 +123,15 @@ struct HelpBookTests {
     #expect(HelpBook.topic(id: HelpBook.defaultTopic) != nil)
   }
 
+  /// The Agents settings section deep-links into the book. A renamed topic
+  /// would otherwise open the wrong page, or none, and nothing would say so.
+  @Test("The topic the Agents settings link to exists")
+  func agentsDeepLinkResolves() {
+    #expect(HelpBook.topic(id: HelpText.agentsTopic) != nil)
+    #expect(HelpBook.resolve(HelpText.agentsTopic).id == HelpContent.agents.id)
+    #expect(HelpText.agentsSetupButton.isEmpty == false)
+  }
+
   // MARK: - Staying true
 
   /// Help that names a control is help that goes stale silently. These hold the
