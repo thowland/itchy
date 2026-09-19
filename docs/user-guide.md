@@ -265,12 +265,25 @@ variable rather than storing the token, so it stays out of
 `~/.codex/config.toml`. That file is shared with Codex in the ChatGPT desktop
 application and the IDE extension.
 
-**Claude Desktop** needs a local bridge. Its custom connectors are opened by
-Anthropic's servers, which cannot reach an address that exists only on your Mac,
-and its configuration file launches a command rather than speaking HTTP. Until
-Itchy ships its own shim, `mcp-remote` fills the gap — see **Itchy Help →
-Connecting Claude or ChatGPT** for the exact entry, including the two details
-that silently break it.
+**Claude Desktop** cannot be pointed at an address: its connectors are opened by
+Anthropic's servers, which cannot see your Mac, and its configuration file
+launches a command rather than speaking HTTP. Itchy ships a small program for it
+to launch. In
+`~/Library/Application Support/Claude/claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "itchy": {
+      "command": "/Applications/Itchy.app/Contents/MacOS/itchy-mcp",
+      "env": { "ITCHY_TOKEN": "PASTE-TOKEN-HERE" }
+    }
+  }
+}
+```
+
+Quit Claude Desktop completely and start it again. The shim finds the port
+itself, so there is nothing to keep in step when it changes.
 
 **ChatGPT's own connectors cannot reach it** — use Codex, above. The difference
 is where the connection is opened from: a ChatGPT connector is opened by

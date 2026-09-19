@@ -141,6 +141,37 @@ check() {
   return $ready
 }
 
+# Builds the stdio shim and seals it inside the application (`FR-8.2`).
+#
+# Inside out, which is the whole of the care required here: a Mach-O added to a
+# bundle after that bundle was signed is not covered by its seal, and
+# `codesign --verify --deep` says so. So the shim is signed first, copied in,
+# and the application re-signed over the top.
+#
+# Built by SwiftPM rather than as an Xcode target because it links none of the
+# application's code — that separation is the point of it (specification §11.1).
+bundle_shim() {
+  local id="$1" app="$2" binary
+  ( cd Shim && swift build -c release --arch arm64 --arch x86_64 ) >/dev/null 2>&1 || {
+    fail "the shim did not build"
+    return 1
+  }
+  binary="$(cd Shim && swift build -c release --arch arm64 --arch x86_64 --show-bin-path 2>/dev/null)/itchy-mcp"
+  [ -f "$binary" ] || { fail "no shim binary at $binary"; return 1; }
+
+  codesign --force --sign "$id" --timestamp --options=runtime "$binary" >/dev/null 2>&1 || {
+    fail "could not sign the shim"
+    return 1
+  }
+  cp "$binary" "$app/Contents/MacOS/itchy-mcp" || return 1
+  codesign --force --sign "$id" --timestamp --options=runtime \
+    --entitlements App/Itchy.entitlements "$app" >/dev/null 2>&1 || {
+    fail "could not re-seal the application over the shim"
+    return 1
+  }
+  pass "shim built, signed and sealed into the bundle"
+}
+
 # What the notary service checks that codesign does not.
 #
 # `codesign --verify` is happy with a build the notary service will refuse, and
@@ -194,6 +225,13 @@ notarisable() {
       ;;
   esac
 
+  # FR-8.2 ships the shim alongside the application. A bundle without it is a
+  # bundle that cannot serve a stdio client, and nothing else would notice.
+  if [ ! -f "$app/Contents/MacOS/itchy-mcp" ]; then
+    fail "the bundle has no stdio shim (FR-8.2)"
+    ok=1
+  fi
+
   return $ok
 }
 
@@ -215,6 +253,7 @@ build() {
     OTHER_CODE_SIGN_FLAGS="--timestamp --options=runtime" \
     build -quiet 2>&1 | "$(dirname "$0")/xcnoise.sh" || exit 1
   cp -R "$DD/Build/Products/Release/$APP_NAME.app" "$EXPORT_DIR/" || exit 1
+  bundle_shim "$id" "$EXPORT_DIR/$APP_NAME.app" || exit 1
   codesign --verify --deep --strict --verbose=2 "$EXPORT_DIR/$APP_NAME.app" || exit 1
   notarisable "$EXPORT_DIR/$APP_NAME.app" || exit 1
   pass "signed and verified at $EXPORT_DIR/$APP_NAME.app"

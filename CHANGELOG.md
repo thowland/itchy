@@ -42,6 +42,10 @@ About is the commit count.
 - Reading a pad that contains an image now returns the text with `[image
   1240×820]` in its place, rather than a character that means nothing. The same
   placeholder appears in the pad's plain-text copy on disk.
+- Itchy now ships `itchy-mcp`, a small program that agents which expect to
+  launch a command — Claude Desktop among them — can use to reach the pads
+  ([D-29](docs/decisions/D-29-stdio-shim.md)). It finds the running server
+  itself; you give it only the token.
 - Help, from the menubar or from About: how to set up agents and backups, what
   the transforms do, how pads work, and where your files are
   ([D-26](docs/decisions/D-26-diagnostic-log-and-help.md)).

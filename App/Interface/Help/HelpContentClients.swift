@@ -21,7 +21,8 @@ extension HelpContent {
         blocks: [
           .text(
             "Three things, all of them in Settings → Agents: the address, the transport, "
-              + "and the token."),
+              + "and the token. Claude Desktop needs only the last of the three — it "
+              + "launches the shim that ships inside Itchy, and that finds the rest."),
           .steps([
             "The address is http://127.0.0.1:PORT\(MCPServerHost.path), where PORT is the "
               + "number Settings → Agents shows. It is usually "
@@ -86,33 +87,25 @@ extension HelpContent {
         heading: "Claude Desktop",
         blocks: [
           .text(
-            "Claude Desktop needs a small bridge, and the reason is worth understanding "
-              + "because it explains ChatGPT too."),
+            "Claude Desktop cannot be pointed at an address directly. Its custom connectors "
+              + "are opened by Anthropic's servers, which cannot reach an address that only "
+              + "exists on your Mac, and its configuration file launches a command rather "
+              + "than speaking HTTP."),
           .text(
-            "Desktop has two ways to reach an MCP server. Custom connectors take a URL, but "
-              + "Anthropic's servers make that connection rather than your Mac, so they "
-              + "cannot reach an address that only exists on your machine. Its configuration "
-              + "file runs on your Mac and can reach Itchy, but it launches a command and "
-              + "talks to it over its input and output — it does not speak HTTP."),
-          .text(
-            "So something local has to sit between them. Itchy will ship that bridge itself; "
-              + "until it does, mcp-remote is the usual one. Edit "
+            "So Itchy ships a small program for it to launch, which does nothing but pass "
+              + "messages along. It is inside the application. Edit "
               + "~/Library/Application Support/Claude/claude_desktop_config.json and add:"),
           .steps([
-            "\"mcpServers\": { \"itchy\": { \"command\": \"npx\", \"args\": [\"mcp-remote\", "
-              + "\"http://127.0.0.1:\(MCPBounds.defaultPort)\(MCPServerHost.path)\", "
-              + "\"--allow-http\", \"--header\", \"Authorization:${AUTH}\"], "
-              + "\"env\": { \"AUTH\": \"Bearer PASTE-TOKEN-HERE\" } } }",
-            "Quit Claude Desktop completely and start it again. It only reads that file at "
+            "\"mcpServers\": { \"itchy\": { \"command\": "
+              + "\"/Applications/Itchy.app/Contents/MacOS/itchy-mcp\", "
+              + "\"env\": { \"ITCHY_TOKEN\": \"PASTE-TOKEN-HERE\" } } }",
+            "Quit Claude Desktop completely and start it again — it reads that file only at "
               + "launch.",
           ]),
           .note(
-            "The token goes in env rather than straight into the header, and there is no "
-              + "space after “Authorization:”. That is a real quirk rather than a typo: "
-              + "Desktop does not escape spaces inside those arguments, so a header written "
-              + "the natural way arrives split in half. --allow-http is needed because "
-              + "mcp-remote refuses plain HTTP otherwise, which is the right default "
-              + "everywhere except a loopback address."),
+            "The shim finds the port itself, so there is no address to keep in step when it "
+              + "changes. If the server is off, or the token is wrong, it says so in Claude "
+              + "Desktop's own log rather than failing silently."),
         ]),
       HelpSection(
         heading: "ChatGPT's own connectors",

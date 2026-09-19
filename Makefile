@@ -18,6 +18,8 @@ OUT := build
 # plug-in failure that have nothing to do with this project and contain the word
 # "error". See the script for what it will and will not remove.
 DEST := platform=macOS,arch=$(shell uname -m)
+# The other half of a universal binary, so the shim matches the application.
+ALT_ARCH := x86_64
 
 .PHONY: help gate project regenerate test test-ui test-all sign-setup bump version lint format arch-lint coverage verify-gate app run reveal package release notarise dmg ship-check icon screenshots clean open
 
@@ -92,9 +94,21 @@ verify-gate: ## Prove the gates fail when they should
 app: project ## Build the application bundle into ./build
 	@set -o pipefail; xcodebuild -project Itchy.xcodeproj -scheme Itchy -configuration Release \
 	  -destination "$(DEST)" -derivedDataPath $(DD) build -quiet 2>&1 | ./Scripts/xcnoise.sh
+	@# The shim ships beside the application, universal like it, and is built
+	@# by SwiftPM rather than the Xcode target because it links none of the
+	@# application's code. `--show-bin-path` rather than a hard-coded directory:
+	@# SwiftPM has moved it before.
+	@cd Shim && swift build -c release --arch arm64 --arch $(ALT_ARCH) >/dev/null 2>&1
 	@mkdir -p $(OUT)
 	@rm -rf $(OUT)/Itchy.app
 	@cp -R $(DD)/Build/Products/Release/Itchy.app $(OUT)/Itchy.app
+	@cp "$$(cd Shim && swift build -c release --arch arm64 --arch $(ALT_ARCH) --show-bin-path 2>/dev/null)/itchy-mcp" \
+	  $(OUT)/Itchy.app/Contents/MacOS/itchy-mcp
+	@# Re-sealed, because a binary added after the bundle was signed is not
+	@# covered by its signature. Ad-hoc here to match the Release default in
+	@# project.yml; `make release` signs the same arrangement with a Developer ID.
+	@codesign --force --sign - $(OUT)/Itchy.app/Contents/MacOS/itchy-mcp
+	@codesign --force --sign - $(OUT)/Itchy.app
 	@echo "app: $(CURDIR)/$(OUT)/Itchy.app"
 	@echo "     open it with 'make run', or 'make reveal' to show it in Finder"
 

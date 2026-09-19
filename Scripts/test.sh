@@ -123,6 +123,24 @@ for package in ItchyCore ItchyServices; do
   fi
 done
 
+# Built before the app suite, not merely checked: the FR-8.2 test launches this
+# binary as a subprocess, so a stale or missing one is a failing test rather
+# than a skipped one.
+if ! bash -c "cd Shim && swift build" >/dev/null 2>&1; then
+  fail "itchy-mcp does not build"
+  FAILED=1
+else
+  pass "itchy-mcp builds"
+fi
+
+if ! bash -c "cd Shim && swift test" >/tmp/itchy-shim.log 2>&1; then
+  fail "itchy-mcp tests"
+  grep -E "✘|error:" /tmp/itchy-shim.log | head -5 | sed 's/^/       /'
+  FAILED=1
+else
+  pass "itchy-mcp"
+fi
+
 if ! bash -c "cd Harness && swift build" >/dev/null 2>&1; then
   fail "itchyctl does not build"
   FAILED=1

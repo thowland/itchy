@@ -64,13 +64,15 @@ struct HelpBookTests {
     #expect(text.contains(".mcp.json"))
   }
 
-  /// Not a typo, and the one detail that silently breaks the Desktop setup.
-  @Test("The Claude Desktop section keeps the no-space header quirk")
-  func desktopHeaderQuirk() {
+  /// Desktop launches the shim that ships inside the bundle, so the path has to
+  /// be the one `make app` actually puts it at.
+  @Test("The Claude Desktop section launches the shipped shim by its real path")
+  func desktopUsesTheShim() {
     let text = allText(of: HelpContent.clients)
-    #expect(text.contains("Authorization:${AUTH}"))
-    #expect(text.contains("--allow-http"))
-    #expect(text.contains("no space after"))
+    #expect(text.contains("/Applications/Itchy.app/Contents/MacOS/itchy-mcp"))
+    #expect(text.contains("ITCHY_TOKEN"))
+    // The shim reads endpoint.json, so no address is pasted anywhere.
+    #expect(text.contains("finds the port itself"))
   }
 
   /// "ChatGPT cannot connect" was too broad: its own connectors cannot, and

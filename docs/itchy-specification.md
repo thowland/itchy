@@ -639,7 +639,11 @@ Agent (HTTP client)  ───────────────────�
 Agent (stdio client) ──▶ itchy-mcp shim ───────┘
 ```
 
-The shim does nothing but proxy, per `FR-8.2`. It reads the port and token from the same well-known location the app writes them to — the port from a small `endpoint.json` in the support directory, the token from the Keychain via a shared access group — and it holds no state and implements no protocol logic. If it grows a single protocol-aware line, that is a defect.
+The shim does nothing but proxy, per `FR-8.2`. It reads the port from a small `endpoint.json` in the support directory and the token from the `ITCHY_TOKEN` environment variable, and it implements no protocol logic. If it grows a single protocol-aware line, that is a defect.
+
+The token was to have come from the Keychain via a shared access group. It does not, and D-29 records why with the measurements: the `keychain-access-groups` entitlement is required for an access group to work at all, and a Developer ID binary carrying it without a matching provisioning profile is killed by AMFI before `main` runs — as a bare executable and inside an `.app` alike. A shared signing team is not sufficient. `NFR-3.3` is unaffected, because the token still lives in the Keychain; the shim is handed a copy by whoever launches it, exactly as Claude Code and Codex are.
+
+"Holds no state" was also one word too strong. The shim keeps the session identifier the server issues at initialisation and requires thereafter, and it never reads it. It also parses the `data:` payloads out of the event stream the server answers requests with. Both are framing rather than protocol, and both live in value types.
 
 Binding is to `127.0.0.1` explicitly, never `0.0.0.0` (`FR-8.3`). The default port is 8899, configurable, with the actual bound port recorded in `endpoint.json` so the shim needs no configuration. 8899 sits well below the 49152–65535 range macOS allocates ephemerally, so it cannot collide with a port the system has handed to something else, and it is neither a registered service nor a common development default. The binding is structural rather than checked: the listener pins its local endpoint, so the socket is not reachable on any other address the machine has, and there is no handler that has to remember to refuse one.
 

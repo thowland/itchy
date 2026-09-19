@@ -1,41 +1,54 @@
 # itchy-mcp
 
-The stdio shim, built in Sprint 9 (`FR-8.2`).
+The stdio shim (`FR-8.2`). It proxies stdio to the loopback endpoint and does
+nothing else, for clients that expect to launch a subprocess rather than connect
+to an address — Claude Desktop, principally.
 
-It proxies stdio to the loopback endpoint and does nothing else: it holds no
-state and implements no protocol logic, reading the port from `endpoint.json` in
-the support directory and the token from the Keychain via a shared access group.
+It reads the port from `endpoint.json` in the support directory, through the
+store's own API, and the token from the `ITCHY_TOKEN` environment variable. It
+was to have read the token from the Keychain via a shared access group; D-29
+records the measurements that ruled that out, the short version being that the
+entitlement needs a provisioning profile and a Developer ID binary carrying it
+without one is killed before `main` runs.
 
-If it ever grows a single protocol-aware line, that is a defect — the whole point
-of the arrangement is that the protocol surface exists in one place while
-remaining compatible with clients on either transport (specification §11.1).
+## The rule
 
-**Not started, and no longer blocked.** It waited on a Developer ID certificate,
-because reading one Keychain item from two binaries needs a shared access group
-and that needs both binaries signed by the same team. The certificate arrived in
-September 2026, so this is now ordinary work that has not been done.
+No protocol logic. If it ever grows a line that knows what an MCP message
+*means*, that is a defect — the point of the arrangement is one protocol surface
+serving both transports (specification §11.1).
 
-Three things are known before it starts, and one is not:
+Two things it does hold, both framing rather than protocol:
 
-- The port comes from `endpoint.json`, which the store writes atomically when the
-  listener binds and removes when it stops (D-25). A file that is present is not
-  proof a server is listening — it carries the process identifier so a stale one
-  left by a crash can be recognised.
-- `MCPTokenKeychain` currently stores the token under a plain service and account
-  with no access-group attribute. Adding one moves the item, so the old one is
-  not found under the new query. Regenerate rather than migrate: the token is not
-  a secret anybody has memorised, and `FR-8.4` already makes regeneration a
-  supported act.
-- The shim holds no protocol logic. If it ever grows a single protocol-aware
-  line, that is a defect — the point of the arrangement is one protocol surface
-  serving both transports (specification §11.1).
-- **Unknown:** whether `keychain-access-groups` needs anything beyond a shared
-  team for a directly-distributed, non-sandboxed build. It should not. "Should
-  not" is what spikes are for, and this one is an afternoon.
+- the session identifier the server issues at initialisation and requires
+  afterwards, which it stores and never reads;
+- enough of `text/event-stream` to pull out the `data:` payloads, because the
+  server answers a request with a stream rather than a body.
 
-Until it exists, `mcp-remote` bridges stdio to the loopback endpoint for clients
-that need it; the in-application help says how. The shim replaces that with
-something that needs no Node, ships in the same bundle, and reads the token
-itself rather than having it pasted into a configuration file.
+## Layout
 
-See `../docs/mcp-remaining-work.md`.
+`ItchyMCPShimCore` is the library — configuration, framing, the proxy — and
+`itchy-mcp` is a one-file executable over it. The split exists so the parts
+worth testing can be imported, by this package's tests and by the application's
+suite, which launches the binary to demonstrate `FR-8.2`.
+
+It depends on `ItchyCore` alone. It must not acquire the MCP SDK: a shim that
+can parse the protocol is a shim that will end up interpreting it.
+
+## Running it by hand
+
+```bash
+ITCHY_TOKEN="$(: paste from Settings → Agents)" \
+  build/Itchy.app/Contents/MacOS/itchy-mcp
+```
+
+`--support-root PATH` points it at a support directory other than the standard
+one. It exists so `FR-8.2` can be demonstrated against a throwaway store, and it
+is an argument rather than an environment variable on purpose: whoever sets it
+decides which server the token is handed to.
+
+## Where it ships
+
+`Contents/MacOS/itchy-mcp`, inside the application bundle, universal and signed
+with the same Developer ID. `make app` builds and seals it; `Scripts/release.sh`
+signs it before the bundle so the outer seal covers it, and refuses to call a
+build releasable if it is missing.

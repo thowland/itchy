@@ -12,6 +12,10 @@ excluded:
   - .build
   - Packages/ItchyCore/.build
   - Packages/ItchyServices/.build
+  # Every package builds into its own .build, and SwiftPM generates a test
+  # runner in there that no style rule should be applied to.
+  - Shim/.build
+  - Harness/.build
   - Tests/Fixtures
 
 opt_in_rules:

@@ -267,7 +267,7 @@ A month of use is also likely to reorder what follows, and the sketches below ar
 
 **Sprint 9 — MCP safety.** Per-pad exposure, the write path through the registry applier, external-write markers and the banner, the stdio shim. Claims `FR-8.7`–`FR-8.9`, `NFR-3.2`. Separated from Sprint 8 because the exposure and write-conflict policies are the two questions the architecture document says must be answered before the feature ships, and bundling them with transport work is how they get answered in a hurry.
 
-*All but the shim.* Exposure has a per-pad toggle and shows on the pad, the registry-aware writer lands an agent write in the open panel as one named undo, and the banner and the menubar marker say when something else wrote. The shim is blocked on the same certificate R1 is waiting on, because two binaries sharing a Keychain item need a shared access group and so a shared signing team; `mcp-remaining-work.md` is now that one item and the two acceptance criteria that cannot be run from this machine.
+*Complete.* Exposure has a per-pad toggle and shows on the pad, the registry-aware writer lands an agent write in the open panel as one named undo, the banner and the menubar marker say when something else wrote, and the stdio shim ships inside the bundle with `FR-8.2` demonstrated in the suite. The shim's token does not come from a shared Keychain access group as planned — D-29 has the measurements that ruled that out.
 
 **Sprint 10 — Model routing.** Per-pad policy, enforcement in `TransformRunner`, the Ollama client, remote credentials, and model-backed transforms appearing in the existing menu. Claims `FR-9.1`–`FR-9.6`. The test with teeth is that a local-only pad makes no outbound connection when the local endpoint is unreachable.
 

@@ -20,35 +20,16 @@ is not.
 
 ## The stdio shim (`FR-8.2`)
 
-**No longer blocked.** This section said the shim was waiting on the same
-certificate the release was. That certificate now exists on this machine —
-`Developer ID Application: Timothy Howland (HPJD2255AP)` — so the shim is
-ordinary work that has not been done rather than work that cannot be.
+**Done**, September 2026. `Shim/itchy-mcp` ships inside the bundle, signed and
+notarised with the application, and `FR-8.2`'s acceptance criterion is
+demonstrated in the suite rather than described here.
 
-`Shim/itchy-mcp` proxies stdio to the loopback endpoint and holds no protocol
-logic. It reads the port from `endpoint.json` — which now exists and is written
-atomically — and the token from the Keychain.
-
-The Keychain was the blocker. Reading the same item from two binaries needs a
-shared access group, which needs both binaries signed by the same team — and
-until the certificate arrived there was no team to share. There is now.
-
-What remains is the work itself. `MCPTokenKeychain` stores the item under a
-plain service and account with no access-group attribute, and adding one is a
-change to where the item lives: the old item is not found under the new query,
-so it needs a migration or a regeneration. Regeneration is the right answer,
-because the token is not a secret anyone has memorised.
-
-Whether the `keychain-access-groups` entitlement needs anything beyond a shared
-team for a directly-distributed build is the first thing to find out when the
-shim is written. It should not, for Developer ID signing, but "should not" is
-what spikes are for.
-
-Until the shim exists, `FR-8.2`'s acceptance criterion — one client over HTTP
-and another over the shim, concurrently, both seeing the same pad state — cannot
-be demonstrated. Half of it can: two HTTP clients are connected concurrently in the
-suite and do see the same pad, because the state is the store's rather than the
-session's. What is untested is the shim, not the concurrency.
+The one thing that did not go as this document predicted is recorded in D-29:
+the token comes from `ITCHY_TOKEN` rather than a shared Keychain access group,
+because the entitlement that makes an access group work needs a provisioning
+profile, and a Developer ID binary carrying it without one is killed at launch.
+This document said that "should not" be so, and that "should not is what spikes
+are for". It was, and it was.
 
 ## What needs a second machine
 

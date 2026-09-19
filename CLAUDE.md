@@ -198,7 +198,7 @@ Packages/
   ItchyServices/transforms, MCP server and its loopback transport, model client
                 (the model client is still to come)
 Harness/        itchyctl — drives the store without the interface
-Shim/           itchy-mcp (Sprint 9)
+Shim/           itchy-mcp — stdio to the loopback endpoint, no protocol logic
 Scripts/        arch-lint, coverage, test, release, make-appicon
 ```
 
@@ -226,15 +226,9 @@ Three of those had been outstanding since the sprints that claimed them, for the
 same reason: none can be run from the machine under test. Keep the list — the
 next release needs it run again — but it is empty now.
 
-The only work that is *waiting* rather than blocked is the stdio shim
-(`FR-8.2`), which the Developer ID certificate unblocked and which nobody has
-written.
-
 ## What is next
 
-Sprint 7 (provenance) and Sprint 10 (model routing), and the stdio shim
-(`FR-8.2`) that has been waiting rather than blocked since the certificate
-arrived. §9's interval is closed and the answer was the good one (D-28), so the
+Sprint 7 (provenance) and Sprint 10 (model routing). §9's interval is closed and the answer was the good one (D-28), so the
 plan proceeds roughly as sketched.
 
 The governing constraint has not moved, and this is exactly the point at which

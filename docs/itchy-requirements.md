@@ -328,7 +328,7 @@ Itchy MUST expose pads over the Model Context Protocol such that an agent can re
 
 **FR-8.2 — Long-running server, two transports** *(R3, MUST)*
 Because Itchy is a long-running application that owns the state, it MUST NOT rely on being launched as a subprocess per session. It MUST serve over a loopback-bound HTTP endpoint, and a stdio shim MUST ship alongside the application for clients that expect to launch a subprocess, doing nothing but proxying to that endpoint.
-*Acceptance:* one client connects over HTTP and another over the shim, concurrently, and both see the same pad state.
+*Acceptance:* one client connects over HTTP and another over the shim, concurrently, and both see the same pad state. **Demonstrated 19 September 2026** (D-29), in the suite: `Tests/ItchyTests/ShimIntegrationTests.swift` launches the built `itchy-mcp` as a subprocess, speaks MCP to it over its standard input and output, and reads the same pad over HTTP at the same time — two sessions, one store.
 
 **FR-8.3 — Loopback only** *(R3, MUST)*
 The endpoint MUST bind to the loopback interface only and MUST NOT be reachable from another host.
