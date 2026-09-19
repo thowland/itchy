@@ -114,8 +114,8 @@ the previous one immediately.
 What that needs:
 
 - Fields on `AppSettings`: whether the server is enabled, and the configured
-  port. Both go through the same `SettingsModel` validation and clamping the
-  other settings use.
+  port, defaulting to 8899. Both go through the same `SettingsModel` validation
+  and clamping the other settings use.
 - A settings section, alongside the existing archive and editor-font ones, with
   the enable toggle, the port, the token shown with a copy button, and a
   regenerate button. Regeneration replaces the Keychain item and the listener's
@@ -131,9 +131,10 @@ What that needs:
 
 ### 5. Wiring
 
-Registering the five tools and the resource list against the SDK's `Server`,
-starting and stopping the listener as the setting changes, and tearing it down
-at termination alongside the existing flush. The tool handlers convert the SDK's
+Registering all five tools — the write tools included, per the decision below —
+and the resource list against the SDK's `Server`, starting and stopping the
+listener as the setting changes, and tearing it down at termination alongside
+the existing flush. The tool handlers convert the SDK's
 `Value` arguments into the `[String: String]` the router takes — the router is
 deliberately free of SDK types so that it stays testable without one, and the
 conversion is the only place that boundary is crossed.
@@ -178,14 +179,17 @@ Note what the applier's recent correction means here: it now replaces the range
 rather than merging attributes into it, so an agent write lands as written
 rather than inheriting whatever styling happened to be at the insertion point.
 
+Because the write tools now ship in Sprint 8, this is no longer only an
+improvement — it is what removes a real failure mode. Whatever interim handling
+Sprint 8 adopts for a write to an open pad is deleted when this lands.
+
 ### Per-pad exposure
 
 The model has `isExposedToMCP` and the store has `setExposedToMCP`; what is
 missing is the toggle in the pad settings sheet and the confirmation that the
-default is off end to end (`NFR-3.2`). `MCPService.create` currently exposes a
-pad it creates, on the reasoning that a pad an agent made and then cannot read
-reads as a failure. That is a decision, it is not in the specification, and it
-should either be recorded or reversed before it ships.
+default is off end to end for pads the person made (`NFR-3.2`).
+`MCPService.create` exposes the pad it creates, which is settled and recorded
+below rather than left implicit in the code.
 
 ### External-write visibility
 
@@ -216,27 +220,54 @@ cheap because the token is not a secret anyone has memorised.
 shim, concurrently, both seeing the same pad state — cannot be demonstrated
 until then.
 
-## Decisions still open
+## Decisions taken
 
-**The default port.** `§11.1` says "8-something in the ephemeral-adjacent
-range, configurable", which is not a number. It wants to be memorable, unlikely
-to collide with a development server, and outside the range macOS hands out
-ephemerally. It needs choosing and recording.
+Settled 19 September 2026. They fold into a decision record when the work
+lands; until then this is where they live.
 
-**Whether the write tools ship in Sprint 8.** `append_pad`, `write_pad` and
-`create_pad` are routed and tested, and they work through `StorePadWriter`,
-which is correct whenever the pad's panel is closed. Against an *open* pad it is
-not: the panel holds the authoritative text and would overwrite the agent's
-write on its next save. Nothing is at risk today because the server does not
-listen and no pad is exposed. The options are to keep the three write tools out
-of the advertised tool list until the registry-aware writer exists, or to ship
-them and accept that an agent writing to an open pad loses the write. The first
-is the default unless someone argues for the second, and it costs one line in
-`MCPToolSurface.all` plus a test asserting the list is two tools rather than
-five while the flag is off.
+**The default port is 8899.** `§11.1` asked for "8-something in the
+ephemeral-adjacent range, configurable" and declined to give a number. 8899 is
+well clear of the 49152–65535 range macOS hands out ephemerally, so it cannot
+collide with a port the system assigned to something else, and it is not a
+registered service or a common development default. It remains configurable, and
+the bound port — not the configured one — is what goes into `endpoint.json`.
 
-**Whether `create_pad` exposes what it creates.** Described above; currently
-yes, and undocumented.
+**The write tools ship in Sprint 8.** `append_pad`, `write_pad` and `create_pad`
+are advertised in the tool list from the start rather than held back until
+Sprint 9's registry-aware writer exists.
+
+The consequence is stated plainly because it is real: `StorePadWriter` is
+correct whenever the pad's panel is closed, and wrong when it is open. The panel
+holds the authoritative text, and its next save — on the serialisation debounce,
+so within about 120 ms of the next keystroke, and unconditionally when the pad
+closes — writes the panel's version over the agent's. An agent write to a pad
+that is exposed, open and being typed in is lost, silently, and the agent is
+told it succeeded.
+
+The exposure is bounded by three things that must all be true before it can
+happen: the server is enabled, that particular pad is opted in, and its panel is
+open. None is a default.
+
+*A recommendation attached to this decision rather than a further question:* the
+cheap mitigation is to refuse rather than lose. `MCPService` can ask the
+registry whether the pad's panel is open and, when it is, fail the write with a
+message saying the pad is open in the interface — an honest refusal an agent can
+report, instead of a success that did nothing. It is a few lines, it needs the
+registry seam Sprint 9 needs anyway, and it is deleted the moment the
+registry-aware writer lands. Losing a write silently is the one failure mode
+this project's storage rules are otherwise written to prevent, and it would be
+odd to introduce it at the MCP boundary alone.
+
+**`create_pad` exposes the pad it creates.** Confirmed. A pad an agent made and
+then cannot read reads as a failure of the tool rather than as a safety
+property, so the pad is exposed at creation.
+
+This is consistent with `NFR-3.2` rather than an exception to it: the
+requirement is that no pad's content becomes readable to another process *as a
+result of a default setting*, and a pad that did not exist until the agent asked
+for it has no content the person put there. Existing pads remain opt-in, and the
+new pad is visible as exposed on the pad itself, so the person can see what was
+made and withdraw it.
 
 ## Blocked on a person, in summary
 

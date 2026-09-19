@@ -641,7 +641,7 @@ Agent (stdio client) ──▶ itchy-mcp shim ───────┘
 
 The shim does nothing but proxy, per `FR-8.2`. It reads the port and token from the same well-known location the app writes them to — the port from a small `endpoint.json` in the support directory, the token from the Keychain via a shared access group — and it holds no state and implements no protocol logic. If it grows a single protocol-aware line, that is a defect.
 
-Binding is to `127.0.0.1` explicitly, never `0.0.0.0` (`FR-8.3`). The default port is 8-something in the ephemeral-adjacent range, configurable, with the actual bound port recorded in `endpoint.json` so the shim needs no configuration.
+Binding is to `127.0.0.1` explicitly, never `0.0.0.0` (`FR-8.3`). The default port is 8899, configurable, with the actual bound port recorded in `endpoint.json` so the shim needs no configuration. 8899 sits well below the 49152–65535 range macOS allocates ephemerally, so it cannot collide with a port the system has handed to something else, and it is neither a registered service nor a common development default.
 
 ### 11.2 Authentication
 
@@ -696,6 +696,8 @@ Pads are additionally exposed as MCP *resources* with URIs of the form `itchy://
 ### 11.5 Exposure
 
 Not exposed by default, opted in per pad (`FR-8.7`). An unexposed pad is absent from `list_pads`, and `read_pad` against its identifier returns the same error as a nonexistent pad — deliberately the same, so that the tool surface does not confirm the existence of pads the caller may not read.
+
+A pad created through `create_pad` is exposed at creation, which is the one case where exposure is not a separate act by the person. It is consistent with `NFR-3.2` rather than an exception to it: the requirement is that no pad's content becomes readable to another process as a result of a *default setting*, and a pad that did not exist until an agent asked for it holds nothing the person put there. The alternative — an agent creating a pad it then cannot read — is a tool that reports success and produces something unusable. Pads the person made stay opt-in, and the new pad shows as exposed on the pad itself, so it can be seen and withdrawn.
 
 ### 11.6 Write path
 
