@@ -27,7 +27,10 @@ let package = Package(
     ),
     .testTarget(
       name: "ItchyServicesTests",
-      dependencies: ["ItchyServices"],
+      // The MCP product, because the end-to-end tests drive a real client over
+      // HTTP: a handshake asserted against our own transport would be asserting
+      // that two halves of one file agree.
+      dependencies: ["ItchyServices", .product(name: "MCP", package: "swift-sdk")],
       swiftSettings: [.swiftLanguageMode(.v6)]
     ),
   ]

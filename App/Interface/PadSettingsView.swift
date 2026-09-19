@@ -53,6 +53,20 @@ struct PadSettingsView: View {
               get: { coordinator.metadata(for: pad).isPinned },
               set: { coordinator.setPinned(pad.id, $0) }))
         }
+
+        Section {
+          Toggle(
+            MCPSettingsModel.exposureLabel,
+            isOn: Binding(
+              get: { coordinator.metadata(for: pad).isExposedToMCP },
+              set: { coordinator.setExposedToMCP(pad.id, $0) })
+          )
+          .accessibilityIdentifier("pad.settings.exposure")
+          PadSettingsNotice(
+            notice: MCPSettingsModel.exposureNote(
+              isExposed: coordinator.metadata(for: pad).isExposedToMCP,
+              serverEnabled: coordinator.settings.mcpServerEnabled))
+        }
       }
       .formStyle(.grouped)
 

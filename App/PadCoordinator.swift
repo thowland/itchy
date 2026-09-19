@@ -1,5 +1,6 @@
 import AppKit
 import ItchyCore
+import ItchyServices
 import Observation
 import SwiftUI
 
@@ -19,7 +20,18 @@ final class PadCoordinator {
   /// not reach across files for a setter.
   internal var settings = AppSettings()
 
-  @ObservationIgnored private let store: PadStore
+  /// What the agent server is doing (`FR-8.10`). Observed, so the menubar and
+  /// the settings section redraw when it starts, stops or fails.
+  internal var serverState: MCPServerState = .off
+  /// The bearer token, surfaced in settings (`FR-8.4`). Observed for the same
+  /// reason: regenerating it must change what the window shows.
+  internal var mcpToken: MCPToken?
+
+  /// Internal rather than private: the MCP extension builds a service around it.
+  @ObservationIgnored internal let store: PadStore
+  @ObservationIgnored internal var mcpHost: MCPServerHost?
+  @ObservationIgnored internal lazy var endpointStore = EndpointStore(layout: layout)
+  @ObservationIgnored internal let mcpKeychain = MCPTokenKeychain()
   @ObservationIgnored internal lazy var registry = PadWindowRegistry(store: store)
   /// Transient per-pad messages, which today means a transform that declined
   /// or failed (`FR-6.6`). Observed, so the status bar redraws when one lands.
@@ -54,6 +66,7 @@ final class PadCoordinator {
     let launch = signposter.beginLaunch()
     settings = settingsStore.load()
     registerHotKey()
+    startServerIfEnabled()
     reconcileLoginItem()
     await store.load(padLimit: settings.padLimit)
     await refreshFaults()

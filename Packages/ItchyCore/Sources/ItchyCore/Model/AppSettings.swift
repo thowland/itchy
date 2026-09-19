@@ -62,6 +62,17 @@ public struct AppSettings: Sendable, Codable, Equatable {
   /// them is still recognised when a pad closed at the time is reopened (D-19).
   public var formerEditorFontFamilies: [String]
 
+  /// Whether the loopback MCP server is running (`FR-8.10`).
+  ///
+  /// False by default, and the default is the requirement rather than a
+  /// preference: nothing about this application is reachable by another process
+  /// until someone has said so here.
+  public var mcpServerEnabled: Bool
+
+  /// The port the server is asked to bind (§11.1). The bound port may differ,
+  /// and it is the bound one that reaches `endpoint.json`.
+  public var mcpPort: Int
+
   public init(
     schemaVersion: Int = ItchyCore.schemaVersion,
     padLimit: Int = PadBounds.defaultCount,
@@ -76,7 +87,9 @@ public struct AppSettings: Sendable, Codable, Equatable {
     lastArchiveFingerprint: String? = nil,
     editorFontFamily: String? = nil,
     editorFontSize: Double = EditorFontBounds.defaultSize,
-    formerEditorFontFamilies: [String] = []
+    formerEditorFontFamilies: [String] = [],
+    mcpServerEnabled: Bool = false,
+    mcpPort: Int = MCPBounds.defaultPort
   ) {
     self.schemaVersion = schemaVersion
     self.padLimit = padLimit
@@ -92,6 +105,8 @@ public struct AppSettings: Sendable, Codable, Equatable {
     self.editorFontFamily = editorFontFamily
     self.editorFontSize = editorFontSize
     self.formerEditorFontFamilies = formerEditorFontFamilies
+    self.mcpServerEnabled = mcpServerEnabled
+    self.mcpPort = mcpPort
   }
 
   /// Returns settings with every value forced into its permitted range.
@@ -141,6 +156,10 @@ public struct AppSettings: Sendable, Codable, Equatable {
     formerEditorFontFamilies =
       try container.decodeIfPresent([String].self, forKey: .formerEditorFontFamilies)
       ?? fallback.formerEditorFontFamilies
+    mcpServerEnabled =
+      try container.decodeIfPresent(Bool.self, forKey: .mcpServerEnabled)
+      ?? fallback.mcpServerEnabled
+    mcpPort = try container.decodeIfPresent(Int.self, forKey: .mcpPort) ?? fallback.mcpPort
   }
 
   public func clamped() -> AppSettings {
@@ -150,6 +169,7 @@ public struct AppSettings: Sendable, Codable, Equatable {
     result.editorFontSize = EditorFontBounds.clamp(editorFontSize)
     result.formerEditorFontFamilies = Array(
       formerEditorFontFamilies.prefix(EditorFontBounds.formerFamilyLimit))
+    result.mcpPort = MCPBounds.clamp(mcpPort)
     return result
   }
 

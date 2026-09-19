@@ -3,9 +3,10 @@ import SwiftUI
 
 /// Settings window.
 ///
-/// Later sprints extend this rather than restructure it: General and Editor are
-/// real now, Agents arrives in Sprint 8 and Models in Sprint 10
-/// (specification §10). Validation and clamping live in `SettingsModel`.
+/// Later sprints extend this rather than restructure it: General, Editor,
+/// Agents and Backups are real now, and Models arrives in Sprint 10
+/// (specification §10). Validation and clamping live in `SettingsModel` and
+/// `MCPSettingsModel`.
 struct SettingsView: View {
   @Environment(PadCoordinator.self) private var coordinator
 
@@ -15,6 +16,8 @@ struct SettingsView: View {
         .tabItem { Label("General", systemImage: "gearshape") }
       EditorSettingsView()
         .tabItem { Label("Editor", systemImage: "textformat") }
+      AgentSettingsView()
+        .tabItem { Label(MCPSettingsModel.sectionTitle, systemImage: "point.3.filled.connected.trianglepath.dotted") }
       ArchiveSettingsView()
         .tabItem { Label("Backups", systemImage: "clock.arrow.circlepath") }
     }

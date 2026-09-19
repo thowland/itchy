@@ -61,4 +61,20 @@ enum MenuModel {
 
   /// What the menu shows when there are no pads at all.
   static let emptyTitle = "No pads yet"
+
+  /// What the menubar says about the agent server, or nothing when it is off
+  /// (`FR-8.10`, §11.8).
+  ///
+  /// A row rather than a branch in the view, for the same reason as every other
+  /// row here: the menu renders what this decides. Off produces no row at all —
+  /// the requirement is that the state is visible when there is a state, not
+  /// that a line of the menu is permanently spent saying "no".
+  static func serverRow(_ state: MCPServerState) -> String? {
+    switch state {
+    case .off: nil
+    case .starting: "Agents: starting…"
+    case .listening(let port): "Agents: listening on \(port)"
+    case .failed: "Agents: could not start"
+    }
+  }
 }

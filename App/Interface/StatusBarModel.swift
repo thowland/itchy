@@ -59,6 +59,18 @@ enum StatusBarModel {
     return segments
   }
 
+  /// Whether the exposure segment is worth the space (`NFR-3.2`, §11.5).
+  ///
+  /// An exposed pad must say so, always — that is the requirement, and it holds
+  /// even when the server is switched off, because "exposed but unreachable"
+  /// and "not exposed" are different states and the person is entitled to know
+  /// which this pad is in. A pad that is not exposed says "private" only while
+  /// the server is running, when the distinction is live; before that it would
+  /// be a word on every pad answering a question nobody has asked.
+  static func showsExposure(serverEnabled: Bool, isExposed: Bool) -> Bool {
+    serverEnabled || isExposed
+  }
+
   static func routingLabel(_ policy: RoutingPolicy) -> String {
     switch policy {
     case .localOnly: "local only"

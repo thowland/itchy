@@ -29,7 +29,11 @@ struct PadPanelContent: View {
       HStack(spacing: 0) {
         PadStatusBar(
           segments: StatusBarModel.segments(
-            for: current, fault: fault, notice: coordinator.notices[pad.id]))
+            for: current, fault: fault,
+            showsExposure: StatusBarModel.showsExposure(
+              serverEnabled: coordinator.settings.mcpServerEnabled,
+              isExposed: current.isExposedToMCP),
+            notice: coordinator.notices[pad.id]))
         FormattingControls(formatting: editor.formatting, mode: current.mode) { trait in
           editor.toggle(trait)
         }
