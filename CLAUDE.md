@@ -58,6 +58,10 @@ it is the kind of rule that erodes silently.
    policies that are meant to agree.
 4. **Coverage exclusions pass the complexity cap** (D-11, §15.3). Exclusion is
    earned by triviality.
+5. **No test reaches the real Keychain** (D-26). Opening it asks the person
+   running the suite for permission, and a run that waits for an answer hangs —
+   unanswerably, on CI. `MCPTokenStore` is the seam; tests get
+   `InMemoryTokenStore`. The rule has no exception mechanism on purpose.
 
 ## Testability doctrine (D-11)
 
@@ -179,9 +183,10 @@ that plainly exists.
 ## Where things are
 
 ```
-App/            menubar, panels, text bridge, settings, coordinator
+App/            menubar, panels, text bridge, settings, help, coordinator
 Packages/
-  ItchyCore/    model, store, atomic writes, migrations. No UI framework
+  ItchyCore/    model, store, atomic writes, migrations, the debug log.
+                No UI framework
   ItchyServices/transforms, MCP server and its loopback transport, model client
                 (the model client is still to come)
 Harness/        itchyctl — drives the store without the interface

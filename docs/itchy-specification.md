@@ -830,6 +830,10 @@ The naming convention is load-bearing, because it is what makes a misplacement v
 | SDK boundary | `MCPArgumentCodec`, `MCPResultCodec`, `MCPToolCodec` | SDK `Value` arguments to the strings the router takes, results to what an agent reads, the tool schemas derived from `MCPToolSurface` | Register handlers, hand over the result |
 | Agent writes | `OpenPadPolicy.admit(isOpen:writerReachesOpenPads:)`, `AgentWritePlan` | Whether a write proceeds or is refused as unsafe; the range it covers and what the undo step is called (D-25) | `MCPService` and the applier perform it |
 | Plain-text extraction | `AttachmentPlaceholder` | The placeholder's form and whether it needs a line of its own (`FR-8.6`, §11.4) | `ContentCodec` walks the attributed string |
+| The diagnostic log | `LogEvent` (closed vocabulary), `LogLine.format(_:at:)`, `LogRotation.decide(...)` | What may be said at all, how a line reads, when the file starts over (D-26) | `DebugLog` holds the handle and appends |
+| Archiving | `ArchivePolicy.due(...) -> ArchiveAttempt?` | Why there is no backup — off, not due, unchanged — rather than only whether there is one (D-26) | The coordinator copies and prunes |
+| Help | `HelpBook.lines(for:)`, `HelpWeight` | Which topics exist, what a topic renders to, and how each line is set (D-26) | `HelpView` draws the lines in order |
+| Token storage | `TokenStoreResolver.store(for:)` | Whether a launch gets the Keychain or an in-memory store, so no test can open the real one (D-26) | `MCPTokenKeychain` performs |
 | Agent settings, menubar state | `MCPSettingsModel`, `MenuModel.serverRow(_:)` | Port range and clamping, what each server state says, whether it reads as a warning, when the bound port is named, what the menubar shows (`FR-8.4`, `FR-8.10`, §11.8) | Bind controls; render the row |
 | Settings | `SettingsModel` | Validation and clamping, including the pad-count ceiling | Bind controls |
 | Formatting controls | `FormattingPlan` | Which traits read as on, whether a toggle applies or removes, which chords are shortcuts, availability by mode (D-20) | `TextFormatter` reads the selection and applies the change through the text view's undo |

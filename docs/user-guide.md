@@ -236,6 +236,25 @@ until you look at it.
 line reading `[image 1240×820]`. It is told something is there rather than being
 quietly given a pad with a hole in it.
 
+## Help
+
+**Itchy Help**, from the menubar or from the **Help** button on the About
+screen, covers all of this in more detail: getting started, working with pads,
+transforms, agents, backups, and where your files are. ⌘? opens it.
+
+## If something is misbehaving
+
+**Settings → General** has a switch for a diagnostic log. It is off by default.
+When you turn it on, Itchy writes what it is doing to `/tmp/itchy.log` — which
+backups it took and which it skipped and why, which agent requests arrived and
+what came of them, which transforms ran. It is the quickest way to find out why
+something did not happen.
+
+It records what happened, to which pad by name, and how many characters were
+involved. It does not contain the text of your pads, anything an agent wrote, or
+the agent token. Anyone with an account on your Mac can read `/tmp`, so switch
+the log off and delete the file when you are done with it.
+
 ## About
 
 Choose **About Itchy** from the menu to see which version you have. Include it

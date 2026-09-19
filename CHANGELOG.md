@@ -34,6 +34,14 @@ About is the commit count.
 - Reading a pad that contains an image now returns the text with `[image
   1240×820]` in its place, rather than a character that means nothing. The same
   placeholder appears in the pad's plain-text copy on disk.
+- Help, from the menubar or from About: how to set up agents and backups, what
+  the transforms do, how pads work, and where your files are
+  ([D-26](docs/decisions/D-26-diagnostic-log-and-help.md)).
+- An optional diagnostic log, in **Settings → General**, off by default. When
+  on, Itchy records what it did — backups taken and skipped and why, agent
+  requests and where each write went, transforms applied and declined — to
+  /tmp/itchy.log. It records how much was written, never what: pad contents and
+  the agent token cannot appear in it.
 - Licensed under the GNU GPL, version 3.
 - A user guide, and the README split into user, development and release
   documentation.
@@ -47,6 +55,11 @@ About is the commit count.
   event where it meant to wait for a particular one.
 - `list_pads` reported the size of the pad's directory under a heading that said
   "characters", which for a five-character pad was several hundred.
+- A first launch, with no pads yet, recorded a failed backup. There was simply
+  nothing to back up, which is not the same thing.
+- Itchy took a backup twice on every launch when the daily backup was switched
+  off. The second never did anything, because nothing had changed since the
+  first a moment earlier.
 
 ## 0.1.1
 
