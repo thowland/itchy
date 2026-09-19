@@ -141,6 +141,62 @@ check() {
   return $ready
 }
 
+# What the notary service checks that codesign does not.
+#
+# `codesign --verify` is happy with a build the notary service will refuse, and
+# the refusal arrives minutes later on the far side of an upload. These are the
+# two conditions that have actually bitten: a debug entitlement injected into a
+# Release build by a setting whose default is wrong for distribution, and a
+# signature with no secure timestamp.
+notarisable() {
+  local app="$1" ok=0 entitlements description
+
+  # Captured, not piped. `grep -q` exits at the first match, the write end of
+  # the pipe gets SIGPIPE, and under `pipefail` a *successful* match becomes a
+  # non-zero pipeline — so the check reports the opposite of what it found. It
+  # cost twenty minutes here, having been written the obvious way first.
+  entitlements=$(codesign -d --entitlements - --xml "$app" 2>/dev/null)
+  description=$(codesign -dv --verbose=4 "$app" 2>&1)
+
+  case "$entitlements" in
+    *com.apple.security.get-task-allow*)
+      fail "the build carries com.apple.security.get-task-allow"
+      warn "  the notary service refuses any binary with it — it is what lets a"
+      warn "  debugger attach. Set CODE_SIGN_INJECT_BASE_ENTITLEMENTS to NO for"
+      warn "  Release; Xcode injects it by default."
+      ok=1
+      ;;
+  esac
+
+  case "$description" in
+    *"Timestamp="*) ;;
+    *)
+      fail "the signature has no secure timestamp"
+      warn "  notarisation requires one. Sign with --timestamp."
+      ok=1
+      ;;
+  esac
+
+  case "$description" in
+    *flags=*runtime*) ;;
+    *)
+      fail "the hardened runtime is not enabled"
+      warn "  notarisation requires it (NFR-4.2)."
+      ok=1
+      ;;
+  esac
+
+  case "$description" in
+    *"Authority=Developer ID Application"*) ;;
+    *)
+      fail "not signed by a Developer ID Application certificate"
+      ok=1
+      ;;
+  esac
+
+  return $ok
+}
+
 build() {
   local id
   id=$(identity)
@@ -157,9 +213,10 @@ build() {
     -derivedDataPath "$DD" \
     CODE_SIGN_IDENTITY="$id" CODE_SIGN_STYLE=Manual \
     OTHER_CODE_SIGN_FLAGS="--timestamp --options=runtime" \
-    build 2>&1 | "$(dirname "$0")/xcnoise.sh" || exit 1
+    build -quiet 2>&1 | "$(dirname "$0")/xcnoise.sh" || exit 1
   cp -R "$DD/Build/Products/Release/$APP_NAME.app" "$EXPORT_DIR/" || exit 1
   codesign --verify --deep --strict --verbose=2 "$EXPORT_DIR/$APP_NAME.app" || exit 1
+  notarisable "$EXPORT_DIR/$APP_NAME.app" || exit 1
   pass "signed and verified at $EXPORT_DIR/$APP_NAME.app"
 }
 

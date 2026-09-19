@@ -42,6 +42,13 @@ settings:
       # Required for notarisation, and compatible with running unsandboxed
       # (NFR-4.2, CON-6).
       ENABLE_HARDENED_RUNTIME: YES
+      # Without this, Xcode injects com.apple.security.get-task-allow — the
+      # entitlement that lets a debugger attach — into the Release entitlements
+      # and signs it in. The notary service rejects any binary carrying it, so
+      # the build signs and verifies perfectly on this machine and is refused
+      # after the upload. The default is YES and it is wrong for anything
+      # distributed; Debug keeps it, because XCTest injection needs it.
+      CODE_SIGN_INJECT_BASE_ENTITLEMENTS: NO
 
 # Debug signing is indirected through Config/Debug.xcconfig so that an ad-hoc
 # build still works everywhere, while `make sign-setup` gives this machine a

@@ -110,6 +110,21 @@ make dmg          # package a signed disk image
 The hardened runtime is required for notarisation and applies to Release builds
 only. It blocks XCTest bundle injection, so Debug builds do not use it.
 
+`make release` checks the signed build for the three things the notary service
+refuses and `codesign --verify` does not notice, before it says it succeeded:
+
+- **`com.apple.security.get-task-allow`**, the entitlement that lets a debugger
+  attach. Xcode injects it unless `CODE_SIGN_INJECT_BASE_ENTITLEMENTS` is `NO`,
+  and its default is `YES` — so a Release build signs and verifies perfectly on
+  the machine that made it and is refused minutes after the upload. The setting
+  is `NO` for Release in `project.yml`, and Debug keeps it because XCTest
+  injection needs it.
+- **A secure timestamp**, which `--timestamp` supplies.
+- **The hardened runtime**, and a Developer ID Application authority.
+
+Each is cheap to check here and expensive to discover at the far end of a
+submission.
+
 Verify the result on a machine that has never seen the build: it should open
 from Finder without a Gatekeeper override. That check is on the manual list
 because it cannot be made from the machine that produced the build.
