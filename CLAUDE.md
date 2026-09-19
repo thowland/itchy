@@ -5,9 +5,10 @@ non-activating panels, styled text with images, indefinite retention, and — th
 differentiating position — pads exposed as a surface software agents can read
 from and write to over MCP.
 
-**Status: R1 feature-complete, not yet shippable.** Sprints 0–5 are done. What
-remains before the first release is signing (see *Blocked on a person* below),
-then a month of daily use before Sprint 6 opens.
+**Status: R1 feature-complete, not yet shippable.** Sprints 0–5 are done, and so
+are Sprint 6 (transforms), Sprint 8 (the MCP server) and all of Sprint 9 but the
+stdio shim. What remains before the first release is signing (see *Blocked on a
+person* below), then a month of daily use.
 
 ## Documents, in precedence order
 
@@ -181,7 +182,8 @@ that plainly exists.
 App/            menubar, panels, text bridge, settings, coordinator
 Packages/
   ItchyCore/    model, store, atomic writes, migrations. No UI framework
-  ItchyServices/transforms, MCP server, model client (mostly still to come)
+  ItchyServices/transforms, MCP server and its loopback transport, model client
+                (the model client is still to come)
 Harness/        itchyctl — drives the store without the interface
 Shim/           itchy-mcp (Sprint 9)
 Scripts/        arch-lint, coverage, test, release, make-appicon
@@ -193,20 +195,29 @@ indexing of every pad, with nothing failing (D-16).
 
 ## Blocked on a person
 
-All four framework spikes are resolved (D-15, D-16, D-17). Two things still
-stand between R1 and a shippable build, and neither can be done from a script:
+All four framework spikes are resolved (D-15, D-16, D-17). Three things still
+need a person, and none can be done from a script:
 
 1. **No Developer ID Application certificate on this machine**, and no
    `notarytool` credential profile. `NFR-4.2` needs both. `make ship-check`
    reports what is missing, and `docs/releasing.md` has the provisioning steps.
+   This also blocks the stdio shim (`FR-8.2`): two binaries reading one Keychain
+   item need a shared access group, and that needs a shared signing team.
 2. **The global hotkey's live firing is unconfirmed.** Registration is verified
    without the Accessibility permission (D-17), but a synthesised keypress
    cannot be posted from a test process. One real ⌃⌥Space press settles it.
+3. **`FR-8.3`'s acceptance criterion needs a second machine.** The suite proves
+   the mechanism — the listener answers on loopback and on no other local
+   address — but "a connection from another machine fails" cannot be run from
+   the machine under test. It is on the manual checklist in `§14.6`.
 
 ## What is next
 
-Sprint 6 (transforms) and Sprint 7 (provenance), but not immediately. The plan's
-§9 puts a month of daily use between R1 and the second release, deliberately:
-the measure of this project is whether working text actually stops being routed
-through messages-to-self, and that cannot be read while features are still
-arriving.
+Sprint 7 (provenance) and Sprint 10 (model routing). The plan's §9 puts a month
+of daily use between R1 and the second release, deliberately: the measure of
+this project is whether working text actually stops being routed through
+messages-to-self, and that cannot be read while features are still arriving.
+
+Now that the MCP server runs, that month is also the first real test of the
+thing the project exists for. `docs/mcp-remaining-work.md` is down to the shim
+and the two acceptance criteria that cannot be run from this machine.

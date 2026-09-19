@@ -11,7 +11,9 @@ remove it.
 
 > **Status: early, and not yet signed for distribution.** Version 0.1.x is in
 > daily use by its author. There is no notarised release yet, so for now Itchy
-> is built from source. The agent integration described below has not been built.
+> is built from source. The agent integration works over HTTP; the stdio shim,
+> for agents that cannot speak HTTP, is waiting on the same signing certificate
+> the release is.
 
 ## What it does
 
@@ -30,6 +32,12 @@ remove it.
   you choose, and zero is one of the choices.
 - **Your files, readable.** Pads are plain files on your Mac, kept out of
   Spotlight, and Itchy makes no network connections.
+- **Pads an agent can read and write — if you say so.** Switch the agent server
+  on in Settings, expose a pad, and a coding agent can read it, append to it and
+  replace it over the Model Context Protocol. It listens on this machine only,
+  every request needs a token, and nothing is exposed until you expose it. An
+  agent's write into a pad you have open is one undo from reverted, and a pad
+  something else wrote to says so.
 
 ## What it will not become
 
@@ -39,9 +47,10 @@ application and will not grow into one. There is no document library, no
 folders, no tags and no search across everything, because the whole collection
 fits in a glance.
 
-The longer-term idea is that pads become a surface both you and a coding agent
-can read and write, over the Model Context Protocol. That is the reason the
-project exists, and [the vision document](docs/itchy-vision.md) explains why.
+The idea the project exists for is that pads become a surface both you and a
+coding agent can read and write, over the Model Context Protocol —
+[the vision document](docs/itchy-vision.md) explains why. That surface is five
+tools and nothing else, and the narrowness is the point.
 
 ## Installing
 

@@ -193,6 +193,49 @@ To be safe, copy the current `pads.noindex` folder somewhere else first.
   any text editor.
 - Backups contain pads you have deleted, as described above.
 
+## Letting an agent use your pads
+
+A coding agent can read and write pads, over the Model Context Protocol. None of
+it happens until you switch it on, and then only for the pads you choose.
+
+**Switch the server on.** **Settings → Agents**, then *Let agents read and write
+exposed pads*. The line beneath says what it is doing: listening on
+`127.0.0.1`, and on which port. That address means this machine and no other —
+nothing on your network can reach it, and neither can anything on the internet.
+The menubar says so too while it is running.
+
+**Give the agent the token.** Beside the switch is a token. Press **Show** to
+read it or **Copy** to put it on the clipboard, and give it to the agent as a
+bearer token. A request without it is refused, and told nothing about what pads
+exist. **Regenerate** makes a new one and stops the old one working straight
+away, which is what to do if you have pasted it somewhere you should not have.
+
+**Expose the pads you want it to see.** A pad is private until you say
+otherwise. Open the pad's own settings — the **⋯** menu on the pad — and turn on
+*Let agents read and write this pad*. An exposed pad says **exposed** at the
+bottom of its window, so you can tell at a glance.
+
+A pad you have not exposed is not merely hidden: an agent asking for it by name
+is told there is no such pad, which is the same answer it gets for a pad that
+does not exist. It cannot use the tools to find out what you have.
+
+**What an agent can do.** Five things: list the exposed pads, read one, append
+to one, replace one, and create a new pad. That is the whole of it. A pad an
+agent creates is exposed to it — otherwise it could not read back what it just
+wrote — and it appears in your menu like any other pad, marked exposed, and you
+can turn that off or delete it.
+
+**What you will see.** A pad something other than you wrote to shows a banner
+saying who wrote, how much, and when. If the pad was open at the time, the
+banner's **Undo** reverts that write and nothing else, and the Edit menu names
+it. If the pad was closed, there is nothing to undo — the pad's undo history
+starts when you open it — so the banner says so, and the menubar marks the pad
+until you look at it.
+
+**Images.** An agent reads plain text, so a picture in a pad comes through as a
+line reading `[image 1240×820]`. It is told something is there rather than being
+quietly given a pad with a hole in it.
+
 ## About
 
 Choose **About Itchy** from the menu to see which version you have. Include it
@@ -211,6 +254,18 @@ one.
 **Itchy doesn't start at login.** Check that it is in your **Applications**
 folder, that **Start Itchy at login** is on, and that Itchy is allowed in
 **System Settings → General → Login Items**.
+
+**The agent server says a port is already in use.** Something else on your Mac
+is on that port. Change it in **Settings → Agents** — any number will do — and
+the server restarts on the new one.
+
+**My agent stopped working.** Check that the server is still switched on, that
+the pad is still exposed, and that the agent has the current token. Regenerating
+the token stops the old one working immediately, including for agents already
+connected.
+
+**An agent says a pad is open in Itchy.** Only tools that cannot reach an open
+window say this, `itchyctl` among them. Close the pad and try again.
 
 **A pad says its content is unreadable.** Itchy found something wrong with that
 pad's files and will not open an empty pad over them, because saving would

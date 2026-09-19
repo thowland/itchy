@@ -40,3 +40,4 @@ New decisions:
 | [D-22](D-22-versioning.md) | Semantic versions biased toward patches, set in an xcconfig; About shows version and build |
 | [D-23](D-23-licence-and-public-repository.md) | GPL-3.0; documentation split by reader for a public repository |
 | [D-24](D-24-transform-layer.md) | JSON reformatted at the token level; failures shown in the status bar; the applier replaces rather than inserts; routing enforced from Sprint 6 |
+| [D-25](D-25-mcp-server.md) | The MCP server: 8899 by default, a deliberate HTTP subset, one session per client, `endpoint.json` written by the store, refusal over silent loss |
