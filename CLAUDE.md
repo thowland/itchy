@@ -5,12 +5,14 @@ non-activating panels, styled text with images, indefinite retention, and — th
 differentiating position — pads exposed as a surface software agents can read
 from and write to over MCP.
 
-**Status: R1 shippable, and demonstrated.** Sprints 0–5 are done, and so are
+**Status: R1 shipped-ready, every acceptance criterion demonstrated.** Sprints 0–5 are done, and so are
 Sprint 6 (transforms), Sprint 8 (the MCP server) and all of Sprint 9 but the
 stdio shim. On 19 September 2026 a signed, notarised 0.1.1 disk image opened on
 a Mac that had never seen it, with no Gatekeeper override, and ran correctly
-through its smoke tests on macOS 15 — which closes `NFR-4.2` and was the last
-thing standing between R1 and a release.
+through its smoke tests on macOS 15. ⌃⌥Space fires there, and a connection from
+a second machine to the agent server is refused — so `NFR-4.2`, `FR-1.4` and
+`FR-8.3` are all demonstrated, and `§14.6`'s manual checklist is empty for the
+first time.
 
 What comes next is the month of daily use the plan's §9 calls for, not more
 features.
@@ -205,34 +207,27 @@ indexing of every pad, with nothing failing (D-16).
 
 ## Blocked on a person
 
-All four framework spikes are resolved (D-15, D-16, D-17).
+Nothing, for the first time. All four framework spikes are resolved (D-15, D-16,
+D-17), the provisioning is done, and every item on the manual checklist in
+`§14.6` passed for 0.1.1 on 19 September 2026:
 
-**The provisioning is done, and the result is verified.** `make ship-check`
-reports ready: a Developer ID Application certificate — `Timothy Howland
-(HPJD2255AP)` — and a `notarytool` credential profile both exist on this
-machine. `make release && make notarise && make dmg` produces a disk image that
-has been opened on a clean Mac with no Gatekeeper override, so `NFR-4.2` is
-demonstrated rather than merely satisfiable.
+- A signed, notarised image opened on a Mac that had never seen the build, with
+  no Gatekeeper override (`NFR-4.2`).
+- The application ran correctly on macOS 15, which is the floor D-27 moved it
+  to, so that floor is observed rather than compiled-for.
+- ⌃⌥Space fires (`FR-1.4`). Registration was verified in the suite from Sprint
+  5; the firing could not be, because a synthesised keypress cannot be posted
+  from a test process. That gap is closed.
+- A connection to the agent server's port from a second machine failed to
+  establish (`FR-8.3`).
 
-Two consequences beyond the release itself. The stdio shim (`FR-8.2`) is
-unblocked: two binaries reading one Keychain item need a shared access group,
-which needs a shared signing team, and there now is one. And `make sign-setup`
-can give Debug builds a stable designated requirement, which is what stops TCC
-re-prompting on every rebuild.
+Three of those had been outstanding since the sprints that claimed them, for the
+same reason: none can be run from the machine under test. Keep the list — the
+next release needs it run again — but it is empty now.
 
-What still needs a person is verification rather than provisioning, and neither
-can be done from a script:
-
-1. **The global hotkey's live firing is unconfirmed.** Registration is verified
-   without the Accessibility permission (D-17), but a synthesised keypress
-   cannot be posted from a test process. One real ⌃⌥Space press settles it —
-   and now that a build runs on macOS 15, pressing it there settles the D-27
-   question at the same time.
-2. **`FR-8.3`'s acceptance criterion needs a second machine.** The suite proves
-   the mechanism — the listener answers on loopback and on no other local
-   address — but "a connection from another machine fails" cannot be run from
-   the machine under test. It is on the manual checklist in `§14.6`. There is
-   now a second Mac to run it from.
+The only work that is *waiting* rather than blocked is the stdio shim
+(`FR-8.2`), which the Developer ID certificate unblocked and which nobody has
+written.
 
 ## What is next
 

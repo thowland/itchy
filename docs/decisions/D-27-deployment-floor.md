@@ -71,10 +71,10 @@ concerned and unverified as far as behaviour is concerned, until somebody runs
 it there. `§14.6`'s manual checklist gains a line saying so.
 
 *Verified 19 September 2026.* A notarised 0.1.1 image was opened on a Mac
-running macOS 15 and the application ran correctly through its smoke tests. The
-floor is now observed rather than assumed. One item on that line is still open:
-whether ⌃⌥Space fires there, which is the same manual check the hotkey has
-carried since D-17 and is not specific to the floor.
+running macOS 15; the application ran correctly through its smoke tests, and
+⌃⌥Space fires there. The floor is observed rather than assumed, and the spike
+behaviours listed above — the hotkey registering without the Accessibility
+permission in particular — hold below macOS 26 as well as on it.
 
 ## What would reverse it
 

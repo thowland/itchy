@@ -93,7 +93,7 @@ Itchy SHOULD offer to start at login and SHOULD default to doing so, on the grou
 
 **FR-1.4 — Global hotkey to last-used pad** *(R1, MUST)*
 A user-configurable global hotkey MUST open the most recently used pad and bring its panel forward and focused, from any application, including over a fullscreen application. Pressing the hotkey while that pad's panel is already frontmost and focused MUST dismiss it.
-*Acceptance:* with a fullscreen application frontmost, the hotkey produces a focused pad accepting typed input; a second press hides it; the pad chosen is the one most recently edited or opened.
+*Acceptance:* with a fullscreen application frontmost, the hotkey produces a focused pad accepting typed input; a second press hides it; the pad chosen is the one most recently edited or opened. **Demonstrated 19 September 2026** for 0.1.1, by hand on macOS 15. Registration was verified in the suite from Sprint 5 (D-17); the firing could not be, because a synthesised keypress cannot be posted from a test process. This was the press.
 
 **FR-1.5 — Settings** *(R1, MUST)*
 A settings window MUST exist and MUST be reachable from the menubar. In R1 it carries the login item, the hotkey, and the pad count; later releases extend it rather than restructure it.
@@ -332,7 +332,7 @@ Because Itchy is a long-running application that owns the state, it MUST NOT rel
 
 **FR-8.3 — Loopback only** *(R3, MUST)*
 The endpoint MUST bind to the loopback interface only and MUST NOT be reachable from another host.
-*Acceptance:* a connection attempt from another machine on the network fails to establish.
+*Acceptance:* a connection attempt from another machine on the network fails to establish. **Demonstrated 19 September 2026** for 0.1.1, from a second Mac on the same network with the agent server enabled. The suite covers the mechanism — the listener answers on loopback and on no other local address — but the criterion itself cannot be run from the machine under test.
 
 **FR-8.4 — Authenticated** *(R3, MUST)*
 Requests MUST be authenticated with a token held in the Keychain and surfaced in settings. The token MUST be regenerable, and regenerating it MUST invalidate the previous token.

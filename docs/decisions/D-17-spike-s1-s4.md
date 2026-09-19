@@ -2,6 +2,10 @@
 
 *Run before Sprint 5, alongside S-3.*
 
+*Closed 19 September 2026: the live firing S-1 left to a manual check has been
+confirmed by hand on macOS 15, so `FR-1.4`'s acceptance criterion is met and the
+behaviour is known below macOS 26 as well as on it (D-27).*
+
 ## S-1 — Carbon `RegisterEventHotKey` on macOS 26
 
 D-6 chose `RegisterEventHotKey` over `NSEvent.addGlobalMonitorForEvents` because
