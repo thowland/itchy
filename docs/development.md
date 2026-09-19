@@ -8,7 +8,8 @@ Building, testing and troubleshooting Itchy. For how to use it, see the
 
 | | |
 |---|---|
-| macOS | 26 or later. There is no back-compatibility story and there will not be one |
+| macOS, to run Itchy | 15 or later (D-27). Below that there is no back-compatibility story and there will not be one |
+| macOS, to build it | 26 or later, because Xcode 26 requires it |
 | Xcode | 26 or later, for the toolchain and for `swift-format` |
 | SwiftLint | `brew install swiftlint` |
 | XcodeGen | `brew install xcodegen` |

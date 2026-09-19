@@ -1,48 +1,102 @@
 # Itchy
 
-A menubar scratchpad for macOS. A small fixed set of pads, each a floating
+A menubar scratchpad for macOS: a small fixed set of pads, each a floating
 window you can summon over whatever you are working in, type or paste into, and
-close without being asked to name or file anything. Content stays until you
-remove it.
+close without being asked to name or file anything.
+
+What makes it worth building rather than another notes application is what the
+pads are connected to. Text in a pad can be reshaped in place by a transform —
+pretty-print the JSON, decode the base64 field, sort the lines — or handed to a
+language model to tidy or summarise, and the same pad can be opened up to a
+coding agent that reads and writes it over the Model Context Protocol. The pad
+is the shared surface: you work in it, and so does whatever else you have
+running.
 
 <p align="center">
   <img src="docs/images/pad-panel.png" width="420" alt="A pad panel holding a tracking number, a JSON fragment and a note">
 </p>
 
-> **Status: early, and not yet signed for distribution.** Version 0.1.x is in
-> daily use by its author. There is no notarised release yet, so for now Itchy
-> is built from source. The agent integration works over HTTP; the stdio shim,
-> for agents that cannot speak HTTP, is not written yet.
+> **Status: version 0.1.x, in daily use by its author.** Builds are signed with
+> a Developer ID and notarised, so one opens on a Mac that has never seen it,
+> but there is no published download yet and you build it from source. Runs on
+> macOS 15 or later.
 
-## What it does
+## A session
 
-- **A handful of pads, one click away.** Nine by default, never more than twenty,
-  listed under the cat in the menubar.
-- **Pads float.** A pad opens over whatever you are doing, including fullscreen
-  applications, and stays where you put it.
-- **One hotkey.** ⌃⌥Space brings back the pad you used last, from anywhere.
-  Press it again to put the pad away.
-- **Styled text and pictures, or plain text.** Paste from a browser or a word
-  processor and the formatting survives, screenshots included. Switch a pad to
-  plain mode for code and JSON, where smart quotes are never welcome.
-- **Nothing to save.** No titles, folders or save prompts. Close a pad and it is
-  still there next time. Name a pad only if you want to.
-- **Backups you control.** A copy is kept when something has changed, as many as
-  you choose, and zero is one of the choices.
-- **Your files, readable.** Pads are plain files on your Mac, kept out of
-  Spotlight, and Itchy makes no network connection of its own until you
-  configure something that needs one.
-- **A model can rewrite a pad, if you set one up.** Tidy prose, summarise, or
-  turn it into bullet points, from the same menu as the instant transforms.
-  Itchy looks for a model on your Mac first and will not fall back to a remote
-  service when the local one is unavailable; each pad decides for itself whether
-  its text may go remote at all, and local only is the default.
-- **Pads an agent can read and write — if you say so.** Switch the agent server
-  on in Settings, expose a pad, and a coding agent can read it, append to it and
-  replace it over the Model Context Protocol. It listens on this machine only,
-  every request needs a token, and nothing is exposed until you expose it. An
-  agent's write into a pad you have open is one undo from reverted, and a pad
-  something else wrote to says so.
+A request fails. You paste the response body into a pad, where it arrives as one
+unreadable line, and pretty-print it from the wand menu. The interesting part is
+a base64 field, so you select that and decode it in place. You add two lines of
+your own underneath about what you think is going on.
+
+Then you expose the pad and tell Claude Code to look at it. It reads the pad,
+works out that the token expired four hours ago, and appends what it found below
+your notes — one undo away if you disagree. Nothing was copied between windows,
+and there is no third place where the conversation lives.
+
+Everything below is detail about how each of those parts behaves.
+
+## The pad
+
+Nine pads by default and never more than twenty, listed under the cat in the
+menubar. A pad opens over whatever you are doing, including a fullscreen
+application, and stays where you put it without pulling focus or rearranging
+anything behind it. ⌃⌥Space brings back the one you used last from inside any
+application, and pressing it again puts it away.
+
+Styled pads keep formatting and images, so a paste from a browser arrives intact
+with its screenshots. Plain pads hold text and nothing else, which is what you
+want for code and JSON where smart quotes are never welcome.
+
+There is nothing to save, no title to invent and no folder to choose. Close a
+pad and it is still there next time. Pads are ordinary files in your Library,
+readable with any editor and kept out of Spotlight, and Itchy makes no network
+connection of its own until you configure something that needs one.
+
+## Transforms
+
+Twelve of them, from the wand button on the pad: flatten styling, upper and
+lower and title case, pretty-print and minify JSON, encode and decode base64,
+encode and decode URL components, trim whitespace, sort lines. Each acts on the
+selection if there is one and the whole pad if there is not, and each is a single
+undo step that the Edit menu names.
+
+A transform is offered only when it would work on the text in front of you, so
+Decode Base64 is greyed out on text that is not base64 and says why when you
+hover it. The alternative is a menu that offers everything and then fails, which
+teaches you to distrust the menu.
+
+## Models
+
+Three more transforms in the same menu, once you have configured a model: tidy
+the prose, summarise it, or turn it into bullet points. They replace text with
+text and undo in one step like everything else. There is no chat panel and no
+conversation view, because a scratchpad that answers questions grows a reply
+field, then a history, and ends up as a chat window with a save button.
+
+Itchy looks for a model on your Mac first — Ollama, or anything speaking its
+API — under every setting and on every pad, because a model running locally
+sends nothing anywhere. If the local one cannot be reached, Itchy says so rather
+than sending your text to a remote service instead, and that holds even on a pad
+you have set to allow remote work. Each pad carries its own answer to whether
+its text may go remote at all: local only, allowed, or ask me each time, which
+asks before anything leaves and names where it is going.
+
+## Agents
+
+Switch the agent server on, expose a pad, and a coding agent can list, read,
+append to, replace and create pads over the Model Context Protocol. It listens
+on `127.0.0.1` and nothing else, every request carries a token you can
+regenerate, and no pad is reachable until you expose it individually.
+
+Five tools and no sixth. An agent cannot run your transforms, reach your models,
+or see a pad you have not opened up, and widening that surface is a decision
+somebody has to take rather than a line somebody adds.
+
+When an agent writes to a pad you have open, the write lands in the window as a
+single named undo. When it writes to one you have closed, the pad says so the
+next time you look at it, and the menubar marks it until you do. Clients that
+run on your Mac work directly — Claude Code, Codex, and Claude Desktop through
+the small shim that ships inside the application.
 
 ## What it will not become
 
@@ -52,14 +106,12 @@ application and will not grow into one. There is no document library, no
 folders, no tags and no search across everything, because the whole collection
 fits in a glance.
 
-The idea the project exists for is that pads become a surface both you and a
-coding agent can read and write, over the Model Context Protocol —
-[the vision document](docs/itchy-vision.md) explains why. That surface is five
-tools and nothing else, and the narrowness is the point.
+[The vision document](docs/itchy-vision.md) explains why the limit is the
+design, and what the project is measured by.
 
 ## Installing
 
-There is no signed download yet. Build it from source:
+There is no published download yet, so build it:
 
 ```bash
 brew install swiftlint xcodegen
@@ -68,17 +120,18 @@ make app
 ```
 
 Then drag `build/Itchy.app` into `/Applications` and open it. Itchy has no Dock
-icon and no main window; look for the cat in the menubar. It only offers to start
-at login when it runs from `/Applications`.
+icon and no main window; look for the cat in the menubar. It only offers to
+start at login when it runs from `/Applications`.
 
-The [user guide](docs/user-guide.md) covers everything from there.
+The [user guide](docs/user-guide.md) covers everything from there, and **Itchy
+Help** in the menubar covers the same ground inside the application.
 
 ## Building from source
 
 | | |
 |---|---|
-| macOS | 26 or later |
-| Xcode | 26 or later, which also provides `swift-format` |
+| To run | macOS 15 or later |
+| To build | macOS 26 and Xcode 26, which also provides `swift-format` |
 | SwiftLint, XcodeGen | `brew install swiftlint xcodegen` |
 
 ```bash
@@ -89,7 +142,9 @@ make gate        # lint, architecture checks, tests and coverage
 make help        # everything else
 ```
 
-[docs/development.md](docs/development.md) covers the rest: the test suites and
+The gate is what a change has to pass: SwiftLint and `swift-format` in strict
+mode, six architecture checks, every test, and a coverage floor of 80 per cent.
+[docs/development.md](docs/development.md) covers the rest — the test suites and
 their permissions, signing for development, the repository layout, and
 troubleshooting.
 
