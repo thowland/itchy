@@ -15,6 +15,14 @@ The application stays below 1.0.0 while it is pre-release. The first bump is to
 the first signed and notarised release (`NFR-4.2`), which is a decision about
 the product and not about the number.
 
+*Reached September 2026. 1.0.0 is the release published to GitHub, and the
+condition above is what decided it rather than the amount of work in the
+section. 0.1.1 was signed and notarised, and opened on a Mac that had never seen
+it, but it was never released: it existed on two machines belonging to the same
+person, and a build nobody can obtain is not a release. The first disk image
+attached to a tag is where `NFR-4.2` stops being a property of a build and
+becomes a property of something somebody has.*
+
 The build number is the commit count, as §16 specifies.
 
 ## Where the numbers live

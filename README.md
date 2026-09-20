@@ -16,10 +16,10 @@ running.
   <img src="docs/images/pad-panel.png" width="420" alt="A pad panel holding a tracking number, a JSON fragment and a note">
 </p>
 
-> **Status: version 0.1.x, in daily use by its author.** Builds are signed with
-> a Developer ID and notarised, so one opens on a Mac that has never seen it,
-> but there is no published download yet and you build it from source. Runs on
-> macOS 15 or later.
+> **Status: version 1.0.0, in daily use by its author.**
+> [Download the latest release](https://github.com/thowland/itchy/releases/latest)
+> — signed with a Developer ID and notarised, so it opens on a Mac that has
+> never seen it without a Gatekeeper override. Runs on macOS 15 or later.
 
 ## A session
 
@@ -133,7 +133,15 @@ design, and what the project is measured by.
 
 ## Installing
 
-There is no published download yet, so build it:
+Take the disk image from
+[the latest release](https://github.com/thowland/itchy/releases/latest), open
+it, and drag Itchy into Applications. It is notarised, so it opens without a
+Gatekeeper override and without the right-click dance.
+
+Itchy has no Dock icon and no main window; look for the cat in the menubar. It
+only offers to start at login when it runs from `/Applications`.
+
+To build it yourself instead:
 
 ```bash
 brew install swiftlint xcodegen
@@ -141,9 +149,9 @@ git clone https://github.com/thowland/itchy.git && cd itchy
 make app
 ```
 
-Then drag `build/Itchy.app` into `/Applications` and open it. Itchy has no Dock
-icon and no main window; look for the cat in the menubar. It only offers to
-start at login when it runs from `/Applications`.
+That leaves the bundle at `build/Itchy.app`, to be dragged into `/Applications`
+the same way. A build from source is signed ad-hoc rather than with a Developer
+ID, which is fine on the machine that built it.
 
 The [user guide](docs/user-guide.md) covers everything from there, and **Itchy
 Help** in the menubar covers the same ground inside the application.

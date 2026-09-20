@@ -4,7 +4,17 @@ What changed, by version. Versions follow `MAJOR.MINOR.PATCH`, biased toward
 patches ([D-22](docs/decisions/D-22-versioning.md)). The build number shown in
 About is the commit count.
 
-## Unreleased
+## 1.0.0
+
+The first release anybody can download. `D-22` reserved 1.0.0 for the first
+signed and notarised release, and this is it: the disk image opens on a Mac
+that has never seen it, without a Gatekeeper override.
+
+It is also the release where the thing that makes Itchy worth building arrives.
+A pad is no longer only somewhere to put text: it can be reshaped in place by a
+transform, handed to a model on your own machine, and opened up to a coding
+agent that reads and writes it over MCP — with each pad deciding for itself how
+far its text is allowed to travel.
 
 **Added**
 

@@ -7,7 +7,7 @@
 //
 // Kept here rather than in project.yml so that bumping it does not regenerate
 // the Xcode project, which would force a full rebuild.
-MARKETING_VERSION = 0.1.1
+MARKETING_VERSION = 1.0.0
 
 // The build number is the commit count, stamped into the built Info.plist by a
 // build phase (specification §16). Zero here means the stamp did not run.

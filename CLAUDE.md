@@ -5,18 +5,21 @@ non-activating panels, styled text with images, indefinite retention, and — th
 differentiating position — pads exposed as a surface software agents can read
 from and write to over MCP.
 
-**Status: R1 shipped-ready, every acceptance criterion demonstrated.** Sprints 0–5 are done, and so are
-Sprint 6 (transforms), Sprint 8 (the MCP server) and all of Sprint 9 but the
-stdio shim. On 19 September 2026 a signed, notarised 0.1.1 disk image opened on
-a Mac that had never seen it, with no Gatekeeper override, and ran correctly
-through its smoke tests on macOS 15. ⌃⌥Space fires there, and a connection from
-a second machine to the agent server is refused — so `NFR-4.2`, `FR-1.4` and
-`FR-8.3` are all demonstrated, and `§14.6`'s manual checklist is empty for the
-first time.
+**Status: 1.0.0, released.** Every sprint in the plan is done, 0 through 10,
+and every requirement has its acceptance criterion recorded as met. The
+repository is public at <https://github.com/thowland/itchy> under GPL-3.0, and
+1.0.0 is the first disk image anybody can download — which is what D-22
+reserved the number for, since 0.1.1 was signed and notarised but existed only
+on two machines belonging to the same person.
+
+`§14.6`'s manual checklist passed for 0.1.1 on 19 September 2026 and is empty:
+a notarised image opened on a Mac that had never seen it with no Gatekeeper
+override, it ran correctly on macOS 15, ⌃⌥Space fired, and a connection to the
+agent server from a second machine was refused — `NFR-4.2`, `FR-1.4` and
+`FR-8.3`. That list comes round again at the next release; keep it.
 
 The plan's §9 interval is closed (D-28): a week of daily use, and working text
-stopped being routed through messages-to-self. That was the measure, and it is
-the first of §9's two branches, so Sprints 7 and 10 proceed.
+stopped being routed through messages-to-self.
 
 ## Documents, in precedence order
 
