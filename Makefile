@@ -82,7 +82,7 @@ format: ## Apply formatting in place
 	@$(SWIFTFORMAT) format --in-place --recursive App Packages Shim Harness
 	@echo "format: applied"
 
-arch-lint: ## Check the four architectural invariants
+arch-lint: ## Check the six architectural invariants
 	@./Scripts/arch-lint.sh
 
 coverage: project ## Measure coverage against the 80% floor (G3)
