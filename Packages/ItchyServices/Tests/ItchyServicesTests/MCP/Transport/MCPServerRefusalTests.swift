@@ -14,7 +14,8 @@ struct MCPServerRefusalTests {
   @Test("An unexposed pad is absent, and unnameable", .timeLimit(.minutes(1)))
   func exposure() async throws {
     let fixture = try await MCPServerFixture.make()
-    defer { Task { await tearDown(fixture) } }
+    let teardown = fixture.teardown
+    defer { Task { await teardown.run() } }
     _ = try await fixture.store.createPad(name: "Salary review")
 
     let (client, transport) = fixture.client()
@@ -36,7 +37,8 @@ struct MCPServerRefusalTests {
   @Test("An unexposed pad is not readable as a resource either", .timeLimit(.minutes(1)))
   func resourceExposure() async throws {
     let fixture = try await MCPServerFixture.make()
-    defer { Task { await tearDown(fixture) } }
+    let teardown = fixture.teardown
+    defer { Task { await teardown.run() } }
     let pad = try await fixture.store.createPad(name: "Private")
 
     let (client, transport) = fixture.client()
@@ -54,7 +56,8 @@ struct MCPServerRefusalTests {
   @Test("An unauthenticated request is refused", .timeLimit(.minutes(1)))
   func missingCredential() async throws {
     let fixture = try await MCPServerFixture.make()
-    defer { Task { await tearDown(fixture) } }
+    let teardown = fixture.teardown
+    defer { Task { await teardown.run() } }
 
     let (status, _) = try await post(to: fixture.endpoint, bearer: nil)
     #expect(status == 401)
@@ -65,7 +68,8 @@ struct MCPServerRefusalTests {
     .timeLimit(.minutes(1)))
   func regenerationInvalidates() async throws {
     let fixture = try await MCPServerFixture.make()
-    defer { Task { await tearDown(fixture) } }
+    let teardown = fixture.teardown
+    defer { Task { await teardown.run() } }
     let previous = fixture.token
 
     let (before, _) = try await post(to: fixture.endpoint, bearer: previous.value)
@@ -80,7 +84,8 @@ struct MCPServerRefusalTests {
   @Test("A refusal says which kind of refusal it is", .timeLimit(.minutes(1)))
   func refusalsExplainThemselves() async throws {
     let fixture = try await MCPServerFixture.make()
-    defer { Task { await tearDown(fixture) } }
+    let teardown = fixture.teardown
+    defer { Task { await teardown.run() } }
 
     let (_, absent) = try await post(to: fixture.endpoint, bearer: nil)
     #expect((String(bytes: absent, encoding: .utf8) ?? "").contains("needs a bearer token"))
@@ -96,7 +101,8 @@ struct MCPServerRefusalTests {
   @Test("A write to a pad open in the interface is refused, not lost", .timeLimit(.minutes(1)))
   func refusesOpenPad() async throws {
     let fixture = try await MCPServerFixture.make(presence: EverythingOpen())
-    defer { Task { await tearDown(fixture) } }
+    let teardown = fixture.teardown
+    defer { Task { await teardown.run() } }
     let pad = try await fixture.exposedPad(named: "Open", text: "typed by hand")
 
     let (client, transport) = fixture.client()
@@ -122,7 +128,8 @@ struct MCPServerRefusalTests {
   @Test("A session identifier from a previous run is refused", .timeLimit(.minutes(1)))
   func staleSession() async throws {
     let fixture = try await MCPServerFixture.make()
-    defer { Task { await tearDown(fixture) } }
+    let teardown = fixture.teardown
+    defer { Task { await teardown.run() } }
 
     let (status, _) = try await post(
       to: fixture.endpoint, bearer: fixture.token.value,
@@ -135,7 +142,8 @@ struct MCPServerRefusalTests {
     .timeLimit(.minutes(1)))
   func sessionRequired() async throws {
     let fixture = try await MCPServerFixture.make()
-    defer { Task { await tearDown(fixture) } }
+    let teardown = fixture.teardown
+    defer { Task { await teardown.run() } }
 
     let body = #"{"jsonrpc":"2.0","id":1,"method":"tools/list"}"#
     let (status, _) = try await post(
@@ -164,7 +172,8 @@ struct MCPServerRefusalTests {
   @Test("The port answers on loopback and on no other local address")
   func loopbackOnly() async throws {
     let fixture = try await MCPServerFixture.make()
-    defer { Task { await tearDown(fixture) } }
+    let teardown = fixture.teardown
+    defer { Task { await teardown.run() } }
 
     #expect(await canConnect(host: "127.0.0.1", port: fixture.port))
     for address in nonLoopbackAddresses() {

@@ -19,7 +19,8 @@ struct MCPServerHostTests {
   @Test("A client handshakes, lists the five tools, and reads a pad", .timeLimit(.minutes(1)))
   func handshake() async throws {
     let fixture = try await MCPServerFixture.make()
-    defer { Task { await tearDown(fixture) } }
+    let teardown = fixture.teardown
+    defer { Task { await teardown.run() } }
     let pad = try await fixture.exposedPad(named: "Notes", text: "hello agent")
 
     let (client, transport) = fixture.client()
@@ -45,7 +46,8 @@ struct MCPServerHostTests {
   @Test("list_pads names what is exposed", .timeLimit(.minutes(1)))
   func listPads() async throws {
     let fixture = try await MCPServerFixture.make()
-    defer { Task { await tearDown(fixture) } }
+    let teardown = fixture.teardown
+    defer { Task { await teardown.run() } }
     _ = try await fixture.exposedPad(named: "Notes", text: "12345")
 
     let (client, transport) = fixture.client()
@@ -60,7 +62,8 @@ struct MCPServerHostTests {
   @Test("A pad is readable as a resource as well as by a tool", .timeLimit(.minutes(1)))
   func resources() async throws {
     let fixture = try await MCPServerFixture.make()
-    defer { Task { await tearDown(fixture) } }
+    let teardown = fixture.teardown
+    defer { Task { await teardown.run() } }
     let pad = try await fixture.exposedPad(named: "Notes", text: "as a resource")
 
     let (client, transport) = fixture.client()
@@ -80,7 +83,8 @@ struct MCPServerHostTests {
   @Test("Several calls in one session all answer", .timeLimit(.minutes(1)))
   func severalCalls() async throws {
     let fixture = try await MCPServerFixture.make()
-    defer { Task { await tearDown(fixture) } }
+    let teardown = fixture.teardown
+    defer { Task { await teardown.run() } }
     _ = try await fixture.exposedPad(named: "Notes", text: "text")
 
     let (client, transport) = fixture.client()
@@ -101,7 +105,8 @@ struct MCPServerHostTests {
   @Test("Writing and appending reach the store", .timeLimit(.minutes(1)))
   func writes() async throws {
     let fixture = try await MCPServerFixture.make()
-    defer { Task { await tearDown(fixture) } }
+    let teardown = fixture.teardown
+    defer { Task { await teardown.run() } }
     let pad = try await fixture.exposedPad(named: "Draft", text: "one")
 
     let (client, transport) = fixture.client()
@@ -124,7 +129,8 @@ struct MCPServerHostTests {
   @Test("A created pad is exposed, and nothing else becomes so", .timeLimit(.minutes(1)))
   func createPad() async throws {
     let fixture = try await MCPServerFixture.make()
-    defer { Task { await tearDown(fixture) } }
+    let teardown = fixture.teardown
+    defer { Task { await teardown.run() } }
     _ = try await fixture.store.createPad(name: "Mine")
 
     let (client, transport) = fixture.client()
@@ -146,7 +152,8 @@ struct MCPServerHostTests {
   @Test("Two clients are connected at once and see the same pad", .timeLimit(.minutes(1)))
   func twoSessions() async throws {
     let fixture = try await MCPServerFixture.make()
-    defer { Task { await tearDown(fixture) } }
+    let teardown = fixture.teardown
+    defer { Task { await teardown.run() } }
     _ = try await fixture.exposedPad(named: "Shared", text: "start")
 
     let (first, firstTransport) = fixture.client()

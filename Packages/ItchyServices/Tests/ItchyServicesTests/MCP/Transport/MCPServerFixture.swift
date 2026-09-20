@@ -36,6 +36,12 @@ internal struct MCPServerFixture: ~Copyable {
     return MCPServerFixture(root: root, store: store, host: host, token: token, port: port)
   }
 
+  /// Taken before the test body runs, because the fixture cannot be captured by
+  /// the closure that tears it down.
+  internal var teardown: MCPServerTeardown {
+    MCPServerTeardown(host: host, root: root)
+  }
+
   internal func client(token presented: String? = nil) -> (Client, HTTPClientTransport) {
     let value = presented ?? token.value
     let transport = HTTPClientTransport(
@@ -59,9 +65,28 @@ internal struct MCPServerFixture: ~Copyable {
   }
 }
 
-internal func tearDown(_ fixture: borrowing MCPServerFixture) async {
-  await fixture.host.stop()
-  try? FileManager.default.removeItem(at: fixture.root)
+/// What tearing a fixture down needs, as a `Sendable` value.
+///
+/// Separated from the fixture because the fixture is `~Copyable` and the
+/// teardown runs inside a `defer`'s `Task`, which is an escaping `sending`
+/// closure. Capturing the fixture there is accepted by Swift 6.4 and rejected
+/// by 6.3 as a data race risk, so the suite compiled on this machine and not on
+/// a runner a minor version behind. The two things teardown actually touches —
+/// an actor and a URL — are both `Sendable`, so handing the closure those
+/// instead is correct under either compiler rather than merely accepted by one.
+internal struct MCPServerTeardown: Sendable {
+  private let host: MCPServerHost
+  private let root: URL
+
+  internal init(host: MCPServerHost, root: URL) {
+    self.host = host
+    self.root = root
+  }
+
+  internal func run() async {
+    await host.stop()
+    try? FileManager.default.removeItem(at: root)
+  }
 }
 
 /// The text an agent actually sees, out of the SDK's content envelope.
