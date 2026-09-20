@@ -21,7 +21,7 @@ DEST := platform=macOS,arch=$(shell uname -m)
 # The other half of a universal binary, so the shim matches the application.
 ALT_ARCH := x86_64
 
-.PHONY: help gate project regenerate test test-ui test-all sign-setup bump version lint format arch-lint coverage verify-gate app run reveal package release notarise dmg ship-check icon screenshots clean open
+.PHONY: help gate project regenerate test test-ui test-all sign-setup bump version lint format arch-lint coverage verify-gate app run reveal package release notarise dmg publish ship-check icon screenshots clean open
 
 help: ## Show this help
 	@grep -E '^[a-z-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -129,6 +129,9 @@ notarise: ## Notarise and staple the release build
 
 dmg: ## Package a signed, stapled DMG
 	@./Scripts/release.sh dmg
+
+publish: ## Draft a GitHub release from the current DMG; PUBLISH=1 to go live
+	@./Scripts/release.sh publish
 
 ship-check: ## Report whether this machine can produce a shippable build
 	@./Scripts/release.sh check

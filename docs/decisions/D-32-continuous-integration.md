@@ -43,18 +43,34 @@ runner is virtualised, shares its host with other jobs, and composites windows
 without a GPU. The number it produces is a measurement of the runner.
 
 Two wrong answers were available. Deleting the test loses the measurement
-altogether. Skipping the assertion on CI leaves the one failure mode that would
-genuinely break the budget — launch beginning to read pad content eagerly,
-against `FR-1.6` — unguarded on the only machine that runs the suite on every
-push, and that failure costs seconds rather than milliseconds.
+altogether. Loosening the budget to something a runner can meet keeps a green
+tick that no longer means what it says.
 
-So `MeasurementHost` names where the measurement is being taken and what it is
-worth there: 250 ms on real hardware, 1500 ms on a shared runner. The
-measurement is always taken and always printed. The loose ceiling is not a
-weaker version of `NFR-1.1`; it is a different and much cruder assertion that
-happens to be checkable in a place where the real one is not, and it is the
-developer's own machine and the manual checklist in §14.6 that continue to
-answer for the requirement itself.
+The first attempt at a third answer did not work, and the way it failed is worth
+keeping. A `MeasurementHost` value read `ProcessInfo.processInfo.environment["CI"]`
+and chose a budget from it: 250 ms on real hardware, 1500 ms on a runner.
+It was tested, it passed the gate, and it failed on CI exactly as before, because
+`xcodebuild` does not forward its own environment to a hosted test process. The
+variable is set on the runner, visible to `make`, visible to the shell script,
+and absent by the time the test asks for it. A probe test confirmed it: with
+`CI=true` in front of `xcodebuild`, the test process reports `CI=(absent)`.
+
+So the decision moves out to where the environment can actually be seen.
+`Scripts/test.sh` adds
+`-skip-testing:ItchyTests/PerformanceTests/testHotKeyToTypeablePadIsUnderBudget`
+when `$CI` is set, and says on the line after the result that it did. The test
+itself keeps one budget, 250 ms, which is the only number that ever meant
+anything, and is unconditional wherever it runs.
+
+This is also the better shape for a second reason. It is the same arrangement
+the UI suite already has and for the same underlying reason: something the
+default path cannot give it. Putting the skip beside that one makes the pattern
+legible rather than inventing a second mechanism for the same problem.
+
+Nothing is lost by skipping it there. The change that could genuinely break the
+budget is launch beginning to read pad content eagerly, against `FR-1.6`, and
+`testLaunchDoesNotReadContent` asserts that structurally, in the same file,
+without a clock. It runs on CI and always did.
 
 ## What CI is for here
 

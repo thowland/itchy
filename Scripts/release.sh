@@ -136,6 +136,16 @@ check() {
     ready=1
   fi
 
+  # Reported rather than required. Everything above is needed to *produce* a
+  # shippable build; this is only needed to hand it to anybody, and a build that
+  # never leaves the machine is still a shippable one.
+  if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
+    pass "GitHub CLI signed in ('make publish' can draft a release)"
+  else
+    warn "GitHub CLI absent or signed out — 'make publish' will not work"
+    warn "  brew install gh && gh auth login"
+  fi
+
   [ $ready -eq 0 ] && echo "" && echo "Ready to ship." \
     || { echo ""; echo "Not ready: the items above need a person, not a build."; }
   return $ready
@@ -393,11 +403,176 @@ dmg() {
   echo "     $OUT_DIR/$APP_NAME.dmg"
 }
 
+
+# --- Publishing -------------------------------------------------------------
+
+marketing_version() {
+  awk -F'=' '/^MARKETING_VERSION/ { gsub(/ /, "", $2); print $2; exit }' \
+    Config/Version.xcconfig
+}
+
+# The CHANGELOG section for a version, heading excluded. Release notes are
+# written once, in the file the repository already keeps, rather than typed
+# again into a text box where they can disagree with it.
+changelog_notes() {
+  awk -v want="## $1" '
+    $0 == want { inside = 1; next }
+    inside && /^## / { exit }
+    inside { print }
+  ' CHANGELOG.md
+}
+
+# The version inside the built image, read by mounting it.
+#
+# Asked of the artefact rather than of the repository, because the mistake this
+# catches is exactly the one where the two disagree: `make bump` raises the
+# version, the DMG is not rebuilt, and an image labelled 0.1.2 contains 0.1.1.
+dmg_version() {
+  local image="$1" mount plist found
+  mount=$(mktemp -d /tmp/itchy-verify.XXXXXX)
+  if ! hdiutil attach -nobrowse -readonly -mountpoint "$mount" "$image" >/dev/null 2>&1; then
+    rmdir "$mount" 2>/dev/null
+    return 1
+  fi
+  plist="$mount/$APP_NAME.app/Contents/Info.plist"
+  found=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$plist" 2>/dev/null)
+  hdiutil detach "$mount" -quiet >/dev/null 2>&1
+  rmdir "$mount" 2>/dev/null
+  [ -n "$found" ] || return 1
+  printf '%s' "$found"
+}
+
+publish() {
+  local version image tag notes asset sha upload draft=1
+  [ "${PUBLISH:-0}" = "1" ] && draft=0
+
+  command -v gh >/dev/null 2>&1 || {
+    fail "the GitHub CLI is not installed"
+    warn "  brew install gh, then gh auth login"
+    exit 1
+  }
+  gh auth status >/dev/null 2>&1 || {
+    fail "the GitHub CLI is not signed in"
+    warn "  gh auth login"
+    exit 1
+  }
+
+  version=$(marketing_version)
+  [ -n "$version" ] || { fail "could not read MARKETING_VERSION"; exit 1; }
+  tag="v$version"
+
+  # Before anything slow. A release whose notes say "Unreleased" is a release
+  # nobody can read, and promoting the section is the step most easily skipped.
+  notes=$(changelog_notes "$version")
+  if [ -z "$(printf '%s' "$notes" | tr -d '[:space:]')" ]; then
+    fail "CHANGELOG.md has no section for $version"
+    warn "  rename '## Unreleased' to '## $version' and commit it first"
+    exit 1
+  fi
+
+  # The trap this closes: `Config/Version.xcconfig` still names the version that
+  # went out last, the work since then is sitting under '## Unreleased', and
+  # both the version check and the tag check pass because the numbers agree with
+  # each other and simply describe the wrong build. Refusing here turns a
+  # mislabelled release into a sentence about running `make bump`.
+  if [ -n "$(changelog_notes 'Unreleased' | tr -d '[:space:]')" ]; then
+    fail "CHANGELOG.md still has an '## Unreleased' section with content in it"
+    warn "  this would publish $version with the notes of a version that shipped"
+    warn "  already. 'make bump', then rename '## Unreleased' to the new version."
+    exit 1
+  fi
+
+  # A release points at a commit, so the commit has to exist for everybody and
+  # has to be the one that was built.
+  if [ -n "$(git status --porcelain)" ]; then
+    fail "the working tree has uncommitted changes"
+    warn "  a release names a commit; commit or stash before publishing"
+    exit 1
+  fi
+  git fetch --quiet origin 2>/dev/null
+  if [ -z "$(git branch -r --contains HEAD 2>/dev/null)" ]; then
+    fail "this commit is not on the remote"
+    warn "  git push first, or the tag will name a commit nobody can fetch"
+    exit 1
+  fi
+
+  if git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null 2>&1; then
+    fail "$tag already exists on the remote"
+    warn "  'make bump' for a new version, or delete the release and its tag"
+    exit 1
+  fi
+
+  image="$OUT_DIR/$APP_NAME.dmg"
+  [ -f "$image" ] || { fail "no disk image; run 'make dmg' first"; exit 1; }
+
+  # Verified here rather than trusted from `make dmg`, because the image on
+  # disk may be from an older run and because an unnotarised image is refused
+  # on the downloader's machine rather than on this one.
+  if ! stapled "$image"; then
+    fail "the disk image has no notarisation ticket"
+    warn "  run 'make dmg', which notarises and staples it"
+    exit 1
+  fi
+  if ! spctl -a -t open --context context:primary-signature "$image" >/dev/null 2>&1; then
+    fail "Gatekeeper refuses this image; it would be refused on download too"
+    exit 1
+  fi
+
+  built=$(dmg_version "$image") || { fail "could not read the version inside the image"; exit 1; }
+  if [ "$built" != "$version" ]; then
+    fail "the image contains $built but this is release $version"
+    warn "  the image is from an earlier build; run 'make release notarise dmg'"
+    exit 1
+  fi
+
+  # Uploaded under its version, so that two downloads in a Downloads folder are
+  # still telling apart.
+  asset="$EXPORT_DIR/$APP_NAME-$version.dmg"
+  cp "$image" "$asset" || exit 1
+  sha=$(shasum -a 256 "$asset" | awk '{ print $1 }')
+
+  upload=$(mktemp /tmp/itchy-notes.XXXXXX)
+  {
+    printf '%s\n' "$notes"
+    printf '%s\n' "---"
+    printf '%s\n' ""
+    printf '%s\n' "Requires macOS 15 or later. The disk image is signed with a Developer ID"
+    printf '%s\n' "and notarised by Apple, so it opens on a Mac that has never seen it without"
+    printf '%s\n' "a Gatekeeper override. Drag Itchy into Applications; it has no Dock icon and"
+    printf '%s\n' "no main window, so look for the cat in the menubar."
+    printf '%s\n' ""
+    printf '%s\n' "\`sha256\` of \`$APP_NAME-$version.dmg\`:"
+    printf '%s\n' ""
+    printf '%s\n' "    $sha"
+  } >"$upload"
+
+  local flags=(--title "$APP_NAME $version" --notes-file "$upload" --target "$(git rev-parse HEAD)")
+  [ "$draft" = "1" ] && flags+=(--draft)
+
+  if ! gh release create "$tag" "$asset" "${flags[@]}"; then
+    fail "gh release create did not succeed"
+    rm -f "$upload"
+    exit 1
+  fi
+  rm -f "$upload"
+  git fetch --quiet --tags origin 2>/dev/null
+
+  pass "uploaded $APP_NAME-$version.dmg"
+  if [ "$draft" = "1" ]; then
+    pass "created as a draft — nothing is downloadable yet"
+    echo "     review it, then publish from the page above, or:"
+    echo "     gh release edit $tag --draft=false"
+  else
+    pass "published; $tag is live and the image is downloadable"
+  fi
+}
+
 case "${1:-check}" in
   check) check ;;
   build) build ;;
   notarise) notarise ;;
   package) package ;;
   dmg) dmg ;;
-  *) echo "usage: release.sh [check|build|notarise|package|dmg]"; exit 2 ;;
+  publish) publish ;;
+  *) echo "usage: release.sh [check|build|notarise|package|dmg|publish]"; exit 2 ;;
 esac

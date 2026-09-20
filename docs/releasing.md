@@ -168,6 +168,56 @@ GitHub yet. When it is created:
    the `ui` job finds Automation Mode already configured (see
    [development](development.md), *Permission prompts*).
 
+## Publishing a release
+
+`make publish` uploads the disk image to GitHub Releases and tags the commit it
+was built from. It is the last step of the chain rather than part of it: the
+image has to exist, be notarised and be stapled first.
+
+```bash
+make bump                    # D-22; PART=minor or PART=major
+# rename '## Unreleased' in CHANGELOG.md to the new version, and commit
+make release notarise dmg
+make publish                 # drafts the release
+make publish PUBLISH=1       # or publishes it outright
+```
+
+It creates a **draft** unless `PUBLISH=1` is set. A draft has a page you can
+read, with the notes rendered and the asset attached, and nothing is downloadable
+until you press publish. Since a published release is the first thing anybody
+sees of a version and the tag is awkward to take back once people have fetched
+it, reviewing the page is worth the extra step; `gh release edit v0.1.2
+--draft=false` publishes it without going to the browser.
+
+The release notes are the version's own section of `CHANGELOG.md`, so they are
+written once rather than typed again into a text box where they can quietly
+disagree with the file. Appended to them are the system requirement, a sentence
+about the image being notarised, and the asset's `sha256`.
+
+### What it refuses to do
+
+Each of these is a mistake that produces a release which looks correct and is
+not, which is why they are checked here rather than noticed later:
+
+- **An unreleased section left in the changelog.** The common shape of this is
+  that `Config/Version.xcconfig` still names the version that went out last and
+  the work since then is sitting under `## Unreleased`. Both the version check
+  and the tag check pass, because the numbers agree with each other and simply
+  describe the wrong build.
+- **A version inside the image that is not the version being released.** Read by
+  mounting the image and asking its `Info.plist`, rather than by trusting that
+  `make dmg` ran after `make bump`.
+- **An image that is not stapled, or that Gatekeeper refuses.** Re-checked here
+  even though `make dmg` checks it, because the image on disk may be from an
+  earlier run, and because this failure lands on the downloader's machine rather
+  than on this one.
+- **A dirty working tree, or a commit that is not on the remote.** A release
+  names a commit; the tag would otherwise point at something nobody can fetch.
+- **A tag that already exists on the remote.**
+
+The asset is uploaded as `Itchy-<version>.dmg` rather than `Itchy.dmg`, so that
+two of them in a Downloads folder can still be told apart.
+
 ## Packaging without a certificate
 
 `make package` builds a disk image from the current build, containing the
