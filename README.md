@@ -52,6 +52,16 @@ pad and it is still there next time. Pads are ordinary files in your Library,
 readable with any editor and kept out of Spotlight, and Itchy makes no network
 connection of its own until you configure something that needs one.
 
+A pad can carry a coloured rule under its title bar, set in that pad's own
+settings and off until you set it. It is there for the moment you are looking
+for one pad among a screenful of windows: the title bar greys out when a pad is
+not the window you are typing in, and the rule does not. Six colours, each with
+a value for light and for dark, or one of your own.
+
+<p align="center">
+  <img src="docs/images/pad-accent.png" width="380" alt="A pad with a blue accent rule under its title bar">
+</p>
+
 ## Transforms
 
 Twelve of them, from the wand button on the pad: flatten styling, upper and

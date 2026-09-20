@@ -45,6 +45,16 @@ extension PadCoordinator {
     }
   }
 
+  /// `FR-3.8`: the accent rule is the person's, per pad, and off until they
+  /// set one. Nil turns it off.
+  func setAccent(_ padID: PadID, _ accent: PadAccent?) {
+    Task { [weak self] in
+      guard let self else { return }
+      try? await self.store.setAccent(padID, accent)
+      await self.refresh()
+    }
+  }
+
   /// `FR-7.5`: clearing the list leaves the pad's content alone. The store
   /// already separates them — provenance is metadata, never text attributes
   /// (`FR-7.2`) — so this is a metadata write and touches no content.

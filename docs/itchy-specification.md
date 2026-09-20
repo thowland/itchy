@@ -479,7 +479,7 @@ Quit Itchy                     ⌘Q
 
 | Property | Value | Requirement |
 |---|---|---|
-| `styleMask` | `[.titled, .closable, .resizable, .utilityWindow, .nonactivatingPanel]` | `FR-3.1`, `FR-3.7` |
+| `styleMask` | `[.titled, .closable, .resizable, .nonactivatingPanel]` | `FR-3.1`, `FR-3.7` |
 | `isFloatingPanel` | `true` | `FR-3.1` |
 | `level` | `.floating` | `FR-3.1` |
 | `hidesOnDeactivate` | `false` | `FR-3.1` |
@@ -492,6 +492,12 @@ Quit Itchy                     ⌘Q
 The `canBecomeKey` override is the single detail most likely to cost an afternoon, because a non-activating panel does not become key by default and the symptom is a panel that appears entirely correct and silently discards every keystroke. `FR-3.2` exists as a separate requirement for this reason, and there is a test for it.
 
 Content is hosted in `NSHostingView`. The minimum size is 240×160; below that the status bar in `PadStatusBar` stops being legible and there is no reason to permit it.
+
+`.utilityWindow` was in that mask until September 2026 and is deliberately absent now (D-33). It is the flag that draws the short title bar with the small, light title, and a pad's own name was the hardest thing on it to read. No supported API restyles a system-drawn title, so the alternative was to draw the chrome ourselves, which `FR-3.7` rules out for better reasons than this one. Dropping the flag gives the standard bold title and costs nothing `FR-3.1` asks for: floating and non-activating come from `.nonactivatingPanel`, `isFloatingPanel` and `level`. The title bar gains about six points of height, which comes out of the content area at a given window size. One thing did rest on the flag: a titled `NSPanel` that is not a utility window reports its accessibility subrole as `AXDialog`, which VoiceOver reads out and which XCUITest classifies as a dialog rather than a window. `PadPanel` therefore overrides `accessibilitySubrole()` to return `.floatingWindow`, and `PanelConfigurationTests` asserts it.
+
+The accent rule (`FR-3.8`) is drawn as the first row of the hosted content, above the external-write banner and flush under the title bar. Inside the content rather than in the chrome, for two reasons: it keeps `FR-3.7` intact, and a non-activating panel spends most of its life not being the key window, where the chrome is drawn dimmed and app-drawn content is not. A pad with no accent draws a zero-height row rather than omitting the view, so that switching the rule on does not restructure the stack beneath an editor holding a selection.
+
+`PadAccent` is `.named(PadAccentName)` or `.custom(AccentRGB)`, written to `meta.json` as a single string — `"sky"` or `"#4a90d9"` — because `FR-5.7` makes that file hand-editable and a synthesised `Codable` would write `{"named":{"_0":"sky"}}`. The field is optional and absent by default, so no pad already on disk needs migrating. `PadAccentPalette` carries a light and a dark value for each of the six names; a custom colour has one value and is used unchanged in both appearances, which is stated in the control rather than left to be discovered.
 
 ### 8.3 Window registry
 

@@ -8,6 +8,19 @@ About is the commit count.
 
 **Added**
 
+- A pad can carry a coloured rule under its title bar, set in the pad's own
+  settings ([FR-3.8](docs/itchy-requirements.md),
+  [D-33](docs/decisions/D-33-pad-identity-on-the-desktop.md)). Off by default,
+  six palette colours that each carry a light and a dark value, or a colour of
+  your own. It is there to help you find one pad among a screenful of windows;
+  nothing sorts, filters or groups pads by it, and nothing will.
+
+**Changed**
+
+- A pad's title is now the standard bold window title rather than the smaller,
+  lighter one a utility window draws (D-33). The title bar is about six points
+  taller as a result.
+
 - Itchy is now signed with a Developer ID and notarised by Apple, so it opens
   on a machine that has never seen it without a Gatekeeper override. Both the
   application and the disk image carry their own notarisation ticket. Confirmed

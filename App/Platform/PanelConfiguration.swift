@@ -22,8 +22,14 @@ struct PanelConfiguration: Equatable, Sendable {
   var canBecomeMain: Bool
   var minimumSize: NSSize
 
+  /// `.utilityWindow` is deliberately absent (D-33). It was here until the
+  /// title proved too small and too light to read at a glance, which is what a
+  /// utility window's short title bar gives you and what no supported API can
+  /// restyle. Dropping it buys the standard bold title; the floating,
+  /// non-activating behaviour `FR-3.1` asks for comes from `.nonactivatingPanel`,
+  /// `isFloatingPanel` and `level`, none of which change.
   static let standard = PanelConfiguration(
-    styleMask: [.titled, .closable, .resizable, .utilityWindow, .nonactivatingPanel],
+    styleMask: [.titled, .closable, .resizable, .nonactivatingPanel],
     level: .floating,
     collectionBehavior: [.canJoinAllSpaces, .fullScreenAuxiliary],
     isFloatingPanel: true,

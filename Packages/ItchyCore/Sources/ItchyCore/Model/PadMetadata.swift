@@ -29,6 +29,11 @@ public struct PadMetadata: Sendable, Codable, Equatable, Identifiable {
   /// R3. Set on every non-user write (`FR-8.9`).
   public var externalWriteMarker: ExternalWriteMarker?
 
+  /// The rule drawn under this pad's title bar, or nil for no rule (`FR-3.8`).
+  /// Optional rather than a default colour, because absence is what every pad
+  /// already written to disk says, and it needs no migration to keep saying it.
+  public var accent: PadAccent?
+
   public init(
     schemaVersion: Int = ItchyCore.schemaVersion,
     id: PadID = PadID(),
@@ -42,7 +47,8 @@ public struct PadMetadata: Sendable, Codable, Equatable, Identifiable {
     isExposedToMCP: Bool = false,
     routingPolicy: RoutingPolicy = .default,
     lastOpened: Date? = nil,
-    externalWriteMarker: ExternalWriteMarker? = nil
+    externalWriteMarker: ExternalWriteMarker? = nil,
+    accent: PadAccent? = nil
   ) {
     self.schemaVersion = schemaVersion
     self.id = id
@@ -57,6 +63,7 @@ public struct PadMetadata: Sendable, Codable, Equatable, Identifiable {
     self.routingPolicy = routingPolicy
     self.lastOpened = lastOpened
     self.externalWriteMarker = externalWriteMarker
+    self.accent = accent
   }
 
   /// A new pad, requiring no input from the user (`FR-2.3`).

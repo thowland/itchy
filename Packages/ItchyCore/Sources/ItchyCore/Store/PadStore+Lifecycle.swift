@@ -68,6 +68,11 @@ extension PadStore {
     try await mutateMetadata(id) { $0.routingPolicy = policy }
   }
 
+  /// Nil turns the rule off (`FR-3.8`).
+  public func setAccent(_ id: PadID, _ accent: PadAccent?) async throws {
+    try await mutateMetadata(id) { $0.accent = accent }
+  }
+
   private func mutateMetadata(
     _ id: PadID,
     _ change: (inout PadMetadata) -> Void

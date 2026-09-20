@@ -49,6 +49,7 @@ final class ScreenshotCapture: XCTestCase {
   /// It runs before the store is damaged, because three of the four want a pad
   /// that still opens.
   func testCaptureTransformsAndSettings() {
+    captureAccentedPad()
     captureTransformMenu()
     captureSettings(tab: "models", as: "settings-models")
     captureSettings(tab: "agents", as: "settings-agents")
@@ -104,6 +105,18 @@ final class ScreenshotCapture: XCTestCase {
         .waitForExistence(timeout: Self.appearance),
       "About opened without its contents")
     attach(app.windows.firstMatch, as: "welcome")
+    app.terminate()
+  }
+
+  /// The accent rule (`FR-3.8`, D-33), which the script has set on the pad's
+  /// metadata before this phase. Captured rather than described because the
+  /// whole claim is that it is visible, and a rule that never drew at all
+  /// would leave every test in the suite passing.
+  private func captureAccentedPad() {
+    let app = launch()
+    let editor = app.windows.textViews["pad.editor"].firstMatch
+    XCTAssertTrue(editor.waitForExistence(timeout: Self.appearance), "no pad opened")
+    attach(app.windows[Self.padName], as: "pad-accent")
     app.terminate()
   }
 

@@ -19,6 +19,7 @@ struct PadPanelContent: View {
   var body: some View {
     let current = coordinator.metadata(for: pad)
     VStack(spacing: 0) {
+      PadAccentBar(accent: current.accent)
       ExternalWriteBanner(
         state: coordinator.bannerState(for: current),
         onUndo: { coordinator.undoExternalWrite(pad.id) },

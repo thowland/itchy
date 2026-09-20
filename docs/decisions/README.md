@@ -48,3 +48,4 @@ New decisions:
 | [D-30](D-30-transforms-are-not-an-agent-surface.md) | `FR-9.2`'s MCP clause withdrawn: transforms stay off the agent surface, and `FR-8.5`'s five tools stand |
 | [D-31](D-31-model-routing.md) | Model routing: local first under every policy, no escalation after a local failure, three transforms that transform rather than answer |
 | [D-32](D-32-continuous-integration.md) | CI runs on a second toolchain and a shared runner; a `sending` capture fixed rather than pinned, and `NFR-1.1`'s budget held to what the host it runs on can measure |
+| [D-33](D-33-pad-identity-on-the-desktop.md) | `.utilityWindow` dropped for a legible title; an optional per-pad accent rule that is a landmark and must never become a tag |

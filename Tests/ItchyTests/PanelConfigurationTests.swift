@@ -31,8 +31,12 @@ struct PanelConfigurationTests {
     #expect(configuration.styleMask.contains(.titled))
     #expect(configuration.styleMask.contains(.closable))
     #expect(configuration.styleMask.contains(.resizable))
-    #expect(configuration.styleMask.contains(.utilityWindow))
     #expect(configuration.styleMask.contains(.nonactivatingPanel))
+    // Absent on purpose (D-33): a utility window draws a short title bar with a
+    // small, light title, and there is no supported way to restyle a
+    // system-drawn title. Floating and non-activating come from the flags
+    // above and from `level`, so dropping it costs none of `FR-3.1`.
+    #expect(!configuration.styleMask.contains(.utilityWindow))
   }
 
   @Test("It floats above other applications")
@@ -75,5 +79,20 @@ struct PanelConfigurationTests {
     #expect(panel.collectionBehavior.contains(.fullScreenAuxiliary))
     #expect(panel.collectionBehavior.contains(.canJoinAllSpaces))
     #expect(panel.minSize == configuration.minimumSize)
+  }
+
+  /// Regression, and the reason it is worth a test of its own (D-33).
+  ///
+  /// A titled `NSPanel` that is not a utility window reports `AXDialog`, and a
+  /// pad is not a dialog — nothing waits on it and it takes no answer.
+  /// VoiceOver says so out loud, and every `app.windows` query in the UI suite
+  /// stops matching at once, which is a loud failure for a quiet mistake. The
+  /// subrole is therefore stated rather than inherited, and asserted here so
+  /// that a future change to the style mask cannot take it away silently.
+  @MainActor
+  @Test("A pad is a floating window rather than a dialog")
+  func accessibilitySubrole() {
+    let panel = PadPanel(contentRect: NSRect(x: 0, y: 0, width: 420, height: 520))
+    #expect(panel.accessibilitySubrole() == .floatingWindow)
   }
 }

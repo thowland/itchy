@@ -55,6 +55,10 @@ struct PadSettingsView: View {
         }
 
         Section {
+          PadAccentControl(pad: pad, coordinator: coordinator)
+        }
+
+        Section {
           Picker(
             PadSettingsModel.routingLabel,
             selection: Binding(
@@ -109,5 +113,64 @@ struct PadSettingsNotice: View {
       .font(.caption)
       .foregroundStyle(.orange)
       .opacity(notice == nil ? 0 : 1)
+  }
+}
+
+/// The accent rule's control (`FR-3.8`, D-33).
+///
+/// Its own view because the colour well is shown only for a custom colour, and
+/// `PadSettingsView` is on the coverage exclusion list and may not branch.
+/// Whether the well appears, and what each row is worth, are `PadAccentModel`'s.
+struct PadAccentControl: View {
+  let pad: PadMetadata
+  let coordinator: PadCoordinator
+
+  var body: some View {
+    let accent = coordinator.metadata(for: pad).accent
+    Picker(
+      PadAccentModel.label,
+      selection: Binding(
+        get: { PadAccentModel.choice(for: accent) },
+        set: { coordinator.setAccent(pad.id, PadAccentModel.accent(for: $0, current: accent)) })
+    ) {
+      ForEach(PadAccentModel.all, id: \.self) { choice in
+        Text(PadAccentModel.title(choice)).tag(choice)
+      }
+    }
+    .accessibilityIdentifier("pad.settings.accent")
+
+    PadAccentWell(accent: accent) { chosen in
+      coordinator.setAccent(pad.id, chosen)
+    }
+    PadSettingsNotice(notice: PadAccentModel.note(for: accent))
+  }
+}
+
+/// The colour well, present only when the pad is on a custom colour.
+struct PadAccentWell: View {
+  let accent: PadAccent?
+  let onChange: (PadAccent?) -> Void
+
+  var body: some View {
+    ColorPicker(
+      PadAccentModel.customLabel,
+      selection: Binding(
+        get: { AccentColorCodec.swiftUIColor(PadAccentPalette.rgb(of: resolved, in: .light)) },
+        set: { chosen in
+          guard let rgb = AccentColorCodec.rgb(chosen) else { return }
+          onChange(.custom(rgb))
+        }),
+      supportsOpacity: false
+    )
+    .accessibilityIdentifier("pad.settings.accent.colour")
+    .opacity(PadAccentModel.showsColorWell(for: accent) ? 1 : 0)
+    .frame(height: PadAccentModel.showsColorWell(for: accent) ? nil : 0)
+  }
+
+  /// A colour to show while there is none. The well is hidden in that case, so
+  /// this is never what somebody sees; it exists because a `ColorPicker` needs
+  /// a binding whether or not it is on screen.
+  private var resolved: PadAccent {
+    accent ?? .named(.slate)
   }
 }

@@ -175,8 +175,16 @@ The panel MUST show the pad's name and mode. From R3 it MUST also show exposure 
 *Acceptance:* each state that exists in a given release is legible from the panel without opening settings or a menu.
 
 **FR-3.7 — Panel chrome** *(R1, SHOULD)*
-The panel SHOULD be a titled, closable, resizable utility window and SHOULD NOT introduce custom window chrome. The category's differentiation is not in window decoration and the standard chrome carries behaviour we would otherwise reimplement.
+The panel SHOULD be a titled, closable, resizable window and SHOULD NOT introduce custom window chrome. The category's differentiation is not in window decoration and the standard chrome carries behaviour we would otherwise reimplement.
 *Acceptance:* standard window controls and standard resize behaviour are present.
+
+*Amended September 2026 (D-33). The original said "utility window", and the utility style mask is what draws the short title bar with the small, light title that made a pad's name hard to read at a glance. There is no supported API for restyling a system-drawn title, so the choice was between custom chrome and standard chrome, and standard chrome is what the requirement's own reasoning asks for. The word was removed rather than the requirement weakened.*
+
+**FR-3.8 — Accent rule** *(R4, MAY)*
+A pad MAY carry a coloured rule drawn between its title bar and its content, from a fixed palette or from a colour of the user's choosing. It MUST default to absent, MUST be settable per pad, and MUST survive closing and relaunching. The colour MUST NOT be usable to filter, sort or search pads.
+*Acceptance:* a pad with no accent set shows no rule; setting one draws a rule of the stated thickness that is still there after a relaunch; no interface anywhere offers to list or group pads by colour.
+
+*The last clause is the requirement, not a note on it. A per-pad colour is one step from a tag, and `CON-1` forbids tagging. What keeps this on the right side of that line is that the colour is a landmark for finding one window among many on a desktop, never a category the collection can be queried by. The moment something can be asked for "the amber pads", this has become the thing it was written to avoid.*
 
 ### FR-4 Editor
 

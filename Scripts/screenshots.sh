@@ -24,7 +24,7 @@ DESTINATION="platform=macOS,arch=$(uname -m)"
 WORK=$(mktemp -d /tmp/itchy-screenshots.XXXXXX)
 STORE="$WORK/store"
 LOG="$WORK/xcodebuild.log"
-NAMES="pad-panel welcome transform-menu settings-models settings-agents help pad-faulted"
+NAMES="pad-panel welcome pad-accent transform-menu settings-models settings-agents help pad-faulted"
 
 reap() {
   pkill -9 -f "/Build/Products/.*Itchy.app/Contents/MacOS/Itchy" 2>/dev/null
@@ -98,6 +98,20 @@ settings["models"] = {
 }
 path.write_text(json.dumps(settings, indent=2))
 SEED
+
+# An accent on the pad, so that the rule under the title bar is in a picture
+# rather than only in a requirement (FR-3.8). Set on the metadata for the same
+# reason the model is seeded rather than typed: the shot is of the rule, not of
+# the picker that sets it.
+python3 - "$STORE/pads.noindex" <<'ACCENT' || { echo "screenshots: could not seed an accent"; exit 1; }
+import json, pathlib, sys
+roots = sorted(pathlib.Path(sys.argv[1]).glob("*/meta.json"))
+if not roots:
+    sys.exit("no pad metadata to accent")
+meta = json.loads(roots[0].read_text())
+meta["accent"] = "sky"
+roots[0].write_text(json.dumps(meta, indent=2))
+ACCENT
 
 echo "screenshots: capturing the transform menu, settings and help"
 run_phase testCaptureTransformsAndSettings
