@@ -63,4 +63,33 @@ struct LaunchOptionsTests {
     #expect(testing.root.deletingLastPathComponent().lastPathComponent == "ItchyUITests")
     #expect(testing.root.lastPathComponent == AppStorage.uiTestRun, "one directory per launch")
   }
+
+  /// The screenshot capture opens Settings and Help directly rather than
+  /// driving a menubar extra, which XCUITest cannot reach.
+  @Test("The screenshot flags open Settings and Help over a pad")
+  func screenshotWindowFlags() {
+    let settings = LaunchOptions.parse([
+      LaunchOptions.uiTestFlag, LaunchOptions.showSettingsFlag,
+    ])
+    #expect(settings.showsSettingsOnLaunch)
+    #expect(settings.opensPadOnLaunch, "Settings reads better over a pad")
+    #expect(settings.showsHelpOnLaunch == false)
+
+    let help = LaunchOptions.parse([LaunchOptions.uiTestFlag, LaunchOptions.showHelpFlag])
+    #expect(help.showsHelpOnLaunch)
+    #expect(help.opensPadOnLaunch)
+  }
+
+  /// The same rule the storage root has: nothing in the arguments opens a
+  /// window on an ordinary launch.
+  @Test("Without the UI-test flag the window flags do nothing")
+  func windowFlagsNeedTheTestFlag() {
+    let options = LaunchOptions.parse([
+      LaunchOptions.showSettingsFlag, LaunchOptions.showHelpFlag,
+      LaunchOptions.showAboutFlag,
+    ])
+    #expect(options == LaunchOptions())
+    #expect(options.showsSettingsOnLaunch == false)
+    #expect(options.showsHelpOnLaunch == false)
+  }
 }

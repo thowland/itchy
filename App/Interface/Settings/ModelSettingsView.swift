@@ -5,6 +5,12 @@ import SwiftUI
 ///
 /// On the coverage exclusion list and so may not branch: wording, trimming and
 /// what counts as configured are `ModelSettingsModel`'s.
+///
+/// Each row is a labelled `TextField` rather than a `TextField` inside a
+/// `LabeledContent`. In a `Form` the field's first argument is rendered as its
+/// leading label, so wrapping it labels the row twice and prints the value
+/// beside the field that holds it — which is what the window did until it was
+/// screenshotted.
 struct ModelSettingsView: View {
   @Environment(PadCoordinator.self) private var coordinator
   @State private var apiKey = ""
@@ -19,70 +25,55 @@ struct ModelSettingsView: View {
       }
 
       Section(ModelSettingsModel.localHeading) {
-        LabeledContent(ModelSettingsModel.localEndpointLabel) {
-          TextField(
-            ModelSettings.defaultLocalEndpoint,
-            text: Binding(
-              get: { coordinator.settings.models.localEndpoint },
-              set: {
-                coordinator.setModelSettings(
-                  ModelSettingsModel.settings(
-                    from: coordinator.settings.models, localEndpoint: $0))
-              })
-          )
-          .accessibilityIdentifier("settings.localEndpoint")
-        }
-        LabeledContent(ModelSettingsModel.localModelLabel) {
-          TextField(
-            ModelSettingsModel.localModelPlaceholder,
-            text: Binding(
-              get: { coordinator.settings.models.localModel },
-              set: {
-                coordinator.setModelSettings(
-                  ModelSettingsModel.settings(from: coordinator.settings.models, localModel: $0))
-              })
-          )
-          .accessibilityIdentifier("settings.localModel")
-        }
+        TextField(
+          ModelSettingsModel.localEndpointLabel,
+          text: Binding(
+            get: { coordinator.settings.models.localEndpoint },
+            set: { coordinator.setModelSettings(models(localEndpoint: $0)) }),
+          prompt: Text(ModelSettings.defaultLocalEndpoint)
+        )
+        .accessibilityIdentifier("settings.localEndpoint")
+
+        TextField(
+          ModelSettingsModel.localModelLabel,
+          text: Binding(
+            get: { coordinator.settings.models.localModel },
+            set: { coordinator.setModelSettings(models(localModel: $0)) }),
+          prompt: Text(ModelSettingsModel.localModelPlaceholder)
+        )
+        .accessibilityIdentifier("settings.localModel")
+
         Text(ModelSettingsModel.localCaption)
           .font(.caption)
           .foregroundStyle(.secondary)
       }
 
       Section(ModelSettingsModel.remoteHeading) {
-        LabeledContent(ModelSettingsModel.remoteEndpointLabel) {
-          TextField(
-            ModelSettingsModel.remoteEndpointPlaceholder,
-            text: Binding(
-              get: { coordinator.settings.models.remoteEndpoint },
-              set: {
-                coordinator.setModelSettings(
-                  ModelSettingsModel.settings(
-                    from: coordinator.settings.models, remoteEndpoint: $0))
-              })
-          )
-        }
-        LabeledContent(ModelSettingsModel.remoteModelLabel) {
-          TextField(
-            ModelSettingsModel.remoteModelPlaceholder,
-            text: Binding(
-              get: { coordinator.settings.models.remoteModel },
-              set: {
-                coordinator.setModelSettings(
-                  ModelSettingsModel.settings(from: coordinator.settings.models, remoteModel: $0))
-              })
-          )
-        }
-        LabeledContent(ModelSettingsModel.remoteKeyLabel) {
-          HStack {
-            SecureField("", text: $apiKey)
-              .accessibilityIdentifier("settings.remoteKey")
-            Button("Save") {
-              coordinator.setRemoteAPIKey(apiKey)
-              apiKey = ""
-            }
+        TextField(
+          ModelSettingsModel.remoteEndpointLabel,
+          text: Binding(
+            get: { coordinator.settings.models.remoteEndpoint },
+            set: { coordinator.setModelSettings(models(remoteEndpoint: $0)) }),
+          prompt: Text(ModelSettingsModel.remoteEndpointPlaceholder)
+        )
+
+        TextField(
+          ModelSettingsModel.remoteModelLabel,
+          text: Binding(
+            get: { coordinator.settings.models.remoteModel },
+            set: { coordinator.setModelSettings(models(remoteModel: $0)) }),
+          prompt: Text(ModelSettingsModel.remoteModelPlaceholder)
+        )
+
+        HStack {
+          SecureField(ModelSettingsModel.remoteKeyLabel, text: $apiKey)
+            .accessibilityIdentifier("settings.remoteKey")
+          Button("Save") {
+            coordinator.setRemoteAPIKey(apiKey)
+            apiKey = ""
           }
         }
+
         Text(ModelSettingsModel.keyDisplay(hasKey: coordinator.hasRemoteAPIKey))
           .font(.caption)
         Text(ModelSettingsModel.keyCaption)
@@ -95,5 +86,21 @@ struct ModelSettingsView: View {
     }
     .formStyle(.grouped)
     .padding()
+  }
+
+  /// One field changed, the rest carried over and trimmed. Here rather than at
+  /// four call sites so the view stays a list of rows.
+  private func models(
+    localEndpoint: String? = nil,
+    localModel: String? = nil,
+    remoteEndpoint: String? = nil,
+    remoteModel: String? = nil
+  ) -> ModelSettings {
+    ModelSettingsModel.settings(
+      from: coordinator.settings.models,
+      localEndpoint: localEndpoint,
+      localModel: localModel,
+      remoteEndpoint: remoteEndpoint,
+      remoteModel: remoteModel)
   }
 }

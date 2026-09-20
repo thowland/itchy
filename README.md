@@ -65,6 +65,10 @@ Decode Base64 is greyed out on text that is not base64 and says why when you
 hover it. The alternative is a menu that offers everything and then fails, which
 teaches you to distrust the menu.
 
+<p align="center">
+  <img src="docs/images/transform-menu.png" width="220" alt="The wand menu, with the transforms that cannot apply to the current text greyed out">
+</p>
+
 ## Models
 
 Three more transforms in the same menu, once you have configured a model: tidy
@@ -81,12 +85,20 @@ you have set to allow remote work. Each pad carries its own answer to whether
 its text may go remote at all: local only, allowed, or ask me each time, which
 asks before anything leaves and names where it is going.
 
+<p align="center">
+  <img src="docs/images/settings-models.png" width="560" alt="The Models tab in Settings, showing a local Ollama endpoint and model name">
+</p>
+
 ## Agents
 
 Switch the agent server on, expose a pad, and a coding agent can list, read,
 append to, replace and create pads over the Model Context Protocol. It listens
 on `127.0.0.1` and nothing else, every request carries a token you can
 regenerate, and no pad is reachable until you expose it individually.
+
+<p align="center">
+  <img src="docs/images/settings-agents.png" width="560" alt="The Agents tab in Settings, with the server switched off, its port, and the access token">
+</p>
 
 Five tools and no sixth. An agent cannot run your transforms, reach your models,
 or see a pad you have not opened up, and widening that surface is a decision
@@ -125,6 +137,10 @@ start at login when it runs from `/Applications`.
 
 The [user guide](docs/user-guide.md) covers everything from there, and **Itchy
 Help** in the menubar covers the same ground inside the application.
+
+<p align="center">
+  <img src="docs/images/help.png" width="640" alt="Itchy Help, showing the Models topic">
+</p>
 
 ## Building from source
 

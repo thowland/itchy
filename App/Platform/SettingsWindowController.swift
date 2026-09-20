@@ -26,8 +26,8 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
 
   /// Opens the window, or brings the open one forward: a second click on the
   /// menu item must not make a second window.
-  func show() {
-    let window = existingOrNewWindow()
+  func show(tab: SettingsTab = .general) {
+    let window = existingOrNewWindow(tab: tab)
     self.window = window
     NSApp.activate(ignoringOtherApps: true)
     window.makeKeyAndOrderFront(nil)
@@ -42,10 +42,10 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
     window = nil
   }
 
-  private func existingOrNewWindow() -> NSWindow {
+  private func existingOrNewWindow(tab: SettingsTab = .general) -> NSWindow {
     if let window { return window }
     let created = NSWindow(
-      contentRect: NSRect(x: 0, y: 0, width: 480, height: 420),
+      contentRect: NSRect(x: 0, y: 0, width: 620, height: 540),
       styleMask: [.titled, .closable],
       backing: .buffered,
       defer: false)
@@ -54,7 +54,7 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
     created.level = .floating
     created.delegate = self
     created.contentView = NSHostingView(
-      rootView: SettingsView().environment(coordinator))
+      rootView: SettingsView(initialTab: tab).environment(coordinator))
     created.center()
     return created
   }

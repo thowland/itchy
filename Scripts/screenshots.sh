@@ -24,7 +24,7 @@ DESTINATION="platform=macOS,arch=$(uname -m)"
 WORK=$(mktemp -d /tmp/itchy-screenshots.XXXXXX)
 STORE="$WORK/store"
 LOG="$WORK/xcodebuild.log"
-NAMES="pad-panel welcome pad-faulted"
+NAMES="pad-panel welcome transform-menu settings-models settings-agents help pad-faulted"
 
 reap() {
   pkill -9 -f "/Build/Products/.*Itchy.app/Contents/MacOS/Itchy" 2>/dev/null
@@ -70,12 +70,37 @@ run_phase() {
     echo "screenshots: $test was skipped; the store path did not reach the runner"
     exit 1
   fi
-  xcrun xcresulttool export attachments --path "$bundle" --output-path "$WORK/attachments" \
+  # One directory per phase. `export attachments` refuses to write into a
+  # directory that already exists, so a shared one works for the first phase and
+  # fails for every phase after it.
+  xcrun xcresulttool export attachments --path "$bundle" \
+    --output-path "$WORK/attachments/$test" \
     >/dev/null 2>&1 || { echo "screenshots: could not export attachments from $test"; exit 1; }
 }
 
 echo "screenshots: capturing a pad and About"
 run_phase testCapturePadAndAbout
+
+# A model has to be configured for the model-backed transforms to appear in the
+# wand menu at all, which is the half of that picture worth showing. Seeded into
+# the store rather than typed into Settings by the runner: the point of the shot
+# is the menu, and driving four text fields to reach it would be four more ways
+# for the capture to fail.
+python3 - "$STORE/settings.json" <<'SEED' || { echo "screenshots: could not seed a model"; exit 1; }
+import json, pathlib, sys
+path = pathlib.Path(sys.argv[1])
+settings = json.loads(path.read_text()) if path.exists() else {}
+settings["models"] = {
+    "localEndpoint": "http://127.0.0.1:11434",
+    "localModel": "llama3.2",
+    "remoteEndpoint": "",
+    "remoteModel": "",
+}
+path.write_text(json.dumps(settings, indent=2))
+SEED
+
+echo "screenshots: capturing the transform menu, settings and help"
+run_phase testCaptureTransformsAndSettings
 
 # Damage the store the way itchyctl's `fault content` does: the pad's content
 # goes, its metadata stays.
@@ -95,12 +120,14 @@ python3 - "$WORK/attachments" "$OUT" $NAMES <<'PY' || exit 1
 import json, pathlib, shutil, sys
 source, destination, names = pathlib.Path(sys.argv[1]), pathlib.Path(sys.argv[2]), sys.argv[3:]
 found = {}
-for test in json.loads((source / "manifest.json").read_text()):
-    for attachment in test.get("attachments", []):
-        readable = attachment.get("suggestedHumanReadableName", "")
-        for name in names:
-            if readable == name or readable.startswith(name + "_") or readable.startswith(name + "."):
-                found[name] = source / attachment["exportedFileName"]
+# One manifest per phase, each beside the files it describes.
+for manifest in sorted(source.glob("*/manifest.json")):
+    for test in json.loads(manifest.read_text()):
+        for attachment in test.get("attachments", []):
+            readable = attachment.get("suggestedHumanReadableName", "")
+            for name in names:
+                if readable == name or readable.startswith(name + "_") or readable.startswith(name + "."):
+                    found[name] = manifest.parent / attachment["exportedFileName"]
 missing = [name for name in names if name not in found]
 if missing:
     print("screenshots: no attachment for " + ", ".join(missing))

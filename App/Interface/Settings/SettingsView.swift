@@ -6,26 +6,56 @@ import SwiftUI
 /// Every section the specification's §10 called for is now real: General,
 /// Editor, Agents, Models and Backups. Validation and wording live in
 /// `SettingsModel`, `MCPSettingsModel` and `ModelSettingsModel`.
+/// The sections of the settings window, so that it can be opened at one.
+///
+/// Named rather than positional: the screenshot capture asks for a section by
+/// name, and a tab index would move the moment a section is inserted.
+enum SettingsTab: String, CaseIterable, Sendable {
+  case general
+  case editor
+  case agents
+  case models
+  case backups
+
+  /// What an argument or an environment variable can name.
+  static func named(_ name: String?) -> SettingsTab {
+    guard let name, let tab = SettingsTab(rawValue: name.lowercased()) else { return .general }
+    return tab
+  }
+}
+
 struct SettingsView: View {
   @Environment(PadCoordinator.self) private var coordinator
+  @State private var selection: SettingsTab
+
+  init(initialTab: SettingsTab = .general) {
+    _selection = State(initialValue: initialTab)
+  }
 
   var body: some View {
-    TabView {
+    TabView(selection: $selection) {
       GeneralSettingsView()
         .tabItem { Label("General", systemImage: "gearshape") }
+        .tag(SettingsTab.general)
       EditorSettingsView()
         .tabItem { Label("Editor", systemImage: "textformat") }
+        .tag(SettingsTab.editor)
       AgentSettingsView()
         .tabItem { Label(MCPSettingsModel.sectionTitle, systemImage: "point.3.filled.connected.trianglepath.dotted") }
+        .tag(SettingsTab.agents)
       ModelSettingsView()
         .tabItem { Label(ModelSettingsModel.sectionTitle, systemImage: "brain") }
+        .tag(SettingsTab.models)
       ArchiveSettingsView()
         .tabItem { Label("Backups", systemImage: "clock.arrow.circlepath") }
+        .tag(SettingsTab.backups)
     }
     .environment(coordinator)
-    // Tall enough for General with the lowering notice showing; the previous
-    // height cut the pad-count section off at the bottom.
-    .frame(width: 480, height: 420)
+    // Wide enough for five tabs. At 480 the fifth did not fit and macOS
+    // collapsed the strip into a » overflow button, which hides every section
+    // but the first behind a menu nobody looks for — found by screenshotting
+    // the window after the Models tab was added.
+    .frame(width: 620, height: 540)
   }
 }
 

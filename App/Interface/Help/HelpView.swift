@@ -20,7 +20,10 @@ struct HelpView: View {
           .tag(topic.id)
           .accessibilityIdentifier("help.topic.\(topic.id)")
       }
-      .navigationSplitViewColumnWidth(min: 190, ideal: 210, max: 260)
+      // Wide enough for the longest topic title. At 210 three of the eight
+      // truncated in their own sidebar, which a screenshot made obvious and
+      // daily use never would, because you learn where they are.
+      .navigationSplitViewColumnWidth(min: 230, ideal: 265, max: 320)
     } detail: {
       HelpPage(topic: HelpBook.resolve(selection))
     }

@@ -114,6 +114,12 @@ final class PadCoordinator {
     if launchOptions.showsAboutOnLaunch {
       showAbout()
     }
+    if launchOptions.showsSettingsOnLaunch {
+      showSettings(tab: SettingsTab.named(launchOptions.settingsTab))
+    }
+    if launchOptions.showsHelpOnLaunch {
+      showHelp()
+    }
     if launchOptions.opensPadOnLaunch {
       await openFirstPadForTesting()
     }
