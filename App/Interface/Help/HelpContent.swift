@@ -122,6 +122,18 @@ enum HelpContent {
               + "left it, without taking your keyboard focus."),
         ]),
       HelpSection(
+        heading: "Rolling a pad up",
+        blocks: [
+          .text(
+            "Double-click a pad's title bar and it rolls up to just the title bar, still "
+              + "floating and still draggable. Double-click again and it unrolls at the size "
+              + "it was, from wherever you left it."),
+          .text(
+            "A rolled-up pad stays rolled up if you close it or quit, and a pinned one comes "
+              + "back that way. Choosing it from the menubar or pressing the hotkey always "
+              + "unrolls it, because that is what you do when you are about to type."),
+        ]),
+      HelpSection(
         heading: "The status line",
         blocks: [
           .text(

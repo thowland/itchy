@@ -186,6 +186,12 @@ A pad MAY carry a coloured rule drawn between its title bar and its content, fro
 
 *The last clause is the requirement, not a note on it. A per-pad colour is one step from a tag, and `CON-1` forbids tagging. What keeps this on the right side of that line is that the colour is a landmark for finding one window among many on a desktop, never a category the collection can be queried by. The moment something can be asked for "the amber pads", this has become the thing it was written to avoid.*
 
+**FR-3.9 — Window shade** *(R4, MAY)*
+Double-clicking a pad's title bar MAY roll the panel up to its title bar, and double-clicking it again MUST then unroll it to the size it had. A shaded panel MUST keep floating and MUST remain movable, MUST keep the pad's accent rule (`FR-3.8`) visible, and MUST NOT accept keystrokes. The shaded state MUST be recorded against the pad with its frame (`FR-3.4`) and survive closing and relaunching; summoning a pad — from the menubar or by the hotkey — MUST unroll it.
+*Acceptance:* double-clicking the title bar of a 420×520 panel leaves a strip with the same top edge; the strip can be dragged; double-clicking it again restores 420×520 hung from where the strip now is; a pad closed while shaded reopens shaded at launch if pinned and unrolled if summoned; the system's own title-bar double-click action (zoom or minimise) does not also occur.
+
+*Named after the classic Mac OS control panel that did the same. It is the same kind of thing as `FR-3.8`: it changes how one window sits on a desktop and lets nobody ask anything of the collection, so `CON-1` and `CON-3` have nothing to say about it.*
+
 ### FR-4 Editor
 
 **FR-4.1 — Styled text** *(R1, MUST)*

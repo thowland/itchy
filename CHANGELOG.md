@@ -4,6 +4,17 @@ What changed, by version. Versions follow `MAJOR.MINOR.PATCH`, biased toward
 patches ([D-22](docs/decisions/D-22-versioning.md)). The build number shown in
 About is the commit count.
 
+## Unreleased
+
+**Added**
+
+- Double-click a pad's title bar to roll it up to just the title bar, and again
+  to unroll it ([FR-3.9](docs/itchy-requirements.md),
+  [D-34](docs/decisions/D-34-window-shade.md)). A rolled-up pad keeps floating,
+  can be dragged, keeps its accent rule, and stays rolled up across a relaunch;
+  summoning it from the menu or with the hotkey unrolls it. For pads, this
+  replaces the system's own title-bar double-click action.
+
 ## 1.0.0
 
 The first release anybody can download. `D-22` reserved 1.0.0 for the first

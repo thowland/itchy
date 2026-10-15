@@ -158,6 +158,7 @@ public enum RoutingPolicy: String, Sendable, Codable {
 public struct PadFrame: Sendable, Codable, Equatable {
     public var x, y, width, height: Double
     public var displayID: UInt32?          // for restore heuristics, §8.5
+    public var isShaded: Bool              // FR-3.9; absent reads as false (D-34)
 }
 
 public struct ProvenanceEntry: Sendable, Codable, Identifiable {
@@ -832,6 +833,7 @@ The naming convention is load-bearing, because it is what makes a misplacement v
 | Status item / `MenuBarExtra` | `MenuModel.rows(for:threshold:)` | Row order, titles, size markers, key equivalents, faulted-pad presentation | Render rows, dispatch selection |
 | `PadPanel` | `PanelConfiguration` | Style mask, level, collection behaviour, minimum size, key/main eligibility | Apply the value to an `NSPanel` |
 | `PadWindowController` | `FrameResolver.resolve(stored:screens:mouseScreen:openCount:)` | Which rectangle a panel opens at, across all four rules of §8.5 | `setFrame` |
+| Window shade | `WindowShadePlan` | Whether a title-bar click shades, unshades or is AppKit's; whether a pad shown opens or stays shaded; the rolled and unrolled frames; the open frame that is stored while shaded (`FR-3.9`, D-34) | `PadPanel` intercepts the click; the controller sets frames and limits |
 | Hot-key handler | `HotKeyAction.decide(target:panelState:)` | Open, close, or create-first — the toggle semantics of §8.6 | Register the key, call the registry |
 | Launch | `LaunchPlan.steps(index:metadata:)` | What is read eagerly, what is deferred, which pinned pads open | Execute the steps in order |
 | `PasteInterceptor` | `PastePlan.plan(descriptor:mode:)` | Chosen representation, discard rules for plain mode, downsample targets, the provenance entry | Read the pasteboard into a descriptor, execute the plan |

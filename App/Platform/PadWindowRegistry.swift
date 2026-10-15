@@ -35,6 +35,7 @@ final class PadWindowRegistry {
     makingKey: Bool = true
   ) -> PadWindowController {
     if let existing = controllers[pad.id] {
+      existing.accent = pad.accent
       existing.show(makingKey: makingKey)
       recordOpened(pad.id)
       return existing
@@ -48,6 +49,8 @@ final class PadWindowRegistry {
     let controller = PadWindowController(
       padID: pad.id, store: store, contentRect: frame, content: content)
     controller.panel.title = pad.name
+    controller.accent = pad.accent
+    controller.restore(storedShaded: pad.frame?.isShaded ?? false, isSummoned: makingKey)
     controllers[pad.id] = controller
     observeClosure(of: controller)
     controller.show(makingKey: makingKey)
@@ -63,15 +66,19 @@ final class PadWindowRegistry {
   /// hotkey's toggle turns on (`FR-1.4`, Sprint 5).
   func isFrontmostAndKey(_ padID: PadID) -> Bool {
     guard let controller = controllers[padID] else { return false }
-    return controller.isVisible && controller.isKey
+    return controller.isFocused
   }
 
   /// The pad whose panel is frontmost and holds keyboard focus, if any.
   ///
   /// What `FR-1.4`'s toggle turns on, and the reason `HotKeyAction.decide` takes
   /// it as a value rather than reaching for the window server itself.
+  ///
+  /// A shaded pad is never it, even if it kept the keyboard when it was rolled
+  /// up: it has nowhere to type into, so the hotkey should unroll it rather
+  /// than put it away (`FR-3.9`).
   func frontmostKeyPad() -> PadID? {
-    controllers.first { $0.value.isVisible && $0.value.isKey }?.key
+    controllers.first { $0.value.isFocused }?.key
   }
 
   private func observeClosure(of controller: PadWindowController) {

@@ -71,6 +71,23 @@ struct CodingTests {
     }
   }
 
+  /// `FR-3.9`. Every frame written before shading existed has no `isShaded`,
+  /// and must still read — as open, which is what those panels were.
+  @Test("A frame with no shaded field reads as open")
+  func frameWithoutShade() throws {
+    let json = #"{"x": 1, "y": 2, "width": 420, "height": 520}"#
+    let frame = try JSONCoding.decoder().decode(PadFrame.self, from: Data(json.utf8))
+    #expect(!frame.isShaded)
+    #expect(frame.height == 520)
+  }
+
+  @Test("A shaded frame round-trips with its open size intact")
+  func shadedFrameRoundTrip() throws {
+    let original = PadFrame(x: 1, y: 2, width: 420, height: 520, displayID: 3, isShaded: true)
+    let data = try JSONCoding.encoder().encode(original)
+    #expect(try JSONCoding.decoder().decode(PadFrame.self, from: data) == original)
+  }
+
   @Test("A pad identifier that is not a UUID is refused")
   func badIdentifier() {
     #expect(PadID(string: "not-a-uuid") == nil)

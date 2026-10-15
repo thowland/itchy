@@ -51,6 +51,9 @@ extension PadCoordinator {
     Task { [weak self] in
       guard let self else { return }
       try? await self.store.setAccent(padID, accent)
+      // The panel needs it too: it decides how much of a rolled-up pad stays
+      // showing, and the rule is part of that (`FR-3.9`).
+      self.registry.controller(for: padID)?.accent = accent
       await self.refresh()
     }
   }

@@ -49,3 +49,4 @@ New decisions:
 | [D-31](D-31-model-routing.md) | Model routing: local first under every policy, no escalation after a local failure, three transforms that transform rather than answer |
 | [D-32](D-32-continuous-integration.md) | CI runs on a second toolchain and a shared runner; a `sending` capture fixed rather than pinned, and `NFR-1.1`'s budget skipped from the script because xcodebuild hides the environment from the test |
 | [D-33](D-33-pad-identity-on-the-desktop.md) | `.utilityWindow` dropped for a legible title; an optional per-pad accent rule that is a landmark and must never become a tag |
+| [D-34](D-34-window-shade.md) | A title-bar double-click rolls a pad up to its title bar; the stored frame stays the open one, and the system's own double-click action is suppressed for pads |

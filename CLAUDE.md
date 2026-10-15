@@ -38,7 +38,7 @@ matters of implementation.
 | `docs/itchy-requirements.md` | What must be true — numbered, with acceptance criteria |
 | `docs/itchy-specification.md` | How it is assembled — decisions D-1…D-11, seams, formats |
 | `docs/itchy-implementation-plan.md` | In what order, and under what gate |
-| `docs/decisions/` | Everything decided since, D-12 through D-33 |
+| `docs/decisions/` | Everything decided since, D-12 through D-34 |
 
 Cite requirement identifiers (`FR-4.2`, `NFR-1.1`, `CON-3`, `D-11`) in commits,
 comments, and discussion. They are permanent; a withdrawn requirement is marked
@@ -242,7 +242,7 @@ that plainly exists.
   reasoning attached. A decision recorded without its reasoning cannot be
   reversed safely later.
 - A decision taken during implementation goes in `docs/decisions/`, numbered
-  after the last — D-33 at the time of writing — and added to that directory's
+  after the last — D-34 at the time of writing — and added to that directory's
   `README.md` index in the same commit. If it contradicts the specification,
   update the specification in the same commit too.
 

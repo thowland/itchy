@@ -38,6 +38,11 @@ Click the cat to see your pads. Choose one to open it.
   applications, so you can keep it beside your work.
 - **It stays where you put it.** Move and resize a pad and it reopens in the
   same place.
+- **Double-click the title bar to roll it up.** The pad shrinks to its title
+  bar, still floating, and you can drag it out of the way. Double-click again
+  to roll it back down at the size it was. A rolled-up pad remembers being
+  rolled up, but bringing it back from the menu or with the hotkey always
+  unrolls it, because you are about to type.
 - **Closing puts it away.** Click the close button. Nothing is lost, and there is
   no prompt.
 - **Everything saves as you type.**
