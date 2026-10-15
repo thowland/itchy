@@ -4,7 +4,7 @@ What changed, by version. Versions follow `MAJOR.MINOR.PATCH`, biased toward
 patches ([D-22](docs/decisions/D-22-versioning.md)). The build number shown in
 About is the commit count.
 
-## Unreleased
+## 1.1.0
 
 **Added**
 
